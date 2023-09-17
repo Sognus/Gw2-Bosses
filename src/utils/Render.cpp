@@ -51,12 +51,12 @@ void render_event_name(std::string name, ImVec2 location, float scale) {
 	ImGui::Text(name.c_str());
 }
 
-void render_tooltip(Event event) {
+void render_tooltip(Event event, ImVec2 location) {
 	ImGuiIO& io = ImGui::GetIO();
 	ImVec2 mousePos = io.MousePos;
 	float radius = ENTRY_RADIUS * event.GetScale();
 
-	float distance = sqrt((mousePos.x - event.GetLocation().x) * (mousePos.x - event.GetLocation().x) + (mousePos.y - event.GetLocation().y) * (mousePos.y - event.GetLocation().y));
+	float distance = sqrt((mousePos.x - location.x) * (mousePos.x - location.x) + (mousePos.y - location.y) * (mousePos.y - location.y));
 	if (distance <= radius) {
 		ImGui::SetTooltip("Event %s\nPercentage: %.2f\nScale: %.2f", event.GetName().c_str(), event.GetPercentage(), event.GetScale());
 	}
@@ -82,5 +82,5 @@ void render_event(Event event) {
 	render_event_name(event.GetName(), location, event.GetScale());
 
 	// Render tooltip
-	render_tooltip(event);
+	render_tooltip(event, location);
 }
