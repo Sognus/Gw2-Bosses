@@ -42,6 +42,9 @@
     <ClCompile Include="src\imgui\imgui.cpp">
       <Filter>Source Files\Imgui</Filter>
     </ClCompile>
+    <ClCompile Include="src\Addon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\circle-blue-no-antialias.png">
@@ -90,6 +93,12 @@
     </ClInclude>
     <ClInclude Include="src\nexus\Nexus.h">
       <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Addon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Globals.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
