@@ -7,11 +7,8 @@
 #include "resource.h"
 #include "mumble/Mumble.h"
 
+#include "Constants.h"
 #include "Addon.h"
-
-#ifndef M_PI
-#define M_PI (3.14159265358979323846)
-#endif
 
 extern AddonAPI APIDefs;
 extern AddonDefinition* AddonDef;

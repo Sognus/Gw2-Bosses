@@ -23,6 +23,7 @@
     <ClCompile Include="src\entry.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\Event.cpp" />
     <ClCompile Include="src\imgui\imgui.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -52,6 +53,8 @@
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\Addon.h" />
+    <ClInclude Include="src\Constants.h" />
+    <ClInclude Include="src\Event.h" />
     <ClInclude Include="src\Globals.h" />
     <ClInclude Include="src\imgui\imconfig.h" />
     <ClInclude Include="src\imgui\imgui.h" />

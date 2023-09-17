@@ -18,6 +18,11 @@ public:
     float GetSizeX() const;
     float GetSizeY() const;
 
+    float GetLeft() const;
+    float GetRight() const;
+    float GetTop() const;
+    float GetBottom() const;
+
 private:
     float top;
     float left;

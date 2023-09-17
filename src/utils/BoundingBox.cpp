@@ -34,3 +34,19 @@ float BoundingBox::GetSizeX() const {
 float BoundingBox::GetSizeY() const {
     return bottom - top;
 }
+
+float BoundingBox::GetLeft() const {
+    return left;
+}
+
+float BoundingBox::GetRight() const {
+    return right;
+}
+
+float BoundingBox::GetTop() const {
+    return top;
+}
+
+float BoundingBox::GetBottom() const {
+    return bottom;
+}

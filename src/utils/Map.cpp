@@ -2,6 +2,13 @@
 #include "BoundingBox.h"
 
 
+float map_object_scale() {
+	float zoom_level = MumbleLink->Context.Compass.Scale;
+	float scale = (zoom_level - MAP_MIN_ZOOM) / (MAP_MAX_ZOOM - MAP_MIN_ZOOM);  
+	return MAX_SCALE - scale * (MAX_SCALE - MIN_SCALE); 
+}
+
+
 BoundingBox map_get_bounding_box() {
 	ImGuiIO& io = ImGui::GetIO();
 
@@ -26,4 +33,10 @@ ImVec2 map_get_scale() {
 	float scaleY = io.DisplaySize.y / viewport.GetSizeY();
 
 	return ImVec2(scaleX, scaleY);
+}
+
+ImVec2 map_coords_to_pixels(ImVec2 mapCoords, BoundingBox viewport, ImVec2 mapScale) {
+	float pixelX = (mapCoords.x - viewport.GetLeft()) * mapScale.x;
+	float pixelY = (mapCoords.y - viewport.GetTop()) * mapScale.y;
+	return ImVec2(pixelX, pixelY);
 }
