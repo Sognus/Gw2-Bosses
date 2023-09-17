@@ -38,6 +38,9 @@
     <ClCompile Include="src\imgui\imgui_widgets.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\utils\BoundingBox.cpp" />
+    <ClCompile Include="src\utils\Map.cpp" />
+    <ClCompile Include="src\utils\Render.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\circle-blue-no-antialias.png" />
@@ -59,6 +62,9 @@
     <ClInclude Include="src\imgui\imstb_truetype.h" />
     <ClInclude Include="src\mumble\Mumble.h" />
     <ClInclude Include="src\nexus\Nexus.h" />
+    <ClInclude Include="src\utils\BoundingBox.h" />
+    <ClInclude Include="src\utils\Map.h" />
+    <ClInclude Include="src\utils\Render.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GW2-Bosses.rc" />

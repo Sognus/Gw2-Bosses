@@ -1,4 +1,6 @@
 #include "Globals.h"
+#include "utils/Render.h"
+#include "utils/Map.h"
 
 // DEBUG
 int x = 0;
@@ -35,47 +37,36 @@ void Addon::Render() {
 	ImVec2 bottomRight = ImVec2(right, bottom);
 
 	// Calculate scaling factors for X and Y axes
-	float scaleX = io.DisplaySize.x / (right - left);
-	float scaleY = io.DisplaySize.y / (bottom - top);
-
-	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	ImVec2 mapScaleX = map_get_scale();
 
 	if (ImGui::Begin("PLENGA", (bool*)0, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing)) {
 
-		// Draw Lines
-		ImVec2 windowSize = ImGui::GetWindowSize();
-		// Calculate the center of the window
-		ImVec2 center = ImVec2(windowSize.x * 0.5f, windowSize.y * 0.5f);
-		// Get the ImGui draw list for the current ImGui window
+		render_debug_crosshair();
+
 		ImDrawList* drawList = ImGui::GetWindowDrawList();
-		// Define the length of the crosshair lines
-		float lineLength = 20.0f;
-		// Define the color of the crosshair lines (in RGBA format)
-		ImU32 color = IM_COL32(255, 0, 0, 255); // Red color
-		// Set the line thickness (optional)
-		float thickness = 2.0f; // Replace with your desired thickness
-		// Draw the horizontal line
-		ImVec2 horizontalStart(center.x - lineLength, center.y);
-		ImVec2 horizontalEnd(center.x + lineLength, center.y);
-		drawList->AddLine(horizontalStart, horizontalEnd, color, thickness);
-		// Draw the vertical line
-		ImVec2 verticalStart(center.x, center.y - lineLength);
-		ImVec2 verticalEnd(center.x, center.y + lineLength);
-		drawList->AddLine(verticalStart, verticalEnd, color, thickness);
+
+		ImU32 color = IM_COL32(255, 0, 0, 255);
 
 		// Try to draw position
 		float mapX = 46545.0;
 		float mapY = 21450.0;
 
-		float pixelX = (mapX - left) * scaleX;
-		float pixelY = (mapY - top) * scaleY;
+		float pixelX = (mapX - left) * mapScaleX.x;
+		float pixelY = (mapY - top) * mapScaleX.y;
 
 		ImVec2 pixelCenter = ImVec2(pixelX, pixelY);
 
-		//ImGui::SetCursorPos(ImVec2(pixelX - texture->Width / 2, pixelY - texture->Height / 2));
+
+		float min_zoom = 0.8533;
+		float max_zoom = 17.066;
+		float max_scale = 1.0;
+		float min_scale = 0.4;
+		float zoom_level = MumbleLink->Context.Compass.Scale;
+		float scale = (zoom_level - min_zoom) / (max_zoom - min_zoom);  // Calculate the relative position
+		textureScale = max_scale - scale * (max_scale - min_scale); // Linear interpolation - zoom in = larger scale
+
+
 		ImGui::SetCursorPos(pixelCenter);
-		//textureScale = 1.0;
-		//ImGui::Image(texture->Resource, ImVec2(texture->Width * textureScale, texture->Height * textureScale));
 
 		float radius = 30.0f * textureScale;
 		float totalAngle = (piePercentage / 100.0f) * (2 * M_PI);
@@ -106,7 +97,7 @@ void Addon::Render() {
 		ImVec2 mousePos = io.MousePos;
 		float distance = sqrt((mousePos.x - pixelCenter.x) * (mousePos.x - pixelCenter.x) + (mousePos.y - pixelCenter.y) * (mousePos.y - pixelCenter.y));
 		if (distance <= radius) {
-			ImGui::SetTooltip("%s", "Examble boss tooltip\nWith multiple lines\nxddTree");
+			ImGui::SetTooltip("%s\n%.2f", "Examble boss tooltip\nWith multiple lines\nxddTree", textureScale);
 		}
 
 		piePercentage = piePercentage + 0.1f;
