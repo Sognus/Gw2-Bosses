@@ -4,6 +4,7 @@
 #include "Map.h"
 
 void render_debug_crosshair() {
+	if (!MumbleLink->Context.IsMapOpen) return;
 
 	ImVec2 windowSize = ImGui::GetWindowSize();
 	ImVec2 center = ImVec2(windowSize.x * 0.5f, windowSize.y * 0.5f);
