@@ -8,6 +8,20 @@ float map_object_scale() {
 	return MAX_SCALE - scale * (MAX_SCALE - MIN_SCALE); 
 }
 
+float map_zoom_scale() {
+	float zoom_level = MumbleLink->Context.Compass.Scale;
+	float scale = (zoom_level - MAP_MIN_ZOOM) / (MAP_MAX_ZOOM - MAP_MIN_ZOOM);
+	float scaled_value = ZOOM_OUT + std::pow(2, (-CURVE_CONVEXITY * scale)) * (ZOOM_IN - ZOOM_OUT);
+	return scaled_value;
+}
+
+float map_font_scale() {
+	float zoom_level = MumbleLink->Context.Compass.Scale;
+	float scale = (zoom_level - MAP_MIN_ZOOM) / (MAP_MAX_ZOOM - MAP_MIN_ZOOM);
+	float scaled_value = FONT_ZOOM_OUT + std::pow(2, (-CURVE_CONVEXITY * scale)) * (FONT_ZOOM_IN - FONT_ZOOM_OUT);
+	return scaled_value;
+}
+
 
 BoundingBox map_get_bounding_box() {
 	ImGuiIO& io = ImGui::GetIO();

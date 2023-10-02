@@ -3,16 +3,19 @@
 #include "utils/Map.h"
 #include "utils/BoundingBox.h"
 #include "Event.h"
+#include "PeriodicEvent.h"
+#include "Addon.h"
 
-Event exampleEvent = Event("Example Event", 46545.0f, 21450.0f);
-Event exampleEvent2 = Event("Example Event 2", 57600.0f, 21592.0f);
 
 Addon::Addon() {
-	// Constructor
+	Addon::LoadEvents();
 }
 
 Addon::~Addon() {
-	// Destructor implementation
+	// Clean events
+	for (auto& kv : events) {
+		delete kv.second;
+	}
 }
 
 
@@ -29,26 +32,117 @@ void Addon::Render() {
 	ImGui::End();
 }
 
+void Addon::LoadEvents() {
+	Event* exampleEvent = new Event("Example Event", 46545.0f, 21450.0f, "base", "FF0000");
+	Event* exampleEvent2 = new Event("Example Event 2", 57600.0f, 21592.0f, "base", "FF0000");
+
+	PeriodicEvent* periodicEvent3 = new PeriodicEvent(
+		"Auric Basin", // name
+		34303.0f, // x
+		33915.0f, // y
+		0,  // midnight offset
+		7200, // periodicity
+		"FF0000" // color               
+	);
+	periodicEvent3->AddPeriodicEntry(
+		"Pylons",
+		"Pylons",
+		0,
+		2700,
+		"414A02"
+	);
+	periodicEvent3->AddPeriodicEntry(
+		"Pylons",
+		"Pylons",
+		0,
+		2700,
+		"414A02"
+	);
+	periodicEvent3->AddPeriodicEntry(
+		"Challenges",
+		"Challenges",
+		2700,
+		900,
+		"545E0D"
+	);
+	periodicEvent3->AddPeriodicEntry(
+		"Octovine",
+		"Octovine",
+		3600,
+		1200,
+		"667118"
+	);
+	periodicEvent3->AddPeriodicEntry(
+		"Reset",
+		"Reset",
+		4800,
+		600,
+		"545E0D"
+	);
+	periodicEvent3->AddPeriodicEntry(
+		"Pylons",
+		"Pylons",
+		5400,
+		1800,
+		"414A02"
+	);
+
+
+	Addon::AddEvent(exampleEvent);
+	Addon::AddEvent(exampleEvent2);
+	Addon::AddEvent(periodicEvent3);
+
+}
+
 void Addon::RenderEvents() {
 	if (!MumbleLink->Context.IsMapOpen) return;
 	
-	render_event(exampleEvent);
-	render_event(exampleEvent2);
+	for (const auto& kvp : events) {
+		const std::string& eventName = kvp.first;
+		Event* eventPtr = kvp.second;
+
+		if (eventPtr) {
+			if (eventPtr->GetEventType() == "base") {
+				render_base_event(*eventPtr);
+			}
+			else if (eventPtr->GetEventType() == "periodic") {
+				PeriodicEvent* periodicEventPtr = static_cast<PeriodicEvent*>(eventPtr);
+				if (periodicEventPtr) {
+					render_periodic_event(*periodicEventPtr);
+				}
+			}
+		}
+	}
 }
 
 void Addon::Update() {
-	float piePercentage = exampleEvent.GetPercentage();
+	Event* exampleEvent = Addon::GetEvent("Example Event");
+	Event* exampleEvent2 = Addon::GetEvent("Example Event 2");
+
+	float piePercentage = exampleEvent->GetPercentage();
 	piePercentage = piePercentage + 0.1f;
 	if (piePercentage > 100.0f) {
 		piePercentage = 0.0f;
 	}
-	exampleEvent.SetPercentage(piePercentage);
+	exampleEvent->SetPercentage(piePercentage);
 
 
-	float piePercentage2 = exampleEvent2.GetPercentage();
+	float piePercentage2 = exampleEvent2->GetPercentage();
 	piePercentage2 = piePercentage2 + 0.2f;
 	if (piePercentage2 > 100.0f) {
 		piePercentage2 = 0.0f;
 	}
-	exampleEvent2.SetPercentage(piePercentage2);
+	exampleEvent2->SetPercentage(piePercentage2);
+}
+
+Event* Addon::GetEvent(const std::string& eventName) {
+	auto it = events.find(eventName);
+	if (it != events.end()) {
+		return it->second;
+	}
+	return nullptr; // Event not found
+}
+
+void Addon::AddEvent(Event* eventInstance) {
+	events[eventInstance->GetName().c_str()] = eventInstance;
 }

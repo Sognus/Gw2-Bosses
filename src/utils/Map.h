@@ -6,6 +6,10 @@
 
 float map_object_scale();
 
+float map_zoom_scale();
+
+float map_font_scale();
+
 BoundingBox map_get_bounding_box();
 
 ImVec2 map_get_scale();
