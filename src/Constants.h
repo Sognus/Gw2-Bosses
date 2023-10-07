@@ -21,7 +21,7 @@ const float ZOOM_IN = 3.0f;
 const float CURVE_CONVEXITY = 5;
 
 // Font scaling
-const float FONT_ZOOM_OUT = 0.4f;
+const float FONT_ZOOM_OUT = 0.2f;
 const float FONT_ZOOM_IN = 0.9f;
 
 const ImU32 RED = IM_COL32(255, 0, 0, 255);

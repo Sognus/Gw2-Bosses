@@ -5,6 +5,7 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#include <algorithm>
 
 #include "../Globals.h"
 #include "../Event.h"
@@ -247,28 +248,32 @@ void render_periodic_event(PeriodicEvent event) {
 
 		std::string name = entry["name"];
 
-		
-		ImFont* font = ImGui::GetFont();
-		font->FontSize = originalFontSize * map_font_scale();
-		ImGui::PushFont(font);
-
 		ImVec2 textSize = ImGui::CalcTextSize(name.c_str());
+
+
+		if(textSize.x > (end.x - start.x) || textSize.y > (end.y - start.y)) {
+			// Calculate minimum scale
+			float scale_x = (end.x - start.x) / textSize.x;
+			float scale_y = (end.y - start.y) / textSize.y;
+			float min_scale = min(scale_x, scale_y);
+			// Set font scale
+			ImGui::SetWindowFontScale(min_scale);
+			// Recalculate text size
+			textSize = ImGui::CalcTextSize(name.c_str());
+		}
+
 		ImVec2 textPos = ImVec2(
 			start.x + 5,
-			start.y + height / 2 - textSize.y / 2);
+			start.y + (end.y - start.y) / 2 - textSize.y / 2);
 
 		// Event Text
 		ImGui::PushClipRect(start, end, true);
 		ImGui::SetCursorPos(textPos);
 		ImGui::Text(name.c_str());
 		ImGui::PopClipRect();
-		ImGui::PopFont();
 
-		// Reset text 
-		ImFont* fontReset = ImGui::GetFont();
-		font->FontSize = originalFontSize;
-		ImGui::PushFont(fontReset);
-		ImGui::PopFont();
+		// Restore font scale
+		ImGui::SetWindowFontScale(1.0f);
 
 		// Tooltip
 		ImGuiIO& io = ImGui::GetIO();
@@ -308,6 +313,17 @@ void render_periodic_event(PeriodicEvent event) {
 	ImVec2 textSize = ImGui::CalcTextSize(current_time.c_str());
 	ImVec2 indicator_top_right = ImVec2(indicator_top.x + textSize.x + 10 * mapObjectScale, indicator_top.y - textSize.y - 10 * mapObjectScale);
 	
+	if (textSize.x > (indicator_top_right.x - indicator_top.x) || textSize.y > (indicator_top.y - indicator_top_right.y)) {
+		// Calculate minimum scale
+		float scale_x = (indicator_top_right.x - indicator_top.x) / textSize.x;
+		float scale_y = (indicator_top.y - indicator_top_right.y) / textSize.y;
+		float min_scale = min(scale_x, scale_y);
+		// Set font scale
+		ImGui::SetWindowFontScale(min_scale);
+		// Recalculate text size
+		textSize = ImGui::CalcTextSize(current_time.c_str());
+	}
+
 	drawList->AddRectFilled(
 		indicator_top,
 		indicator_top_right,
@@ -316,10 +332,12 @@ void render_periodic_event(PeriodicEvent event) {
 
 	ImVec2 textPos = ImVec2(
 		indicator_top.x + 3 * mapObjectScale,
-		indicator_top_right.y + (textSize.y / 2) + ((10 * mapObjectScale) / 4)
+		indicator_top_right.y + (indicator_top.y - indicator_top_right.y) / 2 - textSize.y / 2
 	);
 	ImGui::SetCursorPos(textPos);
 	ImGui::Text(current_time.c_str());
+	// Restore font scale
+	ImGui::SetWindowFontScale(1.0f);
 
 
 
