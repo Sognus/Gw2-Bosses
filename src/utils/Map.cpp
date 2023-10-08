@@ -11,14 +11,14 @@ float map_object_scale() {
 float map_zoom_scale() {
 	float zoom_level = MumbleLink->Context.Compass.Scale;
 	float scale = (zoom_level - MAP_MIN_ZOOM) / (MAP_MAX_ZOOM - MAP_MIN_ZOOM);
-	float scaled_value = ZOOM_OUT + std::pow(2, (-CURVE_CONVEXITY * scale)) * (ZOOM_IN - ZOOM_OUT);
+	float scaled_value = ZOOM_OUT + std::pow(2.0f, (-CURVE_CONVEXITY * scale)) * (ZOOM_IN - ZOOM_OUT);
 	return scaled_value;
 }
 
 float map_font_scale() {
 	float zoom_level = MumbleLink->Context.Compass.Scale;
 	float scale = (zoom_level - MAP_MIN_ZOOM) / (MAP_MAX_ZOOM - MAP_MIN_ZOOM);
-	float scaled_value = FONT_ZOOM_OUT + std::pow(2, (-CURVE_CONVEXITY * scale)) * (FONT_ZOOM_IN - FONT_ZOOM_OUT);
+	float scaled_value = FONT_ZOOM_OUT + std::pow(2.0f, (-CURVE_CONVEXITY * scale)) * (FONT_ZOOM_IN - FONT_ZOOM_OUT);
 	return scaled_value;
 }
 
@@ -30,10 +30,10 @@ BoundingBox map_get_bounding_box() {
 	float mapCenterY = MumbleLink->Context.Compass.Center.Y;
 	float mapScale = MumbleLink->Context.Compass.Scale;
 
-	float left = mapCenterX - ((io.DisplaySize.x / 2) * mapScale);
-	float right = mapCenterX + ((io.DisplaySize.x / 2) * mapScale);
-	float top = mapCenterY - ((io.DisplaySize.y / 2) * mapScale);
-	float bottom = mapCenterY + ((io.DisplaySize.y / 2) * mapScale);
+	float left = mapCenterX - ((io.DisplaySize.x / 2.0f) * mapScale);
+	float right = mapCenterX + ((io.DisplaySize.x / 2.0f) * mapScale);
+	float top = mapCenterY - ((io.DisplaySize.y / 2.0f) * mapScale);
+	float bottom = mapCenterY + ((io.DisplaySize.y / 2.0f) * mapScale);
 
 	return BoundingBox(top, left, bottom, right);
 }

@@ -1,9 +1,13 @@
 #include "imgui\imgui.h"
 
+// Constants 
+#ifndef M_PI
+#define M_PI (3.14159265358979323846f)
+#endif
+
 // DEBUG
 const float DEBUG_LINE_THICKNESS = 2.0f;
 const float DEBUG_LINE_LENGTH = 20.0f;
-
 
 // STANDARD
 
@@ -29,11 +33,7 @@ const ImU32 GREEN = IM_COL32(0, 255, 0, 255);
 const ImU32 BLUE = IM_COL32(0, 0, 255, 255);
 
 const float ENTRY_RADIUS = 30.0f;
-const float ENTRY_ARC_OFFSET = -1.57079633f;
-const float ENTRY_SEGMENTS = 64;
+const float ENTRY_ARC_OFFSET = -(M_PI / 2);
+const float ENTRY_SEGMENTS = 256.0f;
 const float ENTRY_NAME_OFFSET = 5.0f;
 
-
-#ifndef M_PI
-#define M_PI (3.14159265358979323846f)
-#endif

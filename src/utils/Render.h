@@ -11,4 +11,6 @@ void render_base_event(Event event);
 
 void render_periodic_event(PeriodicEvent event);
 
+void render_periodic_circular_event(PeriodicEvent event);
+
 #endif //RENDER_H

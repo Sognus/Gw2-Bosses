@@ -36,61 +36,106 @@ void Addon::LoadEvents() {
 	Event* exampleEvent = new Event("Example Event", 46545.0f, 21450.0f, "base", "FF0000");
 	Event* exampleEvent2 = new Event("Example Event 2", 57600.0f, 21592.0f, "base", "FF0000");
 
-	PeriodicEvent* periodicEvent3 = new PeriodicEvent(
-		"Auric Basin", // name
-		34303.0f, // x
-		33915.0f, // y
-		0,  // midnight offset
-		7200, // periodicity
-		"FF0000" // color               
-	);
-	periodicEvent3->AddPeriodicEntry(
-		"Pylons",
-		"Pylons",
-		0,
-		2700,
-		"414A02"
-	);
-	periodicEvent3->AddPeriodicEntry(
-		"Pylons",
-		"Pylons",
-		0,
-		2700,
-		"414A02"
-	);
-	periodicEvent3->AddPeriodicEntry(
-		"Challenges",
-		"Challenges",
-		2700,
-		900,
-		"545E0D"
-	);
-	periodicEvent3->AddPeriodicEntry(
-		"Octovine",
-		"Octovine",
-		3600,
-		1200,
-		"667118"
-	);
-	periodicEvent3->AddPeriodicEntry(
-		"Reset",
-		"Reset",
-		4800,
-		600,
-		"545E0D"
-	);
-	periodicEvent3->AddPeriodicEntry(
-		"Pylons",
-		"Pylons",
-		5400,
-		1800,
-		"414A02"
-	);
+	PeriodicEvent* periodicEvent3;
+	{
+		periodicEvent3 = new PeriodicEvent(
+			"Auric Basin", // name
+			34303.0f, // x
+			33915.0f, // y
+			0,  // midnight offset
+			7200, // periodicity
+			"FF0000" // color               
+		);
+		periodicEvent3->AddPeriodicEntry(
+			"Pylons",
+			"Pylons",
+			0,
+			2700,
+			"414A02"
+		);
+		periodicEvent3->AddPeriodicEntry(
+			"Pylons",
+			"Pylons",
+			0,
+			2700,
+			"414A02"
+		);
+		periodicEvent3->AddPeriodicEntry(
+			"Challenges",
+			"Challenges",
+			2700,
+			900,
+			"545E0D"
+		);
+		periodicEvent3->AddPeriodicEntry(
+			"Octovine",
+			"Octovine",
+			3600,
+			1200,
+			"667118"
+		);
+		periodicEvent3->AddPeriodicEntry(
+			"Reset",
+			"Reset",
+			4800,
+			600,
+			"545E0D"
+		);
+		periodicEvent3->AddPeriodicEntry(
+			"Pylons",
+			"Pylons",
+			5400,
+			1800,
+			"414A02"
+		);
+	}
+	
+	PeriodicEvent* periodicEvent4;
+	{
+		periodicEvent4 = new PeriodicEvent(
+			"Tangled depths", // name
+			37010.0f, // x
+			35040.0f, // y
+			0,  // midnight offset
+			7200, // periodicity
+			"FF0000" // color               
+		);
+		periodicEvent4->AddPeriodicEntry(
+			"Outposts",
+			"Outposts",
+			0,
+			1500,
+			"414a02"
+		);
+		periodicEvent4->AddPeriodicEntry(
+			"Pre",
+			"Preparations",
+			1500,
+			300,
+			"545e0d"
+		);
+		periodicEvent4->AddPeriodicEntry(
+			"Chak Gerent",
+			"Chak Gerent",
+			1800,
+			1200,
+			"667118"
+		);
+		periodicEvent4->AddPeriodicEntry(
+			"Outposts",
+			"Outposts",
+			3000,
+			4200,
+			"414a02"
+		);
+		periodicEvent4->SetEventType("periodic_timer");
+	}
 
 
 	Addon::AddEvent(exampleEvent);
 	Addon::AddEvent(exampleEvent2);
 	Addon::AddEvent(periodicEvent3);
+	Addon::AddEvent(periodicEvent4);
 
 }
 
@@ -105,10 +150,15 @@ void Addon::RenderEvents() {
 			if (eventPtr->GetEventType() == "base") {
 				render_base_event(*eventPtr);
 			}
-			else if (eventPtr->GetEventType() == "periodic") {
+			else if (eventPtr->GetEventType() == "periodic" || eventPtr->GetEventType() == "periodic_timer") {
 				PeriodicEvent* periodicEventPtr = static_cast<PeriodicEvent*>(eventPtr);
 				if (periodicEventPtr) {
-					render_periodic_event(*periodicEventPtr);
+					if (eventPtr->GetEventType() == "periodic") {
+						render_periodic_event(*periodicEventPtr);
+					}
+					if (eventPtr->GetEventType() == "periodic_timer") {
+						render_periodic_circular_event(*periodicEventPtr);
+					}
 				}
 			}
 		}

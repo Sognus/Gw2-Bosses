@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <string>
 #include <cstdint>
 #include <chrono>
@@ -188,8 +188,8 @@ void render_periodic_event(PeriodicEvent event) {
 	float mapZoomScale = map_zoom_scale();
 	float mapObjectScale = map_object_scale();
 
-	float width = 200 * mapZoomScale; // Zoom in = more wide
-	float height = 50 * mapObjectScale; // Zoom in = less tall
+	float width = 200.0f * mapZoomScale; // Zoom in = more wide
+	float height = 50.0f * mapObjectScale; // Zoom in = less tall
 
 	float width_per_second = width / event.GetPeriodicitySeconds();
 
@@ -338,8 +338,209 @@ void render_periodic_event(PeriodicEvent event) {
 	ImGui::Text(current_time.c_str());
 	// Restore font scale
 	ImGui::SetWindowFontScale(1.0f);
+}
 
 
+void render_ring(ImDrawList* drawList, ImVec2 center, float innerRadius, float outerRadius, ImU32 color, int numSegments) {
+	for (int i = 0; i < numSegments; ++i) {
+		float t0 = static_cast<float>(i) / static_cast<float>(numSegments);
+		float t1 = static_cast<float>(i + 1) / static_cast<float>(numSegments);
 
+		float angle0 = t0 * 2 * M_PI;
+		float angle1 = t1 * 2 * M_PI;
+
+		ImVec2 p0(center.x + innerRadius * cosf(angle0), center.y + innerRadius * sinf(angle0));
+		ImVec2 p1(center.x + innerRadius * cosf(angle1), center.y + innerRadius * sinf(angle1));
+		ImVec2 p2(center.x + outerRadius * cosf(angle1), center.y + outerRadius * sinf(angle1));
+		ImVec2 p3(center.x + outerRadius * cosf(angle0), center.y + outerRadius * sinf(angle0));
+
+		drawList->AddQuad(p0, p1, p2, p3, color);
+	}
+}
+
+bool is_point_inside_arc(ImVec2 point, ImVec2 center, float radius, float startAngle, float endAngle) {
+	float angle = atan2f(point.y - center.y, point.x - center.x);
+
+	// Normalize the angle to be between 0 and 2π
+	while (angle < 0) {
+		angle += 2 * M_PI;
+	}
+	while (angle >= 2 * M_PI) {
+		angle -= 2 * M_PI;
+	}
+
+	// Normalize start and end angles to be between 0 and 2π
+	while (startAngle < 0) {
+		startAngle += 2 * M_PI;
+	}
+	while (startAngle >= 2 * M_PI) {
+		startAngle -= 2 * M_PI;
+	}
+	while (endAngle < 0) {
+		endAngle += 2 * M_PI;
+	}
+	while (endAngle >= 2 * M_PI) {
+		endAngle -= 2 * M_PI;
+	}
+
+	if (startAngle <= endAngle) {
+		return (angle >= startAngle && angle <= endAngle) &&
+			(sqrt((point.x - center.x) * (point.x - center.x) + (point.y - center.y) * (point.y - center.y)) <= radius);
+	}
+	else {
+		return (angle >= startAngle || angle <= endAngle) &&
+			(sqrt((point.x - center.x) * (point.x - center.x) + (point.y - center.y) * (point.y - center.y)) <= radius);
+	}
+}
+
+void render_periodic_circular_event(PeriodicEvent event) {
+	ImGuiIO& io = ImGui::GetIO();
+	ImVec2 mousePos = io.MousePos;
+	
+	BoundingBox viewport = map_get_bounding_box();
+
+	// Calculate scaling factors for X and Y axes;
+	ImVec2 mapScaleX = map_get_scale();
+
+	// Update necessary data for render
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	ImVec2 location = map_coords_to_pixels(event.GetLocation(), viewport, mapScaleX);
+
+	float mapZoomScale = map_zoom_scale();
+	float mapObjectScale = map_object_scale();
+
+	float size = 50.0f * mapObjectScale;
+
+	// Draw base circle
+	render_ring(
+		drawList, 
+		location,						// center
+		size,							// inner radius
+		size + 1.0f,					// outer radius
+		IM_COL32(212, 175, 55, 255),	// color
+		ENTRY_SEGMENTS);				// segments 
+
+	const std::vector<json>& entries = event.GetPeriodicEntries();
+	int current_entry_index = -1;
+	int next_entry_index = -1;
+
+	// Draw arcs
+	for (int i = 0; i < entries.size(); ++i) {
+		const json& entry = entries[i];
+	
+		float offset_seconds = entry["offset_seconds"];
+		float duration_seconds = entry["duration_seconds"];
+		std::string name = entry["name"];
+		std::string description = entry["description"];
+
+		std::string hex_color = entry["color_hex"];
+		ImU32 color = hex_to_color(hex_color);
+
+		// Size of offset 
+		float offset = (offset_seconds / event.GetPeriodicitySeconds()) * 100; // %
+		float offset_angle_radians = ( offset / 100.f) * (2.0f * M_PI); // rad
+
+		// Size of arc 
+		float percentage = (duration_seconds / event.GetPeriodicitySeconds()) * 100; // %
+		float totalAngle = (percentage / 100.f) * (2.0f * M_PI); // rad
+
+		float angleStep = totalAngle / ENTRY_SEGMENTS;
+		float startingAngle = ENTRY_ARC_OFFSET + offset_angle_radians;
+
+		for (int i = 0; i < ENTRY_SEGMENTS; ++i) {
+			float startAngle = startingAngle + angleStep * i;
+			float endAngle = startingAngle + angleStep * (i + 1);
+			drawList->PathLineTo(location);
+			drawList->PathArcTo(location, size, startAngle, endAngle);
+			drawList->PathFillConvex(color);
+			drawList->PathClear();
+		}
+
+		if (is_point_inside_arc(mousePos, location, size, startingAngle, startingAngle + totalAngle)) {
+			std::string time = calculate_tooltip_time(offset_seconds);
+			std::string next = calculate_tooltip_time(offset_seconds + 7200);
+			ImGui::SetTooltip("%s\n\nstarts: %s\n\nnext: %s", description.c_str(), time.c_str(), next.c_str());
+		}
+
+		// Set current entry
+		float startTime = offset_seconds;
+		float endTime = offset_seconds + duration_seconds;
+		float alignedOffset = aligned_time_offset();
+		if (alignedOffset >= startTime && alignedOffset <= endTime) {
+			current_entry_index = i;
+			next_entry_index = i + 1 % entries.size();
+		}
+
+	}
+
+	json current_entry = entries[current_entry_index];
+	json next_entry = entries[next_entry_index];
+
+	// Special case when next entry is split
+	int startIndex = next_entry_index;
+	while (current_entry["description"] == next_entry["description"]) {
+		next_entry_index = (next_entry_index + 1) % entries.size();
+		next_entry = entries[next_entry_index];
+
+		// Just to be sure
+		if (next_entry_index == startIndex) {
+			break;
+		}
+	}
+
+	// Render current time line
+	float aligned_time = aligned_time_offset();
+	float aligned_time_percentage = aligned_time / 7200.0f;
+	float angle = aligned_time_percentage * (2 * M_PI);
+	angle = angle - (M_PI / 2);
+
+	ImVec2 endPoint(location.x + size * cosf(angle), location.y + size * sinf(angle));
+	drawList->AddLine(location, endPoint, RED, 1.5f);
+
+	// Time background + text
+	std::string current_time = time_now_formatted();
+	ImVec2 textSize = ImGui::CalcTextSize(current_time.c_str());
+	
+	float margin = 5.0f * mapObjectScale;
+	float padding = 3.0f * mapObjectScale;
+	ImVec2 textTopLeft = ImVec2(
+		location.x - textSize.x / 2 - padding / 2,
+		location.y - size - margin - textSize.y - padding / 2
+	);
+	ImVec2 textBottomRight = ImVec2(
+		textTopLeft.x + padding + textSize.x,
+		textTopLeft.y + padding + textSize.y
+	);
+
+	drawList->AddRectFilled(
+		textTopLeft,
+		textBottomRight,
+		RED
+	);
+
+	ImVec2 textLocation = ImVec2(
+		location.x - textSize.x / 2,
+		location.y - size - margin - textSize.y
+	);
+	ImGui::SetCursorPos(textLocation);
+	ImGui::Text(current_time.c_str());
+
+	// Event name + info
+	char buffer[1024];
+	std::string currentEntryDesc = current_entry == nullptr ? "?" : current_entry["description"];
+	std::string nextEntryDesc = next_entry == nullptr ? "?" : next_entry["description"];
+	snprintf(buffer, sizeof(buffer),
+		"%s - %s\n\nNext: %s",
+		event.GetName().c_str(),
+		currentEntryDesc.c_str(),
+		nextEntryDesc.c_str()
+	);
+	ImVec2 descTextSize = ImGui::CalcTextSize(buffer);
+	ImVec2 descTextPosition = ImVec2(
+		location.x - descTextSize.x / 2,
+		location.y + size + margin
+	);
+	ImGui::SetCursorPos(descTextPosition);
+	ImGui::Text(buffer);
 
 }
