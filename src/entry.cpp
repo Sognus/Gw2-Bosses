@@ -16,7 +16,7 @@ NexusLinkData* NexusLink;
 
 // Addon
 Addon* addon;
-
+AddonVersion Version;
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
@@ -31,39 +31,45 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 }
 
 
-void AddonLoad(AddonAPI aHostApi) 
+void AddonUnload()
+{
+	//delete addon;
+}
+
+
+void AddonRender(bool aIsUIVisible) {
+	addon->Render(aIsUIVisible);
+}
+
+
+void AddonLoad(AddonAPI aHostApi, void* mallocfn, void* freefn)
 {
 	APIDefs = aHostApi;
 	MumbleLink = (Mumble::Data*)APIDefs.GetResource("DL_MUMBLE_LINK");
 	ImGui::SetCurrentContext(aHostApi.ImguiContext);
 	addon = new Addon();
+
+	APIDefs.RegisterRender(AddonRender);
 }
 
 
-
-void AddonUnload() 
-{
-	delete addon;
-}
-
-
-void AddonRender() {
-	addon->Render();
-}
 
 extern "C" __declspec(dllexport) AddonDefinition * GetAddonDef()
 {
 	AddonDef = new AddonDefinition();
 	AddonDef->Signature = -1;
+	AddonDef->APIVersion = NEXUS_API_VERSION;
 	AddonDef->Name = "World bosses";
-	AddonDef->Version = "0.0.1";
+	Version.Major = 0;
+	Version.Minor = 0;
+	Version.Build = 1;
+	Version.Revision = 0;
+	AddonDef->Version = Version;
 	AddonDef->Author = "Sognus";
 	AddonDef->Description = "Adds meta events and world bosses notifications to in-game map.";
 	AddonDef->Load = AddonLoad;
 	AddonDef->Unload = AddonUnload;
 	AddonDef->Flags = EAddonFlags::None;
-
-	AddonDef->Render = AddonRender;
 
 	/* not necessary if hosted on Raidcore, but shown anyway for the  example also useful as a backup resource */
 	AddonDef->Provider = EUpdateProvider::GitHub;

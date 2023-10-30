@@ -19,7 +19,7 @@ Addon::~Addon() {
 }
 
 
-void Addon::Render() {
+void Addon::Render(bool aIsUIVisible) {
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
 	ImGui::SetNextWindowSize(io.DisplaySize);

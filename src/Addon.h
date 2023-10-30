@@ -10,7 +10,7 @@ public:
     Addon();  // Constructor
     ~Addon(); // Destructor
 
-    void Render(); // Addon render function
+    void Render(bool aIsUIVisible); // Addon render function
 
 private:
     void RenderEvents();
