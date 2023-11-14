@@ -9,7 +9,7 @@
 HMODULE hSelf;
 
 // Nexus
-AddonAPI APIDefs;
+AddonAPI* APIDefs;
 AddonDefinition* AddonDef;
 Mumble::Data* MumbleLink;
 NexusLinkData* NexusLink;
@@ -37,19 +37,39 @@ void AddonUnload()
 }
 
 
-void AddonRender(bool aIsUIVisible) {
-	addon->Render(aIsUIVisible);
+void AddonRender() {
+	if (!addon) {
+		return;
+	}
+	addon->Render();
 }
 
 
-void AddonLoad(AddonAPI aHostApi, void* mallocfn, void* freefn)
+void OnMumbleIdentityUpdate(void* aEventArgs)
+{
+	Mumble::Identity* identity = (Mumble::Identity*)aEventArgs;
+}
+
+void AddonLoad(AddonAPI* aHostApi)
 {
 	APIDefs = aHostApi;
-	MumbleLink = (Mumble::Data*)APIDefs.GetResource("DL_MUMBLE_LINK");
-	ImGui::SetCurrentContext(aHostApi.ImguiContext);
+	ImGui::SetCurrentContext(APIDefs->ImguiContext);
+	ImGui::SetAllocatorFunctions((void* (*)(size_t, void*))APIDefs->ImguiMalloc, (void(*)(void*, void*))APIDefs->ImguiFree); // on imgui 1.80+
+
+	// Addon host
+	std::string nexusLinkName = "";
+	nexusLinkName.append(NLINK_NAME);
+	nexusLinkName.append(std::to_string(GetCurrentProcessId()));
+
+	MumbleLink = (Mumble::Data*)APIDefs->GetResource(MUMBLE_LINK_RESOURCE.c_str());
+	NexusLink = (NexusLinkData*)APIDefs->GetResource(nexusLinkName.c_str());
+	APIDefs->SubscribeEvent(IDENTITY_EVENT.c_str(), OnMumbleIdentityUpdate);
+
+	// Addon init
 	addon = new Addon();
 
-	APIDefs.RegisterRender(AddonRender);
+	// Render register
+	APIDefs->RegisterRender(ERenderType::Render, AddonRender);
 }
 
 
@@ -61,9 +81,9 @@ extern "C" __declspec(dllexport) AddonDefinition * GetAddonDef()
 	AddonDef->APIVersion = NEXUS_API_VERSION;
 	AddonDef->Name = "World bosses";
 	Version.Major = 0;
-	Version.Minor = 0;
-	Version.Build = 1;
-	Version.Revision = 0;
+	Version.Minor = 9;
+	Version.Build = 0;
+	Version.Revision = 1;
 	AddonDef->Version = Version;
 	AddonDef->Author = "Sognus";
 	AddonDef->Description = "Adds meta events and world bosses notifications to in-game map.";
