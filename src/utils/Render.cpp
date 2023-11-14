@@ -210,6 +210,7 @@ void render_periodic_event(PeriodicEvent event) {
 
 	for (const json& entry : entries) {
 		float offset_seconds = entry["offset_seconds"];
+		float offset_next = entry["offset_next"];
 		float duration_seconds = entry["duration_seconds"];
 		std::string hex_color = entry["color_hex"];
 
@@ -283,7 +284,7 @@ void render_periodic_event(PeriodicEvent event) {
 			mousePos.y >= start.y && mousePos.y <= end.y) {
 			
 			std::string time = calculate_tooltip_time(offset_seconds);
-			std::string next = calculate_tooltip_time(offset_seconds + 7200);
+			std::string next = calculate_tooltip_time(offset_seconds + offset_next);
 			ImGui::SetTooltip("%s\n\nstarts: %s\n\nnext: %s", name.c_str(), time.c_str(), next.c_str());
 		}
 
@@ -429,6 +430,7 @@ void render_periodic_circular_event(PeriodicEvent event) {
 		const json& entry = entries[i];
 	
 		float offset_seconds = entry["offset_seconds"];
+		float offset_next = entry["offset_next"];
 		float duration_seconds = entry["duration_seconds"];
 		std::string name = entry["name"];
 		std::string description = entry["description"];
@@ -458,7 +460,7 @@ void render_periodic_circular_event(PeriodicEvent event) {
 
 		if (is_point_inside_arc(mousePos, location, size, startingAngle, startingAngle + totalAngle)) {
 			std::string time = calculate_tooltip_time(offset_seconds);
-			std::string next = calculate_tooltip_time(offset_seconds + 7200);
+			std::string next = calculate_tooltip_time(offset_seconds + offset_next);
 			ImGui::SetTooltip("%s\n\nstarts: %s\n\nnext: %s", description.c_str(), time.c_str(), next.c_str());
 		}
 
@@ -468,7 +470,7 @@ void render_periodic_circular_event(PeriodicEvent event) {
 		float alignedOffset = aligned_time_offset();
 		if (alignedOffset >= startTime && alignedOffset <= endTime) {
 			current_entry_index = i;
-			next_entry_index = i + 1 % entries.size();
+			next_entry_index = (i + 1) % entries.size();
 		}
 
 	}
@@ -526,21 +528,23 @@ void render_periodic_circular_event(PeriodicEvent event) {
 	ImGui::Text(current_time.c_str());
 
 	// Event name + info
-	char buffer[1024];
-	std::string currentEntryDesc = current_entry == nullptr ? "?" : current_entry["description"];
-	std::string nextEntryDesc = next_entry == nullptr ? "?" : next_entry["description"];
-	snprintf(buffer, sizeof(buffer),
-		"%s - %s\n\nNext: %s",
-		event.GetName().c_str(),
-		currentEntryDesc.c_str(),
-		nextEntryDesc.c_str()
-	);
-	ImVec2 descTextSize = ImGui::CalcTextSize(buffer);
-	ImVec2 descTextPosition = ImVec2(
-		location.x - descTextSize.x / 2,
-		location.y + size + margin
-	);
-	ImGui::SetCursorPos(descTextPosition);
-	ImGui::Text(buffer);
+	if (MumbleLink->Context.Compass.Scale <= ENTRY_MAX_ZOOM_TEXT_VISIBILITY) {
+		char buffer[1024];
+		std::string currentEntryDesc = current_entry == nullptr ? "?" : current_entry["description"];
+		std::string nextEntryDesc = next_entry == nullptr ? "?" : next_entry["description"];
+		snprintf(buffer, sizeof(buffer),
+			"%s - %s\n\nNext: %s",
+			event.GetName().c_str(),
+			currentEntryDesc.c_str(),
+			nextEntryDesc.c_str()
+		);
+		ImVec2 descTextSize = ImGui::CalcTextSize(buffer);
+		ImVec2 descTextPosition = ImVec2(
+			location.x - descTextSize.x / 2,
+			location.y + size + margin
+		);
+		ImGui::SetCursorPos(descTextPosition);
+		ImGui::Text(buffer);
+	}
 
 }

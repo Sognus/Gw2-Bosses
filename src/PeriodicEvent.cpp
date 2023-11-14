@@ -27,6 +27,7 @@ void PeriodicEvent::AddPeriodicEntry(
     std::string description,
     int offsetSeconds,
     int durationSeconds,
+    int offsetNext,
     std::string entryColorHex
 ) {
     json entry;
@@ -35,6 +36,27 @@ void PeriodicEvent::AddPeriodicEntry(
     entry["offset_seconds"] = offsetSeconds;
     entry["duration_seconds"] = durationSeconds;
     entry["color_hex"] = entryColorHex;
+    entry["offset_next"] = offsetNext;
+
+    periodic_entries.push_back(entry);
+}
+
+
+
+void PeriodicEvent::AddPeriodicEntry(
+    std::string entryName,
+    std::string description,
+    int offsetSeconds,
+    int durationSeconds,
+    std::string entryColorHex
+) {
+    json entry;
+    entry["name"] = entryName;
+    entry["description"] = description;
+    entry["offset_seconds"] = offsetSeconds;
+    entry["duration_seconds"] = durationSeconds;
+    entry["color_hex"] = entryColorHex;
+    entry["offset_next"] = 7200;
 
     periodic_entries.push_back(entry);
 }
