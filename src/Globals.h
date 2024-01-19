@@ -15,7 +15,7 @@
 #include "Constants.h"
 #include "Addon.h"
 
-extern AddonAPI APIDefs;
+extern AddonAPI* APIDefs;
 extern AddonDefinition* AddonDef;
 extern Mumble::Data* MumbleLink;
 extern NexusLinkData* NexusLink;
