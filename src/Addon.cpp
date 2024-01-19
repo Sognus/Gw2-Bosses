@@ -140,7 +140,7 @@ void Addon::LoadEvents() {
 }
 
 void Addon::RenderEvents() {
-	if (!MumbleLink->Context.IsMapOpen) return;
+	if (!MumbleLink->Context.IsMapOpen || !NexusLink->IsGameplay) return;
 	
 	for (const auto& kvp : events) {
 		const std::string& eventName = kvp.first;

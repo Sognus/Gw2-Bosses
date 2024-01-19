@@ -255,7 +255,7 @@ void render_periodic_event(PeriodicEvent event) {
 			// Calculate minimum scale
 			float scale_x = (end.x - start.x) / textSize.x;
 			float scale_y = (end.y - start.y) / textSize.y;
-			float min_scale = min(scale_x, scale_y);
+			float min_scale = std::min(scale_x, scale_y);
 			// Set font scale
 			ImGui::SetWindowFontScale(min_scale);
 			// Recalculate text size
@@ -317,7 +317,7 @@ void render_periodic_event(PeriodicEvent event) {
 		// Calculate minimum scale
 		float scale_x = (indicator_top_right.x - indicator_top.x) / textSize.x;
 		float scale_y = (indicator_top.y - indicator_top_right.y) / textSize.y;
-		float min_scale = min(scale_x, scale_y);
+		float min_scale = std::min(scale_x, scale_y);
 		// Set font scale
 		ImGui::SetWindowFontScale(min_scale);
 		// Recalculate text size

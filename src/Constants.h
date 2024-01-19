@@ -37,3 +37,9 @@ const float ENTRY_ARC_OFFSET = -(M_PI / 2);
 const float ENTRY_SEGMENTS = 256.0f;
 const float ENTRY_NAME_OFFSET = 5.0f;
 
+const float ENTRY_MAX_ZOOM_TEXT_VISIBILITY = 6.4f;
+
+// Nexus constants
+const std::string NLINK_NAME = "DL_NEXUS_LINK_";
+const std::string IDENTITY_EVENT = "EV_MUMBLE_IDENTITY_UPDATED";
+const std::string MUMBLE_LINK_RESOURCE = "DL_MUMBLE_LINK";

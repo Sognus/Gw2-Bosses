@@ -23,11 +23,19 @@ public:
     float GetTop() const;
     float GetBottom() const;
 
+    bool Overlaps(const BoundingBox& other) const;
+    float OverlapDegree(const BoundingBox& other) const;
+
+    BoundingBox Merge(const BoundingBox& other) const;
+    BoundingBox& operator+=(const BoundingBox& rhs);
+    friend BoundingBox operator+(BoundingBox lhs, const BoundingBox& rhs);
+
 private:
     float top;
     float left;
     float bottom;
     float right;
+    float area;
 };
 
 #endif //BOUNDING_BOX_H

@@ -1,12 +1,15 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+#define NOMINMAX
+#define UNICODE
+#define STRICT
+
 #include <string>
 
 #include "nexus/Nexus.h"
 #include "imgui\imgui.h"
 #include "imgui\imgui_extensions.h"
-#include "resource.h"
 #include "mumble/Mumble.h"
 
 #include "Constants.h"
