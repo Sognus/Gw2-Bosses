@@ -42,7 +42,7 @@ void render_event_progress(ImVec2 location, float percentage, float scale) {
 	float totalAngle = (percentage / 100.0f) * (2.0f * M_PI);
 
 	float angleStep = totalAngle / ENTRY_SEGMENTS;
-	float startingAngle = ENTRY_ARC_OFFSET; 
+	float startingAngle = ENTRY_ARC_OFFSET;
 
 	for (int i = 0; i < ENTRY_SEGMENTS; ++i) {
 		float startAngle = startingAngle + angleStep * i;
@@ -165,7 +165,7 @@ std::string time_now_formatted() {
 
 	// Convert the time point to a time_t
 	std::time_t time = std::chrono::system_clock::to_time_t(now);
-	
+
 	// Convert the time_t to a struct tm (for local time)
 	std::tm local_time;
 	localtime_s(&local_time, &time); // Using localtime_s for safety on Windows
@@ -199,7 +199,7 @@ void render_periodic_event(PeriodicEvent event) {
 	const float originalFontSize = originalFont->FontSize;
 
 	// Location of top left of render
-	ImVec2 topLeft = ImVec2(location.x - width /2, location.y - height / 2);
+	ImVec2 topLeft = ImVec2(location.x - width / 2, location.y - height / 2);
 
 	// Add filled rectangle
 	drawList->AddRectFilled(
@@ -210,6 +210,7 @@ void render_periodic_event(PeriodicEvent event) {
 
 	for (const json& entry : entries) {
 		float offset_seconds = entry["offset_seconds"];
+		float offset_next = entry["offset_next"];
 		float duration_seconds = entry["duration_seconds"];
 		std::string hex_color = entry["color_hex"];
 
@@ -251,7 +252,7 @@ void render_periodic_event(PeriodicEvent event) {
 		ImVec2 textSize = ImGui::CalcTextSize(name.c_str());
 
 
-		if(textSize.x > (end.x - start.x) || textSize.y > (end.y - start.y)) {
+		if (textSize.x > (end.x - start.x) || textSize.y > (end.y - start.y)) {
 			// Calculate minimum scale
 			float scale_x = (end.x - start.x) / textSize.x;
 			float scale_y = (end.y - start.y) / textSize.y;
@@ -281,9 +282,9 @@ void render_periodic_event(PeriodicEvent event) {
 
 		if (mousePos.x >= start.x && mousePos.x <= end.x &&
 			mousePos.y >= start.y && mousePos.y <= end.y) {
-			
+
 			std::string time = calculate_tooltip_time(offset_seconds);
-			std::string next = calculate_tooltip_time(offset_seconds + 7200);
+			std::string next = calculate_tooltip_time(offset_seconds + offset_next);
 			ImGui::SetTooltip("%s\n\nstarts: %s\n\nnext: %s", name.c_str(), time.c_str(), next.c_str());
 		}
 
@@ -312,7 +313,7 @@ void render_periodic_event(PeriodicEvent event) {
 	std::string current_time = time_now_formatted();
 	ImVec2 textSize = ImGui::CalcTextSize(current_time.c_str());
 	ImVec2 indicator_top_right = ImVec2(indicator_top.x + textSize.x + 10 * mapObjectScale, indicator_top.y - textSize.y - 10 * mapObjectScale);
-	
+
 	if (textSize.x > (indicator_top_right.x - indicator_top.x) || textSize.y > (indicator_top.y - indicator_top_right.y)) {
 		// Calculate minimum scale
 		float scale_x = (indicator_top_right.x - indicator_top.x) / textSize.x;
@@ -396,7 +397,7 @@ bool is_point_inside_arc(ImVec2 point, ImVec2 center, float radius, float startA
 void render_periodic_circular_event(PeriodicEvent event) {
 	ImGuiIO& io = ImGui::GetIO();
 	ImVec2 mousePos = io.MousePos;
-	
+
 	BoundingBox viewport = map_get_bounding_box();
 
 	// Calculate scaling factors for X and Y axes;
@@ -413,7 +414,7 @@ void render_periodic_circular_event(PeriodicEvent event) {
 
 	// Draw base circle
 	render_ring(
-		drawList, 
+		drawList,
 		location,						// center
 		size,							// inner radius
 		size + 1.0f,					// outer radius
@@ -427,8 +428,9 @@ void render_periodic_circular_event(PeriodicEvent event) {
 	// Draw arcs
 	for (int i = 0; i < entries.size(); ++i) {
 		const json& entry = entries[i];
-	
+
 		float offset_seconds = entry["offset_seconds"];
+		float offset_next = entry["offset_next"];
 		float duration_seconds = entry["duration_seconds"];
 		std::string name = entry["name"];
 		std::string description = entry["description"];
@@ -438,7 +440,7 @@ void render_periodic_circular_event(PeriodicEvent event) {
 
 		// Size of offset 
 		float offset = (offset_seconds / event.GetPeriodicitySeconds()) * 100; // %
-		float offset_angle_radians = ( offset / 100.f) * (2.0f * M_PI); // rad
+		float offset_angle_radians = (offset / 100.f) * (2.0f * M_PI); // rad
 
 		// Size of arc 
 		float percentage = (duration_seconds / event.GetPeriodicitySeconds()) * 100; // %
@@ -458,7 +460,7 @@ void render_periodic_circular_event(PeriodicEvent event) {
 
 		if (is_point_inside_arc(mousePos, location, size, startingAngle, startingAngle + totalAngle)) {
 			std::string time = calculate_tooltip_time(offset_seconds);
-			std::string next = calculate_tooltip_time(offset_seconds + 7200);
+			std::string next = calculate_tooltip_time(offset_seconds + offset_next);
 			ImGui::SetTooltip("%s\n\nstarts: %s\n\nnext: %s", description.c_str(), time.c_str(), next.c_str());
 		}
 
@@ -468,7 +470,7 @@ void render_periodic_circular_event(PeriodicEvent event) {
 		float alignedOffset = aligned_time_offset();
 		if (alignedOffset >= startTime && alignedOffset <= endTime) {
 			current_entry_index = i;
-			next_entry_index = i + 1 % entries.size();
+			next_entry_index = (i + 1) % entries.size();
 		}
 
 	}
@@ -500,7 +502,7 @@ void render_periodic_circular_event(PeriodicEvent event) {
 	// Time background + text
 	std::string current_time = time_now_formatted();
 	ImVec2 textSize = ImGui::CalcTextSize(current_time.c_str());
-	
+
 	float margin = 5.0f * mapObjectScale;
 	float padding = 3.0f * mapObjectScale;
 	ImVec2 textTopLeft = ImVec2(
@@ -526,21 +528,23 @@ void render_periodic_circular_event(PeriodicEvent event) {
 	ImGui::Text(current_time.c_str());
 
 	// Event name + info
-	char buffer[1024];
-	std::string currentEntryDesc = current_entry == nullptr ? "?" : current_entry["description"];
-	std::string nextEntryDesc = next_entry == nullptr ? "?" : next_entry["description"];
-	snprintf(buffer, sizeof(buffer),
-		"%s - %s\n\nNext: %s",
-		event.GetName().c_str(),
-		currentEntryDesc.c_str(),
-		nextEntryDesc.c_str()
-	);
-	ImVec2 descTextSize = ImGui::CalcTextSize(buffer);
-	ImVec2 descTextPosition = ImVec2(
-		location.x - descTextSize.x / 2,
-		location.y + size + margin
-	);
-	ImGui::SetCursorPos(descTextPosition);
-	ImGui::Text(buffer);
+	if (MumbleLink->Context.Compass.Scale <= ENTRY_MAX_ZOOM_TEXT_VISIBILITY) {
+		char buffer[1024];
+		std::string currentEntryDesc = current_entry == nullptr ? "?" : current_entry["description"];
+		std::string nextEntryDesc = next_entry == nullptr ? "?" : next_entry["description"];
+		snprintf(buffer, sizeof(buffer),
+			"%s - %s\n\nNext: %s",
+			event.GetName().c_str(),
+			currentEntryDesc.c_str(),
+			nextEntryDesc.c_str()
+		);
+		ImVec2 descTextSize = ImGui::CalcTextSize(buffer);
+		ImVec2 descTextPosition = ImVec2(
+			location.x - descTextSize.x / 2,
+			location.y + size + margin
+		);
+		ImGui::SetCursorPos(descTextPosition);
+		ImGui::Text(buffer);
+	}
 
 }

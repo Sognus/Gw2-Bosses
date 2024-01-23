@@ -1,9 +1,23 @@
 #include "BoundingBox.h"
 
-
-BoundingBox::BoundingBox(float top, float left, float bottom, float right)
-    : top(top), left(left), bottom(bottom), right(right) {
+void BoundingBox::Initialize(float top, float left, float bottom, float right) {
+    this->top = top;
+    this->left = left;
+    this->bottom = bottom;
+    this->right = right;
     area = (right - left) * (bottom - top);
+}
+
+BoundingBox::BoundingBox(ImVec2 point) {
+    Initialize(point.y, point.x, point.y, point.x);
+}
+
+BoundingBox::BoundingBox(float top, float left, float bottom, float right) {
+    Initialize(top, left, bottom, right);
+}
+
+BoundingBox::BoundingBox(ImVec2 topLeft, ImVec2 bottomRight) {
+    Initialize(topLeft.y, topLeft.x, bottomRight.y, bottomRight.x);
 }
 
 ImVec2 BoundingBox::GetTopLeft() const {
@@ -72,7 +86,7 @@ float BoundingBox::OverlapDegree(const BoundingBox& other) const {
 
     float overlapPercentage = intersectionArea / unionArea;
 
-    overlapPercentage = std::round(overlapPercentage * 100.0) / 100.0;
+    overlapPercentage = (float) (std::round(overlapPercentage * 100.0) / 100.0);
 
     return overlapPercentage;
 }
@@ -90,11 +104,27 @@ BoundingBox& BoundingBox::operator+=(const BoundingBox& rhs) {
     this->bottom = std::max(this->bottom, rhs.bottom);
     return *this;
 }
+
+// BoundingBox + BoundingBox
 BoundingBox operator+(BoundingBox lhs, const BoundingBox& rhs) {
     lhs += rhs;
     return lhs;
 }
 
+
+// Might break
+BoundingBox operator+(const ImVec2& lhs, BoundingBox rhs) {
+    return rhs + lhs;
+}
+
+BoundingBox operator+(BoundingBox lhs, const ImVec2& rhs) {
+    lhs.left = std::min(lhs.left, rhs.x);
+    lhs.top = std::min(lhs.top, rhs.y);
+    lhs.right = std::max(lhs.right, rhs.x);
+    lhs.bottom = std::max(lhs.bottom, rhs.y);
+
+    return lhs;
+}
 
 bool boundingbox_overlaps(const BoundingBox& box1, const BoundingBox& box2) {
     return box1.Overlaps(box2);

@@ -9,10 +9,11 @@
 HMODULE hSelf;
 
 // Nexus
-AddonAPI* APIDefs;
-AddonDefinition* AddonDef;
-Mumble::Data* MumbleLink;
-NexusLinkData* NexusLink;
+AddonAPI* APIDefs = nullptr;
+AddonDefinition* AddonDef = nullptr;
+Mumble::Data* MumbleLink = nullptr;
+NexusLinkData* NexusLink = nullptr;
+Mumble::Identity* MumbleIdentity = nullptr;
 
 // Addon
 Addon* addon;
@@ -47,7 +48,7 @@ void AddonRender() {
 
 void OnMumbleIdentityUpdate(void* aEventArgs)
 {
-	Mumble::Identity* identity = (Mumble::Identity*)aEventArgs;
+	MumbleIdentity = (Mumble::Identity*) aEventArgs;
 }
 
 void AddonLoad(AddonAPI* aHostApi)
@@ -57,19 +58,15 @@ void AddonLoad(AddonAPI* aHostApi)
 	ImGui::SetAllocatorFunctions((void* (*)(size_t, void*))APIDefs->ImguiMalloc, (void(*)(void*, void*))APIDefs->ImguiFree); // on imgui 1.80+
 
 	// Addon host
-	std::string nexusLinkName = "";
-	nexusLinkName.append(NLINK_NAME);
-	nexusLinkName.append(std::to_string(GetCurrentProcessId()));
-
 	MumbleLink = (Mumble::Data*)APIDefs->GetResource(MUMBLE_LINK_RESOURCE.c_str());
-	NexusLink = (NexusLinkData*)APIDefs->GetResource(nexusLinkName.c_str());
+	NexusLink = (NexusLinkData*)APIDefs->GetResource(NLINK_NAME.c_str());
 	APIDefs->SubscribeEvent(IDENTITY_EVENT.c_str(), OnMumbleIdentityUpdate);
 
 	// Addon init
 	addon = new Addon();
 
 	// Render register
-	APIDefs->RegisterRender(ERenderType::Render, AddonRender);
+	APIDefs->RegisterRender(ERenderType::ERenderType_Render, AddonRender);
 }
 
 
@@ -89,10 +86,10 @@ extern "C" __declspec(dllexport) AddonDefinition * GetAddonDef()
 	AddonDef->Description = "Adds meta events and world bosses notifications to in-game map.";
 	AddonDef->Load = AddonLoad;
 	AddonDef->Unload = AddonUnload;
-	AddonDef->Flags = EAddonFlags::None;
+	AddonDef->Flags = EAddonFlags::EAddonFlags_None;
 
 	/* not necessary if hosted on Raidcore, but shown anyway for the  example also useful as a backup resource */
-	AddonDef->Provider = EUpdateProvider::GitHub;
+	AddonDef->Provider = EUpdateProvider::EUpdateProvider_GitHub;
 	AddonDef->UpdateLink = "https://github.com/Sognus/GW2-Bosses";
 
 	return AddonDef;

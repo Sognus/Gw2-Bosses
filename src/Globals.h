@@ -1,9 +1,17 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#define NOMINMAX
-#define UNICODE
-#define STRICT
+#ifndef NOMINMAX
+	#define NOMINMAX
+#endif // !NOMINMAX
+
+#ifndef UNICODE
+	#define UNICODE
+#endif // !UNICODE
+
+#ifndef STRICT
+	#define STRICT
+#endif // !STRICT
 
 #include <string>
 
@@ -19,6 +27,7 @@ extern AddonAPI* APIDefs;
 extern AddonDefinition* AddonDef;
 extern Mumble::Data* MumbleLink;
 extern NexusLinkData* NexusLink;
+extern Mumble::Identity* MumbleIdentity;
 
 extern Addon* addon;
 

@@ -34,6 +34,15 @@ public:
         std::string entryColorHex
     );
 
+    void AddPeriodicEntry(
+        std::string entryName,
+        std::string description,
+        int offsetSeconds,
+        int durationSeconds,
+        int offsetNext,
+        std::string entryColorHex
+    );
+
     // Function to serialize the PeriodicEvent to a JSON object
     json ToJson() const;
 

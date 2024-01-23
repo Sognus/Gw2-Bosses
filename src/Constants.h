@@ -11,8 +11,17 @@ const float DEBUG_LINE_LENGTH = 20.0f;
 
 // STANDARD
 
-const float MAP_MIN_ZOOM = 0.8533f;
-const float MAP_MAX_ZOOM = 17.066f;
+const float MAP_MIN_ZOOM_UISIZE_0 = 00.7681f;
+const float MAP_MAX_ZOOM_UISIZE_0 = 15.3620f;
+
+const float MAP_MIN_ZOOM_UISIZE_1 = 00.8533f;
+const float MAP_MAX_ZOOM_UISIZE_1 = 17.0660f;
+
+const float MAP_MIN_ZOOM_UISIZE_2 = 00.9481f;
+const float MAP_MAX_ZOOM_UISIZE_2 = 18.9630f;
+
+const float MAP_MIN_ZOOM_UISIZE_3 = 01.0000f;
+const float MAP_MAX_ZOOM_UISIZE_3 = 20.0000f;
 
 const float MAX_SCALE = 1.0f;
 const float MIN_SCALE = 0.4f;
@@ -40,6 +49,6 @@ const float ENTRY_NAME_OFFSET = 5.0f;
 const float ENTRY_MAX_ZOOM_TEXT_VISIBILITY = 6.4f;
 
 // Nexus constants
-const std::string NLINK_NAME = "DL_NEXUS_LINK_";
+const std::string NLINK_NAME = "DL_NEXUS_LINK";
 const std::string IDENTITY_EVENT = "EV_MUMBLE_IDENTITY_UPDATED";
 const std::string MUMBLE_LINK_RESOURCE = "DL_MUMBLE_LINK";
