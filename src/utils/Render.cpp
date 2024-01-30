@@ -399,7 +399,7 @@ void render_periodic_circular_event(PeriodicEvent event) {
 	ImGuiIO& io = ImGui::GetIO();
 	ImVec2 mousePos = io.MousePos;
 
-	BoundingBox screen = BoundingBox(0, 0, 1080, 1920);
+	BoundingBox screen = BoundingBox(0, 0, io.DisplaySize.y, io.DisplaySize.x);
 	BoundingBox viewport = map_get_bounding_box();
 
 	// Calculate scaling factors for X and Y axes;
