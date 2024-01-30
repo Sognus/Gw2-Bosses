@@ -26,10 +26,13 @@ void Addon::Render() {
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
 	ImGui::SetNextWindowSize(io.DisplaySize);
 
-	if (ImGui::Begin("GW2_BOSSES", (bool*)0, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing)) {
-#ifdef _DEBUG
-		render_debug_crosshair();
-#endif
+	if (ImGui::Begin("GW2_BOSSES", (bool*)0, 
+		ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs |
+		ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoScrollbar |
+		ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoResize)) {
+		#ifdef _DEBUG
+			render_debug_crosshair();
+		#endif
 		this->RenderEvents();
 		this->Update();
 	}

@@ -1,5 +1,16 @@
 #include "BoundingBox.h"
 
+
+void BoundingBox::Initialize(ImVec2 point, float rectangleSize, bool useHalfSize) {
+    float sizeMultiplier = useHalfSize ? 0.5f : 1.0f;
+    float halfSize = rectangleSize * sizeMultiplier;
+    float x1 = point.x - halfSize;
+    float y1 = point.y - halfSize;
+    float x2 = point.x + halfSize;
+    float y2 = point.y + halfSize;
+    Initialize(y1, x1, y2, x2);
+}
+
 void BoundingBox::Initialize(float top, float left, float bottom, float right) {
     this->top = top;
     this->left = left;
@@ -7,6 +18,16 @@ void BoundingBox::Initialize(float top, float left, float bottom, float right) {
     this->right = right;
     area = (right - left) * (bottom - top);
 }
+
+
+BoundingBox::BoundingBox(ImVec2 point, float rectangleSize) {
+    Initialize(point, rectangleSize, false);
+}
+
+BoundingBox::BoundingBox(ImVec2 point, float rectangleSize, bool useHalfSize) {
+    Initialize(point, rectangleSize, useHalfSize);
+}
+
 
 BoundingBox::BoundingBox(ImVec2 point) {
     Initialize(point.y, point.x, point.y, point.x);
@@ -73,22 +94,37 @@ bool BoundingBox::Overlaps(const BoundingBox& other) const {
 }
 
 
+/// <summary>
+/// How much other overlaps with current
+/// </summary>
+/// <param name="other"></param>
+/// <returns></returns>
 float BoundingBox::OverlapDegree(const BoundingBox& other) const {
-    float overlapX = std::max(0.0f, (std::min(right, other.right) - std::max(left, other.left)));
-    float overlapY = std::max(0.0f, (std::min(bottom, other.bottom) - std::max(top, other.top)));
+    float overlapLeft = std::max(left, other.left);
+    float overlapRight = std::min(right, other.right);
+    float overlapTop = std::max(top, other.top);
+    float overlapBottom = std::min(bottom, other.bottom);
 
-    float intersectionArea = overlapX * overlapY;
-    float unionArea = GetArea() + other.GetArea() - intersectionArea;
+    float overlapWidth = std::max(0.0f, overlapRight - overlapLeft);
+    float overlapHeight = std::max(0.0f, overlapBottom - overlapTop);
 
-    if (unionArea == 0.0f) {
-        return 0.0;
+    float overlapArea = overlapWidth * overlapHeight;
+    float boxArea = (right - left) * (bottom - top);
+
+    if (boxArea == 0.0f) {
+        // Avoid division by zero
+        return 0.0f;
     }
 
-    float overlapPercentage = intersectionArea / unionArea;
+    float overlapPercentage = overlapArea / boxArea;
 
-    overlapPercentage = (float) (std::round(overlapPercentage * 100.0) / 100.0);
-
-    return overlapPercentage;
+    // Ensure order of operation
+    if (overlapPercentage > 1.0f) {
+        return 1.0f;
+    }
+    else {
+        return overlapPercentage;
+    }
 }
 
 // Creates new BoundingBox for current and other bounding boxes

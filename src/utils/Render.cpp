@@ -174,6 +174,7 @@ std::string time_now_formatted() {
 }
 
 
+// DEPRECATED
 void render_periodic_event(PeriodicEvent event) {
 
 	BoundingBox viewport = map_get_bounding_box();
@@ -398,6 +399,7 @@ void render_periodic_circular_event(PeriodicEvent event) {
 	ImGuiIO& io = ImGui::GetIO();
 	ImVec2 mousePos = io.MousePos;
 
+	BoundingBox screen = BoundingBox(0, 0, 1080, 1920);
 	BoundingBox viewport = map_get_bounding_box();
 
 	// Calculate scaling factors for X and Y axes;
@@ -411,6 +413,13 @@ void render_periodic_circular_event(PeriodicEvent event) {
 	float mapObjectScale = map_object_scale();
 
 	float size = 50.0f * mapObjectScale;
+
+	// CHECK IF EVENT IS OUTSIDE VIEWPORT
+	BoundingBox eventBox = BoundingBox(location, size, true);
+
+	if (!screen.Overlaps(eventBox)) {
+		return;
+	}
 
 	// Draw base circle
 	render_ring(

@@ -29,6 +29,17 @@ public:
     /// <param name="topLeft">Top-left x, y coordinates</param>
     /// <param name="bottomRight">Bottom-right x, y coordinates</param>
     BoundingBox(ImVec2 topLeft, ImVec2 bottomRight);
+
+    /// <summary>
+    /// Constructor for area using location and rectangle size
+    /// </summary>
+    BoundingBox(ImVec2 point, float rectangleSize);
+
+    /// <summary>
+    /// Constructor for area using location and half rectangle size
+    /// </summary>
+    /// <returns></returns>
+    BoundingBox(ImVec2 point, float rectangleSize, bool useHalfSize);
     
     ImVec2 GetTopLeft() const;
     ImVec2 GetTopRight() const;
@@ -62,7 +73,15 @@ private:
     float right;
     float area;
 
+    /// <summary>
+    /// Initialize using elements of vectors
+    /// </summary>
     void Initialize(float top, float left, float bottom, float right);
+
+    /// <summary>
+    /// Initialize using central point, rectangle size and halfSize flag
+    /// </summary>
+    void Initialize(ImVec2 point, float rectangleSize, bool useHalfSize);
 };
 
 #endif //BOUNDING_BOX_H

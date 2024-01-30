@@ -75,6 +75,9 @@
   <ItemGroup>
     <ResourceCompile Include="GW2-Bosses.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="patchnotes.md" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
