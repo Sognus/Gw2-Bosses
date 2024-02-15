@@ -2,10 +2,10 @@
 #include "Event.h"
 #include "nlohmann/json.hpp"
 
-using json = nlohmann::json;
-
 #ifndef PERIODIC_EVENT_H
 #define PERIODIC_EVENT_H
+
+using json = nlohmann::json;
 
 class PeriodicEvent : public Event {
 public:
@@ -43,8 +43,34 @@ public:
         std::string entryColorHex
     );
 
-    // Function to serialize the PeriodicEvent to a JSON object
-    json ToJson() const;
+    void AddPeriodicEntryGeneric(
+        std::string entryName,
+        std::string description,
+        int offsetSeconds,
+        int durationSeconds,
+        std::string entryColorHex,
+        std::string periodicityType,
+        int periodicity_override
+    );
+
+    void AddPeriodicEntryDay(
+        std::string entryName,
+        std::string description,
+        int offsetSeconds,
+        int durationSeconds,
+        int offsetNext,
+        std::string entryColorHex,
+        int periodicity_override
+    );
+
+    void AddPeriodicEntryDay(
+        std::string entryName,
+        std::string description,
+        int offsetSeconds,
+        int durationSeconds,
+        std::string entryColorHex,
+        int periodicity_override
+    );
 
     // Getter for periodicity_seconds
     int GetPeriodicitySeconds() const;
@@ -64,10 +90,18 @@ public:
     // Setter for midnight_offset_seconds
     void SetMidnightOffsetSeconds(int newMidnightOffsetSeconds);
 
+    // Functions to serialize and deserialize the Event to and from a JSON object
+    json ToJson() const override;
+    void FromJson(const json& json) override;
+    static PeriodicEvent CreateFromJson(const json& json);
+
 private:
     int periodicity_seconds;
     std::vector<json> periodic_entries;
     int midnight_offset_seconds; // Added midnight offset as a private field
+
+protected:
+    PeriodicEvent();
 };
 
 #endif // PERIODIC_EVENT_H

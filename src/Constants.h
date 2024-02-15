@@ -5,6 +5,8 @@
 #define M_PI (3.14159265358979323846f)
 #endif
 
+// Data version (for data.json)
+
 // DEBUG
 const float DEBUG_LINE_THICKNESS = 2.0f;
 const float DEBUG_LINE_LENGTH = 20.0f;

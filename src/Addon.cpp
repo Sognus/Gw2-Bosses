@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <fstream>
 #include "Globals.h"
 #include "utils/Render.h"
 #include "utils/Map.h"
@@ -6,6 +7,7 @@
 #include "Event.h"
 #include "PeriodicEvent.h"
 #include "Addon.h"
+
 
 namespace fs = std::filesystem;
 
@@ -41,21 +43,130 @@ void Addon::Render() {
 
 void Addon::LoadEvents() {
 	// Get addon directory
-	std::string path = APIDefs->GetAddonDirectory(AddonDef->Name);
+	std::string pathFolder = APIDefs->GetAddonDirectory(AddonDef->Name);
 
-	if (!fs::exists(path)) {
+	// Create folder if not exist
+	if (!fs::exists(pathFolder)) {
 		try {
-			fs::create_directory(path);
+			fs::create_directory(pathFolder);
 		}
 		catch (const std::exception& e) {
 			std::string message = "Could not create addon directory: ";
-			message.append(path);
+			message.append(pathFolder);
 			APIDefs->Log(ELogLevel::ELogLevel_CRITICAL, message.c_str());
-			return;
 		}
 	}
 
-	// Hardcoded events because I don't have mental strength to continue
+	// Load flags
+	boolean eventsLoaded = false;
+
+	std::string pathData = pathFolder + "data.json";
+
+	/*
+	* Check if data.json exist
+	* If it exist check version
+	* If version is not set override with json from resources
+	* If version of resources is higher override with json from resources (const Version definition in constants.h)
+	* Try to load events from data.json
+	* If not fail, set eventsLoaded = true so fallback does not happen
+	* If fail, load events through fallback
+	* TODO: Option to disable auto-updates via flag, default true
+	*/
+
+	// TODO: Copy data.json from resources
+
+	// TODO: Load events from data.json 
+
+	// Load events via fallback if loaded flag was not set to positive value
+	if (!eventsLoaded) {
+		Addon::LoadEventsFallback();
+	}
+}
+
+void Addon::RenderEvents() {
+	if (!MumbleLink->Context.IsMapOpen || !NexusLink->IsGameplay) return;
+
+	for (const auto& kvp : events) {
+		const std::string& eventName = kvp.first;
+		Event* eventPtr = kvp.second;
+
+		if (eventPtr) {
+			if (eventPtr->GetEventType() == "base") {
+				render_base_event(*eventPtr);
+			}
+			else if 
+			(
+				eventPtr->GetEventType().compare("periodic") == 0 ||
+				eventPtr->GetEventType().compare("periodic_timer") == 0 ||
+				eventPtr->GetEventType().compare("periodic_timer_convergences") == 0
+			){
+				PeriodicEvent* periodicEventPtr = static_cast<PeriodicEvent*>(eventPtr);
+				if (periodicEventPtr) {
+					if (eventPtr->GetEventType().compare("periodic") == 0) {
+						render_periodic_event(*periodicEventPtr);
+						continue;
+					}
+					if (eventPtr->GetEventType().compare("periodic_timer") == 0) {
+						render_periodic_circular_event(*periodicEventPtr);
+						continue;
+					}
+					if (eventPtr->GetEventType().compare("periodic_timer_convergences") == 0) {
+						render_periodic_circular_event_convergences(*periodicEventPtr);
+						continue;
+					}
+				}
+			}
+		}
+	}
+}
+
+void Addon::Update() {
+}
+
+Event* Addon::GetEvent(const std::string& eventName) {
+	auto it = events.find(eventName);
+	if (it != events.end()) {
+		return it->second;
+	}
+	return nullptr; // Event not found
+}
+
+void Addon::AddEvent(Event* eventInstance) {
+	events[eventInstance->GetName().c_str()] = eventInstance;
+}
+
+
+void Addon::ExportEventsJson() {
+	// Get addon directory
+	std::string path = APIDefs->GetAddonDirectory(AddonDef->Name);
+	std::string jsonDataPath = path + "/data.json";
+	std::ofstream outputFile(jsonDataPath);
+
+	if (outputFile.is_open()) {
+		json eventsWrapper;
+		for (const auto& kvp : events) {
+			const std::string& eventName = kvp.first;
+			IJsonHandled* eventPtr = kvp.second;
+
+			json eventData = eventPtr->ToJson();
+			eventsWrapper[eventName] = eventData;
+		}
+
+		json finalJson;
+		finalJson["version"] = 
+		finalJson["events"] = eventsWrapper;
+		outputFile << finalJson.dump(4) << std::endl;
+
+		outputFile.close();
+	}
+	else {
+		std::string message = "Unable to open file " + jsonDataPath + " for saving events";
+		APIDefs->Log(ELogLevel::ELogLevel_CRITICAL, message.c_str());
+	}
+}
+
+void Addon::LoadEventsFallback() {
+
 
 	// Dry top block
 	PeriodicEvent* dry_top;
@@ -550,7 +661,7 @@ void Addon::LoadEvents() {
 			"Serpent's Ire",
 			1800,
 			1200,
-			"FF0000"
+			"7E4E11"
 		);
 
 		domain_of_vabbi->AddPeriodicEntry(
@@ -558,7 +669,7 @@ void Addon::LoadEvents() {
 			"Forged With Fire",
 			3000,
 			1800,
-			"7E4E11"
+			"976320"
 		);
 
 		domain_of_vabbi->AddPeriodicEntry(
@@ -1054,8 +1165,8 @@ void Addon::LoadEvents() {
 	{
 		wizard_tower = new PeriodicEvent(
 			"Wizard's Tower",
-			24098.0f,
-			22715.0f,
+			24668.0f,
+			22698.0f,
 			0,
 			7200,
 			"FF0000"
@@ -1087,8 +1198,8 @@ void Addon::LoadEvents() {
 
 
 		wizard_tower->AddPeriodicEntry(
-			"Convergences + Target Practice",
-			"Convergences + Target Practice",
+			"Target Practice",
+			"Target Practice",
 			5400,
 			600,
 			"FFD792"
@@ -1112,6 +1223,29 @@ void Addon::LoadEvents() {
 
 
 		wizard_tower->SetEventType("periodic_timer");
+	}
+
+	PeriodicEvent* convergences;
+	{
+		convergences = new PeriodicEvent(
+			"Convergences",
+			23503.0f,
+			22698.0f,
+			0,
+			7200,
+			"A06608"
+		);
+
+		convergences->AddPeriodicEntryDay(
+			"Convergences",
+			"Convergences",
+			5400,
+			600,
+			"FFD792",
+			10800 // Override of 2h periode into 3h
+		);
+
+		convergences->SetEventType("periodic_timer_convergences");
 	}
 
 	// Add events block
@@ -1154,47 +1288,8 @@ void Addon::LoadEvents() {
 		Addon::AddEvent(skywatch_archipelago);
 		Addon::AddEvent(amnytas);
 		Addon::AddEvent(wizard_tower);
+		Addon::AddEvent(convergences);
 	}
 
-}
-
-void Addon::RenderEvents() {
-	if (!MumbleLink->Context.IsMapOpen || !NexusLink->IsGameplay) return;
-
-	for (const auto& kvp : events) {
-		const std::string& eventName = kvp.first;
-		Event* eventPtr = kvp.second;
-
-		if (eventPtr) {
-			if (eventPtr->GetEventType() == "base") {
-				render_base_event(*eventPtr);
-			}
-			else if (eventPtr->GetEventType() == "periodic" || eventPtr->GetEventType() == "periodic_timer") {
-				PeriodicEvent* periodicEventPtr = static_cast<PeriodicEvent*>(eventPtr);
-				if (periodicEventPtr) {
-					if (eventPtr->GetEventType() == "periodic") {
-						render_periodic_event(*periodicEventPtr);
-					}
-					if (eventPtr->GetEventType() == "periodic_timer") {
-						render_periodic_circular_event(*periodicEventPtr);
-					}
-				}
-			}
-		}
-	}
-}
-
-void Addon::Update() {
-}
-
-Event* Addon::GetEvent(const std::string& eventName) {
-	auto it = events.find(eventName);
-	if (it != events.end()) {
-		return it->second;
-	}
-	return nullptr; // Event not found
-}
-
-void Addon::AddEvent(Event* eventInstance) {
-	events[eventInstance->GetName().c_str()] = eventInstance;
+	Addon::ExportEventsJson();
 }

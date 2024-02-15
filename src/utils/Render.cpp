@@ -13,6 +13,10 @@
 #include "BoundingBox.h"
 #include "Map.h"
 
+#ifdef _WIN32
+#define timegm _mkgmtime
+#endif
+
 void render_debug_crosshair() {
 	if (!MumbleLink->Context.IsMapOpen) return;
 
@@ -484,6 +488,11 @@ void render_periodic_circular_event(PeriodicEvent event) {
 
 	}
 
+	if (current_entry_index < 0 || next_entry_index < 0) {
+		current_entry_index = 0;
+		next_entry_index = 0;
+	}
+
 	json current_entry = entries[current_entry_index];
 	json next_entry = entries[next_entry_index];
 
@@ -547,6 +556,276 @@ void render_periodic_circular_event(PeriodicEvent event) {
 			currentEntryDesc.c_str(),
 			nextEntryDesc.c_str()
 		);
+		ImVec2 descTextSize = ImGui::CalcTextSize(buffer);
+		ImVec2 descTextPosition = ImVec2(
+			location.x - descTextSize.x / 2,
+			location.y + size + margin
+		);
+		ImGui::SetCursorPos(descTextPosition);
+		ImGui::Text(buffer);
+	}
+
+}
+
+
+long get_time_since_midnight() {
+	// Get current time in UTC
+	auto now = std::chrono::system_clock::now();
+
+	// Convert current time to time_t
+	std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+
+	// Create a tm struct to store the time information
+	std::tm timeInfo;
+
+	// Use gmtime_s to convert time_t to tm struct in UTC
+	if (gmtime_s(&timeInfo, &currentTime) != 0) {
+		// Handle error, if any
+		std::cerr << "Error in gmtime_s" << std::endl;
+		return -1; // You can return an error code or handle it in another way
+	}
+
+	// Calculate number of seconds since midnight
+	long secondsSinceMidnight = timeInfo.tm_hour * 3600 + timeInfo.tm_min * 60 + timeInfo.tm_sec;
+
+	return secondsSinceMidnight;
+}
+
+
+float calculate_distance(const ImVec2& point1, const ImVec2& point2) {
+	float dx = point2.x - point1.x;
+	float dy = point2.y - point1.y;
+	return std::sqrt(dx * dx + dy * dy);
+}
+
+
+std::chrono::system_clock::time_point from_offset(auto duration) {
+	const auto now = std::chrono::system_clock::now();
+	const auto time = std::chrono::system_clock::to_time_t(now);
+
+	std::tm tm_struct;
+	if (gmtime_s(&tm_struct, &time) != 0) {
+		// Handle error
+		throw std::runtime_error("Error converting time");
+	}
+
+	tm_struct.tm_hour = 0;
+	tm_struct.tm_min = 0;
+	tm_struct.tm_sec = 0;
+
+	// Use _mkgmtime to convert to UTC
+	const auto midnight_utc = std::chrono::system_clock::from_time_t(timegm(&tm_struct));
+	return midnight_utc + duration;
+}
+
+std::string calculate_tooltip_time_absolute(long seconds_since_midnight) {
+	auto duration = std::chrono::seconds(seconds_since_midnight);
+	auto timestamp = from_offset(duration);
+
+	std::ostringstream oss;
+	oss << std::format("{:%R}", std::chrono::current_zone()->to_local(timestamp));
+
+	return oss.str();
+}
+
+
+
+void render_periodic_circular_event_convergences(PeriodicEvent event) {
+	ImGuiIO& io = ImGui::GetIO();
+	ImVec2 mousePos = io.MousePos;
+
+	BoundingBox screen = BoundingBox(0, 0, io.DisplaySize.y, io.DisplaySize.x);
+	BoundingBox viewport = map_get_bounding_box();
+
+	// Calculate scaling factors for X and Y axes;
+	ImVec2 mapScaleX = map_get_scale();
+
+	// Update necessary data for render
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	ImVec2 location = map_coords_to_pixels(event.GetLocation(), viewport, mapScaleX);
+
+	float mapZoomScale = map_zoom_scale();
+	float mapObjectScale = map_object_scale();
+
+	float size = 50.0f * mapObjectScale;
+
+	// CHECK IF EVENT IS OUTSIDE VIEWPORT
+	BoundingBox eventBox = BoundingBox(location, size, true);
+
+	if (!screen.Overlaps(eventBox)) {
+		return;
+	}
+
+	// Draw base circle
+	render_ring(
+		drawList,
+		location,						// center
+		size,							// inner radius
+		size + 1.0f,					// outer radius
+		IM_COL32(212, 175, 55, 255),	// color
+		ENTRY_SEGMENTS);				// segments 
+
+	std::string event_hex_color = event.GetColorHex();
+	ImU32 event_color = hex_to_color(event_hex_color);
+	drawList->AddCircleFilled(location, size, event_color, ENTRY_SEGMENTS);
+
+	// Imgui tooltip
+	if (calculate_distance(location, io.MousePos) < size) {
+		ImGui::SetTooltip("No convergence");
+	}
+
+	const std::vector<json>& entries = event.GetPeriodicEntries();
+	int current_entry_index = -1;
+	int next_entry_index = -1;
+
+	// Draw arcs
+	for (int i = 0; i < entries.size(); ++i) {
+		const json& entry = entries[i];
+
+		float offset_seconds = entry["offset_seconds"];
+		float offset_next = entry["offset_next"];
+		float duration_seconds = entry["duration_seconds"];
+		std::string name = entry["name"];
+		std::string description = entry["description"];
+
+		std::string hex_color = entry["color_hex"];
+		ImU32 color = hex_to_color(hex_color);
+
+		// Determine if convergence is in current block
+		long periodicity = entry.find("periocitity_override") == entry.end() ? 7200L : long(entry["periocitity_override"]);
+		long current_time_offset = get_time_since_midnight();
+		long block_2h = floor(current_time_offset / 7200.0f);
+		long block_periodicity = floor(current_time_offset / periodicity);
+
+		long block_periodicity_start = block_periodicity * periodicity;
+		long periodicity_absolute = block_periodicity_start + offset_seconds;
+
+		long which_2h_block = floor(periodicity_absolute / 7200.0f);
+		bool happening = block_2h == which_2h_block;
+
+		if (!happening) {
+			continue; // Convergences are not happening in this block
+		}
+
+		long offset_2h = periodicity_absolute - (which_2h_block * 7200L);
+
+		// Size of offset 
+		float offset = (offset_2h / 7200.0F) * 100; // %
+		float offset_angle_radians = (offset / 100.f) * (2.0f * M_PI); // rad
+
+		// Size of arc 
+		float percentage = (duration_seconds / 7200.0F) * 100; // %
+		float totalAngle = (percentage / 100.f) * (2.0f * M_PI); // rad
+
+		float angleStep = totalAngle / ENTRY_SEGMENTS;
+		float startingAngle = ENTRY_ARC_OFFSET + offset_angle_radians;
+
+		for (int i = 0; i < ENTRY_SEGMENTS; ++i) {
+			float startAngle = startingAngle + angleStep * i;
+			float endAngle = startingAngle + angleStep * (i + 1);
+			drawList->PathLineTo(location);
+			drawList->PathArcTo(location, size, startAngle, endAngle);
+			drawList->PathFillConvex(color);
+			drawList->PathClear();
+		}
+
+		if (is_point_inside_arc(mousePos, location, size, startingAngle, startingAngle + totalAngle)) {
+			std::string time = calculate_tooltip_time_absolute(periodicity_absolute);
+			std::string next = calculate_tooltip_time_absolute(periodicity_absolute + periodicity);
+			ImGui::SetTooltip("%s\n\nstarts: %s\n\nnext: %s", description.c_str(), time.c_str(), next.c_str());
+		}
+
+		// Set current entry
+		float startTime = offset_seconds;
+		float endTime = offset_seconds + duration_seconds;
+		float alignedOffset = aligned_time_offset();
+		if (alignedOffset >= startTime && alignedOffset <= endTime) {
+			current_entry_index = i;
+			next_entry_index = (i + 1) % entries.size();
+		}
+
+	}
+
+	if (current_entry_index < 0 || next_entry_index < 0) {
+		current_entry_index = 0;
+		next_entry_index = 0;
+	}
+
+	json current_entry = entries[current_entry_index];
+	json next_entry = entries[next_entry_index];
+
+	// Special case when next entry is split
+	int startIndex = next_entry_index;
+	while (current_entry["description"] == next_entry["description"]) {
+		next_entry_index = (next_entry_index + 1) % entries.size();
+		next_entry = entries[next_entry_index];
+
+		// Just to be sure
+		if (next_entry_index == startIndex) {
+			break;
+		}
+	}
+
+	// Render current time line
+	float aligned_time = aligned_time_offset();
+	float aligned_time_percentage = aligned_time / 7200.0f;
+	float angle = aligned_time_percentage * (2 * M_PI);
+	angle = angle - (M_PI / 2);
+
+	ImVec2 endPoint(location.x + size * cosf(angle), location.y + size * sinf(angle));
+	drawList->AddLine(location, endPoint, RED, 1.5f);
+
+	// Time background + text
+	std::string current_time = time_now_formatted();
+	ImVec2 textSize = ImGui::CalcTextSize(current_time.c_str());
+
+	float margin = 5.0f * mapObjectScale;
+	float padding = 3.0f * mapObjectScale;
+	ImVec2 textTopLeft = ImVec2(
+		location.x - textSize.x / 2 - padding / 2,
+		location.y - size - margin - textSize.y - padding / 2
+	);
+	ImVec2 textBottomRight = ImVec2(
+		textTopLeft.x + padding + textSize.x,
+		textTopLeft.y + padding + textSize.y
+	);
+
+	drawList->AddRectFilled(
+		textTopLeft,
+		textBottomRight,
+		RED
+	);
+
+	ImVec2 textLocation = ImVec2(
+		location.x - textSize.x / 2,
+		location.y - size - margin - textSize.y
+	);
+	ImGui::SetCursorPos(textLocation);
+	ImGui::Text(current_time.c_str());
+
+	// Event name + info
+	if (MumbleLink->Context.Compass.Scale <= ENTRY_MAX_ZOOM_TEXT_VISIBILITY) {
+		char buffer[1024];
+		std::string currentEntryDesc = current_entry == nullptr ? "?" : current_entry["description"];
+		std::string nextEntryDesc = next_entry == nullptr ? "?" : next_entry["description"];
+
+		if (event.GetName().compare(currentEntryDesc) == 0) {
+			snprintf(buffer, sizeof(buffer),
+				"%s\n\nNext: %s",
+				currentEntryDesc.c_str(),
+				nextEntryDesc.c_str()
+			);
+		}
+		else {
+			snprintf(buffer, sizeof(buffer),
+				"%s - %s\n\nNext: %s",
+				event.GetName().c_str(),
+				currentEntryDesc.c_str(),
+				nextEntryDesc.c_str()
+			);
+		}
+
+
 		ImVec2 descTextSize = ImGui::CalcTextSize(buffer);
 		ImVec2 descTextPosition = ImVec2(
 			location.x - descTextSize.x / 2,

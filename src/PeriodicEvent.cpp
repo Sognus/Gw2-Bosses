@@ -1,6 +1,10 @@
 #include "PeriodicEvent.h"
 
 
+PeriodicEvent::PeriodicEvent() {
+
+}
+
 PeriodicEvent::PeriodicEvent(
     std::string name,
     ImVec2 location,
@@ -22,6 +26,81 @@ PeriodicEvent::PeriodicEvent(
     // Init
 }
 
+
+
+
+void PeriodicEvent::AddPeriodicEntryGeneric(
+    std::string entryName,
+    std::string description,
+    int offsetSeconds,
+    int durationSeconds,
+    std::string entryColorHex,
+    std::string periodicityType, 
+    int periodicity_override
+) {
+    json entry;
+    entry["name"] = entryName;
+    entry["description"] = description;
+    entry["offset_seconds"] = offsetSeconds;
+    entry["duration_seconds"] = durationSeconds;
+    entry["color_hex"] = entryColorHex;
+    entry["offset_next"] = 7200;
+    entry["periodicity_type"] = periodicityType; // Periode is bound inside period
+    entry["periocitity_override"] = periodicity_override;
+    periodic_entries.push_back(entry);
+}
+
+
+
+
+
+
+void PeriodicEvent::AddPeriodicEntryDay(
+    std::string entryName,
+    std::string description,
+    int offsetSeconds,
+    int durationSeconds,
+    int offsetNext,
+    std::string entryColorHex,
+    int periodicity_override
+) {
+    json entry;
+    entry["name"] = entryName;
+    entry["description"] = description;
+    entry["offset_seconds"] = offsetSeconds;
+    entry["duration_seconds"] = durationSeconds;
+    entry["color_hex"] = entryColorHex;
+    entry["offset_next"] = offsetNext;
+    entry["periodicity_type"] = "day"; // Periode is bound to day
+    entry["periocitity_override"] = periodicity_override;
+
+    periodic_entries.push_back(entry);
+}
+
+
+void PeriodicEvent::AddPeriodicEntryDay(
+    std::string entryName,
+    std::string description,
+    int offsetSeconds,
+    int durationSeconds,
+    std::string entryColorHex,
+    int periodicity_override
+) {
+    json entry;
+    entry["name"] = entryName;
+    entry["description"] = description;
+    entry["offset_seconds"] = offsetSeconds;
+    entry["duration_seconds"] = durationSeconds;
+    entry["color_hex"] = entryColorHex;
+    entry["offset_next"] = 7200;
+    entry["periodicity_type"] = "day"; // Periode is bound to day
+    entry["periocitity_override"] = periodicity_override;
+
+    periodic_entries.push_back(entry);
+}
+
+
+
 void PeriodicEvent::AddPeriodicEntry(
     std::string entryName,
     std::string description,
@@ -37,9 +116,12 @@ void PeriodicEvent::AddPeriodicEntry(
     entry["duration_seconds"] = durationSeconds;
     entry["color_hex"] = entryColorHex;
     entry["offset_next"] = offsetNext;
+    entry["periodicity_type"] = "periode"; // Periode is bound inside period
+    entry["periocitity_override"] = 7200; // Assume 2h periode
 
     periodic_entries.push_back(entry);
 }
+
 
 
 
@@ -57,24 +139,10 @@ void PeriodicEvent::AddPeriodicEntry(
     entry["duration_seconds"] = durationSeconds;
     entry["color_hex"] = entryColorHex;
     entry["offset_next"] = 7200;
+    entry["periodicity_type"] = "periode"; // Periode is bound inside period
+    entry["periocitity_override"] = 7200; // Assume 2h periode
 
     periodic_entries.push_back(entry);
-}
-
-json PeriodicEvent::ToJson() const {
-    json eventData = Event::ToJson(); // Serialize base Event data
-
-    // Add PeriodicEvent-specific fields
-    eventData["periodicity_seconds"] = periodicity_seconds;
-
-    // Serialize periodic entries
-    json periodicEntriesArray;
-    for (const auto& entry : periodic_entries) {
-        periodicEntriesArray.push_back(entry);
-    }
-    eventData["periodic_entries"] = periodicEntriesArray;
-
-    return eventData;
 }
 
 // Getter for periodicity_seconds
@@ -105,4 +173,46 @@ int PeriodicEvent::GetMidnightOffsetSeconds() const {
 // Setter for midnight_offset_seconds
 void PeriodicEvent::SetMidnightOffsetSeconds(int newMidnightOffsetSeconds) {
     midnight_offset_seconds = newMidnightOffsetSeconds;
+}
+
+json PeriodicEvent::ToJson() const {
+    json eventData = Event::ToJson(); // Serialize base Event data
+
+    // Add PeriodicEvent-specific fields
+    eventData["periodicity_seconds"] = periodicity_seconds;
+
+    // Serialize periodic entries
+    json periodicEntriesArray;
+    for (const auto& entry : periodic_entries) {
+        periodicEntriesArray.push_back(entry);
+    }
+    eventData["periodic_entries"] = periodicEntriesArray;
+
+    return eventData;
+}
+
+void PeriodicEvent::FromJson(const json& jsonData) {
+    Event::FromJson(jsonData);
+
+    if (jsonData.find("periodicity_seconds") != jsonData.end()) {
+        periodicity_seconds = jsonData["periodicity_seconds"];
+    }
+
+    if (jsonData.find("periodic_entries") != jsonData.end()) {
+        const json& periodicEntriesArray = jsonData["periodic_entries"];
+        if (periodicEntriesArray.is_array()) {
+            periodic_entries.clear();
+            for (const auto& entry : periodicEntriesArray) {
+                periodic_entries.push_back(entry);
+            }
+        }
+    }
+}
+
+
+
+PeriodicEvent PeriodicEvent::CreateFromJson(const json& jsonData) {
+    PeriodicEvent eventInstance;
+    eventInstance.FromJson(jsonData);
+    return eventInstance;
 }

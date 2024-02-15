@@ -63,6 +63,9 @@
     <ClCompile Include="src\PeriodicEvent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\IJsonHandled.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\circle-blue-no-antialias.png">
@@ -137,6 +140,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\PeriodicEvent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IJsonHandled.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -13,4 +13,6 @@ void render_periodic_event(PeriodicEvent event);
 
 void render_periodic_circular_event(PeriodicEvent event);
 
+void render_periodic_circular_event_convergences(PeriodicEvent event);
+
 #endif //RENDER_H

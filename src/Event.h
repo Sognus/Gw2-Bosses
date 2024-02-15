@@ -1,12 +1,13 @@
 #include "Globals.h"
 #include "nlohmann/json.hpp"
-
-using json = nlohmann::json;
+#include "IJsonhandled.h"
 
 #ifndef EVENT_H
 #define EVENT_H
 
-class Event {
+using json = nlohmann::json;
+
+class Event : public IJsonHandled {
 public:
     Event(
         std::string name,
@@ -39,16 +40,22 @@ public:
     std::string GetColorHex() const;
     void SetColorHex(std::string newColorHex);
 
-    // Function to serialize the Event to a JSON object
-    json ToJson() const;
+    // Functions to serialize and deserialize the Event to and from a JSON object
+    json ToJson() const override;
+    void FromJson(const json& json) override;
+    static Event CreateFromJson(const json& json);
 
 private:
+
     std::string name;
     ImVec2 location;
     float scale;
     float percentage;
     std::string event_type;
     std::string color_hex;
+
+protected:
+    Event();
 };
 
 #endif //EVENT_H

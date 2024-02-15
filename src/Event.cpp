@@ -9,6 +9,10 @@ Event::Event(std::string name, float x, float y, std::string eventType, std::str
     location.y = y;
 }
 
+Event::Event() {
+
+}
+
 std::string Event::GetName() const {
     return name;
 }
@@ -59,4 +63,21 @@ json Event::ToJson() const {
     eventData["scale"] = scale;
     eventData["percentage"] = percentage;
     return eventData;
+}
+
+void Event::FromJson(const json& jsonData) {
+    name = jsonData["name"];
+    location.x = jsonData["location"]["x"];
+    location.y = jsonData["location"]["y"];
+    event_type = jsonData["event_type"];
+    color_hex = jsonData["color_hex"];
+    scale = jsonData["scale"];
+    percentage = jsonData["percentage"];
+}
+
+
+Event Event::CreateFromJson(const json& json) {
+    Event eventInstance;
+    eventInstance.FromJson(json);
+    return eventInstance;
 }
