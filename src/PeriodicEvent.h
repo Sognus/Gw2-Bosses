@@ -93,7 +93,7 @@ public:
     // Functions to serialize and deserialize the Event to and from a JSON object
     json ToJson() const override;
     void FromJson(const json& json) override;
-    static PeriodicEvent CreateFromJson(const json& json);
+    static PeriodicEvent* CreateFromJson(const json& json);
 
     // Destructor
     ~PeriodicEvent() override;

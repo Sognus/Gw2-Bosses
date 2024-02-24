@@ -18,6 +18,7 @@ Addon::Addon() {
 
 Addon::~Addon() {
 	// Clean events
+	APIDefs->Log(ELogLevel::ELogLevel_DEBUG, "Bosses addon destructor called");
 	for (auto& kv : events) {
 		delete kv.second;
 	}
@@ -79,8 +80,8 @@ void Addon::LoadEvents() {
 					jsonEvent.find("event_type") != jsonEvent.end() &&
 					jsonEvent["event_type"].get<std::string>().starts_with("periodic_timer")
 				) {
-					PeriodicEvent periodicEventObject = PeriodicEvent::CreateFromJson(jsonEvent);
-					this->AddEvent(&periodicEventObject);
+					PeriodicEvent* periodicEventObject = PeriodicEvent::CreateFromJson(jsonEvent);
+					this->AddEvent(periodicEventObject);
 				}
 			}
 

@@ -215,9 +215,9 @@ void PeriodicEvent::FromJson(const json& jsonData) {
 
 
 
-PeriodicEvent PeriodicEvent::CreateFromJson(const json& jsonData) {
-    PeriodicEvent eventInstance;
-    eventInstance.FromJson(jsonData);
+PeriodicEvent* PeriodicEvent::CreateFromJson(const json& jsonData) {
+    PeriodicEvent* eventInstance = new PeriodicEvent();
+    eventInstance->FromJson(jsonData);
     return eventInstance;
 }
 

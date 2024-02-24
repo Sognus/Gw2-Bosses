@@ -76,9 +76,9 @@ void Event::FromJson(const json& jsonData) {
 }
 
 
-Event Event::CreateFromJson(const json& json) {
-    Event eventInstance;
-    eventInstance.FromJson(json);
+Event* Event::CreateFromJson(const json& json) {
+    Event* eventInstance = new Event();
+    eventInstance->FromJson(json);
     return eventInstance;
 }
 
