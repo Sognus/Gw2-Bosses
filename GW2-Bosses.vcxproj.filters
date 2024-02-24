@@ -66,6 +66,9 @@
     <ClCompile Include="src\IJsonHandled.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\Strings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\circle-blue-no-antialias.png">
@@ -143,6 +146,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\IJsonHandled.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Strings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

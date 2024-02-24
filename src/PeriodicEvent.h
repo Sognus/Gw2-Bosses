@@ -95,6 +95,9 @@ public:
     void FromJson(const json& json) override;
     static PeriodicEvent CreateFromJson(const json& json);
 
+    // Destructor
+    ~PeriodicEvent() override;
+
 private:
     int periodicity_seconds;
     std::vector<json> periodic_entries;

@@ -195,7 +195,7 @@ void PeriodicEvent::FromJson(const json& jsonData) {
     Event::FromJson(jsonData);
 
     if (jsonData.find("periodicity_seconds") != jsonData.end()) {
-        periodicity_seconds = jsonData["periodicity_seconds"];
+        periodicity_seconds = jsonData["periodicity_seconds"].get<int>();
     }
 
     if (jsonData.find("periodic_entries") != jsonData.end()) {
@@ -207,6 +207,10 @@ void PeriodicEvent::FromJson(const json& jsonData) {
             }
         }
     }
+
+    if (jsonData.find("midnight_offset_seconds") != jsonData.end()) {
+        midnight_offset_seconds = jsonData["midnight_offset_seconds"].get<int>();
+    }
 }
 
 
@@ -215,4 +219,8 @@ PeriodicEvent PeriodicEvent::CreateFromJson(const json& jsonData) {
     PeriodicEvent eventInstance;
     eventInstance.FromJson(jsonData);
     return eventInstance;
+}
+
+// Destructor
+PeriodicEvent::~PeriodicEvent() {
 }

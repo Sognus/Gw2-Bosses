@@ -45,6 +45,9 @@ public:
     void FromJson(const json& json) override;
     static Event CreateFromJson(const json& json);
 
+    // Destructor
+    virtual ~Event();
+
 private:
 
     std::string name;

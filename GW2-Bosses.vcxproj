@@ -44,6 +44,7 @@
     <ClCompile Include="src\utils\BoundingBox.cpp" />
     <ClCompile Include="src\utils\Map.cpp" />
     <ClCompile Include="src\utils\Render.cpp" />
+    <ClCompile Include="src\utils\Strings.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\circle-blue-no-antialias.png" />
@@ -73,6 +74,7 @@
     <ClInclude Include="src\utils\BoundingBox.h" />
     <ClInclude Include="src\utils\Map.h" />
     <ClInclude Include="src\utils\Render.h" />
+    <ClInclude Include="src\utils\Strings.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GW2-Bosses.rc" />
@@ -170,7 +172,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;GW2BOSSES_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;GW2BOSSES_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -196,7 +198,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;GW2BOSSES_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;GW2BOSSES_EXPORTS;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>

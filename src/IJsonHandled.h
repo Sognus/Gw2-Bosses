@@ -7,6 +7,7 @@ using json = nlohmann::json;
 
 class IJsonHandled {
 public:
+
     virtual ~IJsonHandled() {}
 
     virtual json ToJson() const = 0;

@@ -66,13 +66,13 @@ json Event::ToJson() const {
 }
 
 void Event::FromJson(const json& jsonData) {
-    name = jsonData["name"];
-    location.x = jsonData["location"]["x"];
-    location.y = jsonData["location"]["y"];
-    event_type = jsonData["event_type"];
-    color_hex = jsonData["color_hex"];
-    scale = jsonData["scale"];
-    percentage = jsonData["percentage"];
+    name = jsonData["name"].get<std::string>();
+    location.x = jsonData["location"]["x"].get<float>();
+    location.y = jsonData["location"]["y"].get<float>();
+    event_type = jsonData["event_type"].get<std::string>();
+    color_hex = jsonData["color_hex"].get<std::string>();
+    scale = jsonData["scale"].get<float>();
+    percentage = jsonData["percentage"].get<float>();
 }
 
 
@@ -80,4 +80,9 @@ Event Event::CreateFromJson(const json& json) {
     Event eventInstance;
     eventInstance.FromJson(json);
     return eventInstance;
+}
+
+// Destructor
+Event::~Event() {
+
 }

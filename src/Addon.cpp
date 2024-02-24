@@ -3,6 +3,7 @@
 #include "Globals.h"
 #include "utils/Render.h"
 #include "utils/Map.h"
+#include "utils/Strings.h"
 #include "utils/BoundingBox.h"
 #include "Event.h"
 #include "PeriodicEvent.h"
@@ -60,22 +61,36 @@ void Addon::LoadEvents() {
 	// Load flags
 	boolean eventsLoaded = false;
 
-	std::string pathData = pathFolder + "data.json";
+	const char* dataFilename = "data.json";
+	std::string pathData = pathFolder + preferred_separator_char() + dataFilename;
 
-	/*
-	* Check if data.json exist
-	* If it exist check version
-	* If version is not set override with json from resources
-	* If version of resources is higher override with json from resources (const Version definition in constants.h)
-	* Try to load events from data.json
-	* If not fail, set eventsLoaded = true so fallback does not happen
-	* If fail, load events through fallback
-	* TODO: Option to disable auto-updates via flag, default true
-	*/
+	// Load events from data.json
+	if (fs::exists(pathData)) {
+		std::ifstream dataFile(pathData);
 
-	// TODO: Copy data.json from resources
+		if (dataFile.is_open()) {
+			json jsonData;
+			dataFile >> jsonData;
 
-	// TODO: Load events from data.json 
+			json jsonDataEvents = jsonData["events"];
+
+			for (auto& [key, jsonEvent] : jsonDataEvents.items()) {
+				if (
+					jsonEvent.find("event_type") != jsonEvent.end() &&
+					jsonEvent["event_type"].get<std::string>().starts_with("periodic_timer")
+				) {
+					PeriodicEvent periodicEventObject = PeriodicEvent::CreateFromJson(jsonEvent);
+					this->AddEvent(&periodicEventObject);
+				}
+			}
+
+			// TODO: load for bosses entry type 
+
+
+			eventsLoaded = true;
+		}
+
+	}
 
 	// Load events via fallback if loaded flag was not set to positive value
 	if (!eventsLoaded) {
@@ -91,7 +106,7 @@ void Addon::RenderEvents() {
 		Event* eventPtr = kvp.second;
 
 		if (eventPtr) {
-			if (eventPtr->GetEventType() == "base") {
+			if (eventPtr->GetEventType().compare("base") == 0) {
 				render_base_event(*eventPtr);
 			}
 			else if 
@@ -153,7 +168,6 @@ void Addon::ExportEventsJson() {
 		}
 
 		json finalJson;
-		finalJson["version"] = 
 		finalJson["events"] = eventsWrapper;
 		outputFile << finalJson.dump(4) << std::endl;
 
