@@ -66,6 +66,8 @@ public:
     bool operator==(const CoreWorldbossEvent& other) const;
     bool operator==(const CoreWorldbossEvent* other) const;
 
+    // Priority comparison function
+    static bool ComparePriority(const CoreWorldbossEvent* event1, const CoreWorldbossEvent* event2);
 private:
     // Event is being notified between notify_offset_seconds and midnight_offset_seconds
     int notify_offset_seconds;
@@ -73,13 +75,10 @@ private:
     int midnight_offset_seconds;
     // Event is happening between midnight_offset_seconds and midnight_offset_seconds + duration_seconds
     int duration_seconds;
-
 protected:
     // Protected empty constructor
     CoreWorldbossEvent();
 
-    // Priority comparison function
-    static bool ComparePriority(const CoreWorldbossEvent* event1, const CoreWorldbossEvent* event2);
 };
 
 #endif;

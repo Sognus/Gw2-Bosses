@@ -1,156 +1,89 @@
 #include "CyclicalCoreWorldbossEventQueue.h"
 
-CoreWorldBossEventNode::CoreWorldBossEventNode(CoreWorldbossEvent* value) : data(value), next(nullptr), prev(nullptr) {}
 
-CyclicalCoreWorldbossEventQueue::CyclicalCoreWorldbossEventQueue() : head(nullptr) {}
+CyclicalCoreWorldbossEventQueue::CyclicalCoreWorldbossEventQueue() {
+    head = nullptr;
+}
 
+CyclicalCoreWorldbossEventQueue::~CyclicalCoreWorldbossEventQueue() {
+    while (queue.empty()) {
+        CoreWorldbossEvent* element = queue.front();
+        queue.pop();
+        delete element;
+    }
+}
+
+
+// Expensive af
 void CyclicalCoreWorldbossEventQueue::push(CoreWorldbossEvent* value) {
-    if (head == nullptr) {
-        head = new CoreWorldBossEventNode(value);
-        head->next = head;
-        head->prev = head;
+    if (queue.empty()) {
+        head = value;
     }
-    else {
-        CoreWorldBossEventNode* newNode = new CoreWorldBossEventNode(value);
+    queue.push(value);
+    
+    // Transfer elements to a vector
+    std::vector<CoreWorldbossEvent*> tempVector;
+    while (!queue.empty()) {
+        tempVector.push_back(queue.front());
+        queue.pop();
+    }
 
-        if (head->prev == head && head->next == head) {
-            head->next = newNode;
-            head->prev = newNode;
-            newNode->next = head;
-            newNode->prev = head;
-        }
-        else {
-            bool cycle = false;
-            CoreWorldBossEventNode* initial = head;
-            CoreWorldBossEventNode* current = head;
-            CoreWorldBossEventNode* lower = nullptr;
-            CoreWorldBossEventNode* upper = nullptr;
+    // Sort the vector using your comparison method
+    std::sort(tempVector.begin(), tempVector.end(), CoreWorldbossEvent::ComparePriority);
 
-            while (true) {
-                if (lower != nullptr && upper == nullptr) {
-                    if (current->data->GetMidnightOffsetSeconds() > newNode->data->GetMidnightOffsetSeconds() || (current == initial && cycle == true) ) {
-                        upper = current;
-                    }
-                }
-
-                if (current == initial) {
-                    if (cycle == true) {
-                        break;
-                    }
-                    else {
-                        cycle = true;
-                    }
-                }
-
-                if (lower == nullptr) {
-                    if (newNode->data->GetMidnightOffsetSeconds() > current->data->GetMidnightOffsetSeconds()) {
-                        lower = current;
-                    }
-                    else if (newNode->data->GetMidnightOffsetSeconds() == current->data->GetMidnightOffsetSeconds()) {
-                        if (newNode->data->GetName().compare(current->data->GetName()) >= 0) {
-                            CoreWorldBossEventNode* hold = current->next;
-                            current->next = newNode;
-                            newNode->prev = current;
-                            newNode->next = hold;
-                        }
-                        else {
-                            newNode->prev = current->prev;
-                            newNode->next = current;
-                        }
-                        break;
-                    }
-                }
-
-                if (lower != nullptr && upper != nullptr) {
-                    lower->next = newNode;
-                    newNode->prev = lower;
-                    newNode->next = upper;
-                    upper->prev = newNode;
-                    break;
-                }
-
-                current = current->next;
-            }
-        }
+    // Re-populate the queue with sorted elements
+    for (const auto& element : tempVector) {
+        queue.push(element);
+    }
+    
+    // Find head again after sort
+    CoreWorldbossEvent* frontElement = queue.front();
+    while (frontElement != head) {
+        queue.push(frontElement);
+        queue.pop();
+        frontElement = queue.front();
     }
 }
 
+
+/* Please not
 void CyclicalCoreWorldbossEventQueue::remove(CoreWorldbossEvent* toRemove) {
-    bool cycle = false;
-    CoreWorldBossEventNode* initial = head;
-    CoreWorldBossEventNode* current = head;
 
-    while (true) {
-        if (current == initial) {
-            if (cycle == true) {
-                break;
-            }
-            else {
-                cycle = true;
-            }
-        }
-
-        if (current->data == toRemove) {
-            CoreWorldBossEventNode* holdPrev = current->prev;
-            CoreWorldBossEventNode* holdNext = current->next;
-
-            if (holdPrev != current) {
-                holdPrev->next = holdNext;
-            }
-            else {
-                head = (holdNext == current) ? nullptr : holdNext;
-            }
-
-            if (holdNext != current) {
-                holdNext->prev = holdPrev;
-            }
-
-            delete current;
-        }
-
-        current = current->next;
-    }
 }
+*/
 
 CoreWorldbossEvent* CyclicalCoreWorldbossEventQueue::peek() {
-    return head->data;
+    if (queue.empty()) {
+        return nullptr;
+    }
+    return queue.front();
 }
 
 void CyclicalCoreWorldbossEventQueue::printState() {
-    bool cycle = false;
-    CoreWorldBossEventNode* initial = head;
-    CoreWorldBossEventNode* current = head;
-
     std::string buffer = "CyclicalCoreWorldbossEventQueue state => ";
+    if (!queue.empty()) {
+        CoreWorldbossEvent* initial = queue.front();
+        do {
+            CoreWorldbossEvent* frontElement = queue.front();
+            queue.pop();
+            queue.push(frontElement);
 
-    while (current != nullptr) {
-        
-        if (current == initial) {
-            if (cycle) {
-                break;
-            }
-            else {
-                cycle = true;
-            }
-        }
-        
-        buffer = buffer + "[" + current->data->GetName() + " = " + std::to_string(current->data->GetMidnightOffsetSeconds()) + "] ";
+            buffer = buffer + "[" + frontElement->GetName() + " = " + std::to_string(frontElement->GetMidnightOffsetSeconds()) + "] ";
 
-
-        current = current->next;
-
-        buffer = buffer + ", ";
+        } while (queue.front() != initial);
     }
 
     APIDefs->Log(ELogLevel::ELogLevel_DEBUG, buffer.c_str());
 }
 
 CoreWorldbossEvent* CyclicalCoreWorldbossEventQueue::popEvent() {
-    CoreWorldBossEventNode* hold = head;
-    head = head->next;
-    return hold->data;
+    CoreWorldbossEvent* frontElement = queue.front();
+    queue.pop();
+    queue.push(frontElement);
+    head = queue.front();
+    return frontElement;
 }
 
 void CyclicalCoreWorldbossEventQueue::pop() {
-    head = head->next;
+    CyclicalCoreWorldbossEventQueue::popEvent();
 }

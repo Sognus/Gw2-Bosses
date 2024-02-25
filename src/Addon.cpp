@@ -4,52 +4,8 @@
 namespace fs = std::filesystem;
 
 Addon::Addon() {
+	worldBossesNotifications = new CyclicalCoreWorldbossEventQueue();
 	Addon::LoadEvents();
-
-	// Test
-	APIDefs->Log(ELogLevel::ELogLevel_DEBUG, "QUEUE TEST 1");
-	CyclicalCoreWorldbossEventQueue* notifyQueue = new CyclicalCoreWorldbossEventQueue();
-	notifyQueue->printState(); // null
-
-	CoreWorldbossEvent* e1 = new CoreWorldbossEvent("E1", 0, 0, 1, 0, "FFDEAD");
-	notifyQueue->push(e1);
-	notifyQueue->printState(); // 1
-
-	CoreWorldbossEvent* e5 = new CoreWorldbossEvent("E5", 0, 0, 5, 0, "FFDEAD");
-	notifyQueue->push(e5);
-	notifyQueue->printState(); // 1 5
-
-	CoreWorldbossEvent* e3 = new CoreWorldbossEvent("E3", 0, 0, 3, 0, "FFDEAD");
-	notifyQueue->push(e3);
-	notifyQueue->printState(); // 1 3 5
-
-	// Test 2
-	APIDefs->Log(ELogLevel::ELogLevel_DEBUG, "QUEUE TEST 2");
-
-	CyclicalCoreWorldbossEventQueue* notifyQueue2 = new CyclicalCoreWorldbossEventQueue();
-	notifyQueue2->printState(); // null
-
-	CoreWorldbossEvent* a1 = new CoreWorldbossEvent("A1", 0, 0, 1, 0, "FFDEAD");
-	notifyQueue2->push(a1);
-	notifyQueue2->printState(); // 1
-
-	CoreWorldbossEvent* a5 = new CoreWorldbossEvent("A5", 0, 0, 5, 0, "FFDEAD");
-	notifyQueue2->push(a5);
-	notifyQueue2->printState(); // 1 5
-
-	notifyQueue2->pop();
-	notifyQueue2->printState(); // 5 1
-
-	CoreWorldbossEvent* a3 = new CoreWorldbossEvent("A3", 0, 0, 3, 0, "FFDEAD");
-	APIDefs->Log(ELogLevel::ELogLevel_DEBUG, "expected: 5 1 3");
-	notifyQueue2->push(a3);
-	notifyQueue2->printState(); // 5 1 3
-
-	notifyQueue2->pop();
-	notifyQueue2->printState(); // 1 3 5 
-
-	notifyQueue2->pop();
-	notifyQueue2->printState(); //  3 5 1 
 }
 
 Addon::~Addon() {
@@ -58,6 +14,7 @@ Addon::~Addon() {
 	for (auto& kv : events) {
 		delete kv.second;
 	}
+	delete worldBossesNotifications;
 }
 
 
@@ -131,6 +88,7 @@ void Addon::LoadEvents() {
 				if (jsonEvent["event_type"].get<std::string>().starts_with("core_worldboss")) {
 					CoreWorldbossEvent* coreWorldBossEvent = CoreWorldbossEvent::CreateFromJson(jsonEvent);
 					this->AddCoreWorldbossEvent(coreWorldBossEvent);
+					this->worldBossesNotifications->push(coreWorldBossEvent);
 				}
 
 
@@ -1368,4 +1326,47 @@ void Addon::LoadEventsFallback() {
 		Addon::AddEvent(wizard_tower);
 		Addon::AddEvent(convergences);
 	}
+
+
+	// WorldBosses
+	// Taidha block
+	{
+		float x = 0;
+		float y = 0;
+		int notifyOffsetSeconds = 900;
+		int midnightOffsetSeconds = 0;
+		int duration = 900;
+		
+		int timesPerDay = 8;
+		int offset = 10800;
+
+		std::string baseName = "Admiral Taidha Covington";
+
+		for (int i = 0; i < timesPerDay; i++) {
+
+			CoreWorldbossEvent* taidha = new  CoreWorldbossEvent(
+				baseName + std::to_string(i+1),
+				x,
+				y,
+				notifyOffsetSeconds,
+				midnightOffsetSeconds + (i * offset),
+				duration,
+				"000000"
+			);
+
+			Addon::AddCoreWorldbossEvent(taidha);
+		}
+	}
+
+	// TODO: Svanir Shaman Chief
+	// TODO: Megadestroyer
+	// TODO: Fire Elemental
+	// TODO: The Shatterer
+	// TODO: Great Jungle Wurm
+	// TODO: Modniir Ulgoth
+	// TODO: Shadow Behemoth
+	// TODO: Golem Mark II
+	// TODO: Claw of Jormag
+	// TODO: Tequatl
+	// TODO: Karka Queen
 }

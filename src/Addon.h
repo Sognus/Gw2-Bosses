@@ -37,7 +37,9 @@ private:
     Event* GetEvent(const std::string& eventName);
     void AddEvent(Event *event);
     void AddCoreWorldbossEvent(Event* event);
+
     std::unordered_map<std::string, Event*> events;
+    CyclicalCoreWorldbossEventQueue* worldBossesNotifications;
 };
 
 
