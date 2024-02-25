@@ -69,6 +69,12 @@
     <ClCompile Include="src\utils\Strings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\CoreWorldbossEvent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CyclicalCoreWorldbossEventQueue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\circle-blue-no-antialias.png">
@@ -149,6 +155,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\Strings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CoreWorldbossEvent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CyclicalCoreWorldbossEventQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

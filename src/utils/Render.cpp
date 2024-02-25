@@ -17,6 +17,9 @@
 #define timegm _mkgmtime
 #endif
 
+// Suppress the C4244 warning for the entire file
+#pragma warning(disable : 4244)
+
 void render_debug_crosshair() {
 	if (!MumbleLink->Context.IsMapOpen) return;
 
@@ -836,3 +839,6 @@ void render_periodic_circular_event_convergences(PeriodicEvent event) {
 	}
 
 }
+
+// Re-enable warning
+#pragma warning(default : 4244)

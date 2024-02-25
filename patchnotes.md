@@ -1,6 +1,7 @@
 ## Version NEXT:
 - Improved interface scaling for events map render
 - Improved performance of event render by culling events outside visible area
+- Improved events backend to support event customization through data.json modification
 - Fixed wrong event color for Serpent's Ire
 - Fixed Convergences timer being misaligned because event is on 3h cooldown and not 2h
 

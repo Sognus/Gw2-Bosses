@@ -50,7 +50,6 @@ public:
 
 private:
 
-    std::string name;
     ImVec2 location;
     float scale;
     float percentage;
@@ -58,6 +57,8 @@ private:
     std::string color_hex;
 
 protected:
+    std::string name;
+
     Event();
 };
 
