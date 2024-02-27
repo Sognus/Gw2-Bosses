@@ -9,6 +9,11 @@
 
 
 class CyclicalCoreWorldbossEventQueue {
+private: 
+    // Edit mode to disable sorting when adding bulk of data
+    bool editMode;
+    void sort();
+
 protected:
     std::queue<CoreWorldbossEvent*> queue;
     CoreWorldbossEvent* head;
@@ -28,6 +33,13 @@ public:
     CoreWorldbossEvent* popEvent();
 
     void pop();
+
+    /// <summary>
+    /// Sets edit mode to desired state - enabled/disabled
+    /// </summary>
+    /// <param name="modeState">true - set to enabled; false - set to disabled</param>
+    /// <returns>Result of operation</returns>
+    bool SetEditMode(bool modeState);
 
 
 };

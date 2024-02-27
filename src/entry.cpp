@@ -31,10 +31,20 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	return TRUE;
 }
 
+void ProcessKeybind(const char* aIdentifier) {
+	std::string keybind = aIdentifier;
 
-void AddonUnload()
-{
-	delete addon;
+	if (addon) {
+
+		if (keybind == KEY_BOSSES_TOGGLE_RENDER) {
+			addon->render = !addon->render;
+		}
+
+		if (keybind == KEY_BOSSES_TOGGLE_NOTIFICATION) {
+			addon->showNotifications = !addon->showNotifications;
+		}
+
+	}
 }
 
 
@@ -62,6 +72,10 @@ void AddonLoad(AddonAPI* aHostApi)
 	NexusLink = (NexusLinkData*)APIDefs->GetResource(NLINK_NAME.c_str());
 	APIDefs->SubscribeEvent(IDENTITY_EVENT.c_str(), OnMumbleIdentityUpdate);
 
+	// Keybinds handler
+	APIDefs->RegisterKeybindWithString(KEY_BOSSES_TOGGLE_RENDER.c_str(), ProcessKeybind, "CTRL+SHIFT+B");
+	APIDefs->RegisterKeybindWithString(KEY_BOSSES_TOGGLE_NOTIFICATION.c_str(), ProcessKeybind, "CTRL+SHIFT+O");
+
 	// Addon init
 	addon = new Addon();
 
@@ -69,7 +83,19 @@ void AddonLoad(AddonAPI* aHostApi)
 	APIDefs->RegisterRender(ERenderType::ERenderType_Render, AddonRender);
 }
 
+void AddonUnload()
+{
+	// Unregister keybinds
+	APIDefs->UnregisterKeybind(KEY_BOSSES_TOGGLE_RENDER.c_str());
+	APIDefs->UnregisterKeybind(KEY_BOSSES_TOGGLE_NOTIFICATION.c_str());
 
+	// Unregister render
+	APIDefs->UnregisterRender(AddonRender);
+	// Unregister events
+	APIDefs->UnsubscribeEvent(IDENTITY_EVENT.c_str(), OnMumbleIdentityUpdate);
+
+	delete addon;
+}
 
 extern "C" __declspec(dllexport) AddonDefinition * GetAddonDef()
 {

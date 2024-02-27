@@ -47,6 +47,7 @@
     <ClCompile Include="src\utils\Map.cpp" />
     <ClCompile Include="src\utils\Render.cpp" />
     <ClCompile Include="src\utils\Strings.cpp" />
+    <ClCompile Include="src\utils\Time.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\circle-blue-no-antialias.png" />
@@ -79,12 +80,14 @@
     <ClInclude Include="src\utils\Map.h" />
     <ClInclude Include="src\utils\Render.h" />
     <ClInclude Include="src\utils\Strings.h" />
+    <ClInclude Include="src\utils\Time.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GW2-Bosses.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="patchnotes.md" />
+    <None Include="README.md" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

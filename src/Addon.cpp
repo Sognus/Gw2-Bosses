@@ -1,11 +1,14 @@
 #include "Addon.h"
 
-
 namespace fs = std::filesystem;
 
 Addon::Addon() {
 	worldBossesNotifications = new CyclicalCoreWorldbossEventQueue();
 	Addon::LoadEvents();
+
+	// Default behaviour 
+	render = true;
+	showNotifications = true;
 }
 
 Addon::~Addon() {
@@ -23,7 +26,8 @@ void Addon::Render() {
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
 	ImGui::SetNextWindowSize(io.DisplaySize);
 
-	if (ImGui::Begin("GW2_BOSSES", (bool*)0, 
+	// Render events
+	if (ImGui::Begin("GW2_BOSSES_EVENTS", (bool*)0, 
 		ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs |
 		ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoScrollbar |
 		ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoResize)) {
@@ -31,9 +35,14 @@ void Addon::Render() {
 			render_debug_crosshair();
 		#endif
 		this->RenderEvents();
-		this->Update();
 	}
 	ImGui::End();
+
+	// Render notifications
+	this->RenderNotifications();
+
+
+	this->Update();
 }
 
 void Addon::LoadEvents() {
@@ -85,14 +94,11 @@ void Addon::LoadEvents() {
 				}
 
 				// Handle core world bosses
-				if (jsonEvent["event_type"].get<std::string>().starts_with("core_worldboss")) {
+				if (jsonEvent["event_type"].get<std::string>().starts_with("core_world_bosses")) {
 					CoreWorldbossEvent* coreWorldBossEvent = CoreWorldbossEvent::CreateFromJson(jsonEvent);
 					this->AddCoreWorldbossEvent(coreWorldBossEvent);
 					this->worldBossesNotifications->push(coreWorldBossEvent);
 				}
-
-
-
 
 			}
 
@@ -104,13 +110,18 @@ void Addon::LoadEvents() {
 	// Load events via fallback if loaded flag was not set to positive value
 	if (!eventsLoaded) {
 		Addon::LoadEventsFallback();
+		Addon::LoadCoreWorldbossesFallback();
 		Addon::ExportEventsJson();
 	}
 }
 
 void Addon::RenderEvents() {
+	// Do not render when render is disabled
+	if (!render) return;
+	// Do not render when user is not looking at map
 	if (!MumbleLink->Context.IsMapOpen || !NexusLink->IsGameplay) return;
 
+	// Render events
 	for (const auto& kvp : events) {
 		const std::string& eventName = kvp.first;
 		Event* eventPtr = kvp.second;
@@ -149,7 +160,192 @@ void Addon::RenderEvents() {
 	}
 }
 
+void Addon::RenderNotifications() {
+	if (!this->showNotifications) return;
+	// Dont show if not gameplay
+	if(!NexusLink->IsGameplay) return;
+
+	if (ImGui::Begin("GW2 BOSSES: Notifications", (bool*)0, 0)) {
+		// TODO: show more than 1 boss
+		// idea is to have some kind of constant that will multiply 15 minute like start - (notifyOffset * CONSTANT)
+		// then here in render it should do stuff like divide notifyOffset by 15 minutes and sort it to different boxes
+
+		// TODO:
+		// In render there must be InProgress and in Upcoming flag set 
+		// Set it by angle of current being in angle of pie part between startAngle and EndAngle
+		// Different pie parts will need flags if they should trigger 
+
+		// TODO: Add localized time after ImGui::Text(name.c_str());
+		// TODO: With sorting add list of active metaevents to some other box InProgress and Upcoming
+
+		if (ImGui::CollapsingHeader("Upcoming core world bosses (next 15 minutes)", ImGuiTreeNodeFlags_DefaultOpen)) {
+			for (Event* notificationEvent : notificationBoxUpcoming) {
+				std::string eventName = notificationEvent->GetName();
+				size_t spacePos = eventName.find_last_of(" ");
+				std::string name;
+				
+				if (spacePos != std::string::npos) {
+					name = eventName.substr(0, spacePos);
+				}
+				else {
+					name = eventName;
+				}
+
+				ImGui::Text(name.c_str());
+				ImGui::Separator();
+			}
+		}
+		if (ImGui::CollapsingHeader("Core world bosses in progress", ImGuiTreeNodeFlags_DefaultOpen)) {
+			for (Event* notificationEvent : notificationBoxInProgress) {
+				std::string eventName = notificationEvent->GetName();
+				size_t spacePos = eventName.find_last_of(" ");
+				std::string name;
+
+				if (spacePos != std::string::npos) {
+					name = eventName.substr(0, spacePos);
+				}
+				else {
+					name = eventName;
+				}
+
+				ImGui::Text(name.c_str());
+				ImGui::Separator();
+			}
+		}
+	}
+	ImGui::End();
+}
+
 void Addon::Update() {
+	long current_time = get_time_since_midnight();
+
+	// Get events into upcoming notification 
+	while (true) {
+		CoreWorldbossEvent* coreEvent = worldBossesNotifications->peek();
+
+		// Queue empty - skipping
+		if (coreEvent == nullptr) {
+			break;
+		}
+
+		// Get notification start
+		long eventStart = coreEvent->GetMidnightOffsetSeconds();
+		long notificationUnclamped = eventStart - coreEvent->GetNotifyOffsetSeconds();
+		long notificationStart = std::clamp(notificationUnclamped, TIME_CLAMP_MIDNIGHT_LOWER, TIME_CLAMP_MIDNIGHT_UPPER);
+		long eventEndUnclamped = eventStart + coreEvent->GetDurationSeconds();
+		long eventEnd = std::clamp(eventEndUnclamped, TIME_CLAMP_MIDNIGHT_LOWER, TIME_CLAMP_MIDNIGHT_UPPER);
+
+		// Add to upcoming
+		if (current_time >= notificationStart && current_time < eventStart) {
+			this->notificationBoxUpcoming.push_back(coreEvent);
+			// Event was handled pop queue
+			worldBossesNotifications->pop();
+		}
+		// Add to in progress
+		else if (current_time >= eventStart && current_time <= eventEnd) {
+			this->notificationBoxInProgress.push_back(coreEvent);
+			worldBossesNotifications->pop();
+		}
+		// Go through all past events - usually only for initialization/first update
+		if (current_time > eventEnd) {
+			worldBossesNotifications->pop();
+		}
+		else {
+			// Current event is not yet upcomming, because queue is sorted, skip 
+			break;
+		}
+	}
+
+	// Move events from upcomming to in progress
+	for (auto it = this->notificationBoxUpcoming.begin(); it != this->notificationBoxUpcoming.end(); /* no increment */) {
+		Event* eventPtr = *it;
+
+		// Handle Core event
+		if (eventPtr->GetEventType().starts_with("core_world_bosses")) {
+			CoreWorldbossEvent* coreEvent = static_cast<CoreWorldbossEvent*>(eventPtr);
+			long eventStart = coreEvent->GetMidnightOffsetSeconds();
+			long notificationUnclamped = eventStart - coreEvent->GetNotifyOffsetSeconds();
+			long notificationStart = std::clamp(notificationUnclamped, TIME_CLAMP_MIDNIGHT_LOWER, TIME_CLAMP_MIDNIGHT_UPPER);
+			long eventEndUnclamped = eventStart + coreEvent->GetDurationSeconds();
+			long eventEnd = std::clamp(eventEndUnclamped, TIME_CLAMP_MIDNIGHT_LOWER, TIME_CLAMP_MIDNIGHT_UPPER);
+			
+			// Event is still upcoming - skipping
+			if (current_time >= notificationStart && current_time < eventStart) {
+				++it;
+				continue;
+			}
+
+			// Event is between start and end - push erase from upcoming and move to in progress
+			if (current_time >= eventStart && current_time <= eventEnd) {
+				// Move to in progress
+				this->notificationBoxInProgress.push_back(eventPtr);
+				// Erase and move to next iterator
+				it = this->notificationBoxUpcoming.erase(it);
+				continue;
+			}
+
+			// Just in case
+			if (current_time > eventEnd) {
+				it = this->notificationBoxUpcoming.erase(it);
+				continue;
+			}
+		}
+
+		// Handle periodic event
+		if(
+			eventPtr->GetEventType().compare("periodic") == 0 ||
+			eventPtr->GetEventType().compare("periodic_timer") == 0 ||
+			eventPtr->GetEventType().compare("periodic_timer_convergences") == 0
+		){
+			PeriodicEvent* periodicEventPtr = static_cast<PeriodicEvent*>(eventPtr);
+
+			if (periodicEventPtr->GetNotifyUpcoming() == false) {
+				it = this->notificationBoxUpcoming.erase(it);
+				continue;
+			}
+		}
+
+		// Move to next element
+		++it;
+	}
+
+	// Remove events from in progress
+	for (auto it = this->notificationBoxInProgress.begin(); it != this->notificationBoxInProgress.end(); /* no increment */) {
+		Event* eventPtr = *it;
+
+		// Handle Core event
+		if (eventPtr->GetEventType().starts_with("core_world_bosses")) {
+			CoreWorldbossEvent* coreEvent = static_cast<CoreWorldbossEvent*>(eventPtr);
+			long eventStart = coreEvent->GetMidnightOffsetSeconds();
+			long eventEndUnclamped = eventStart + coreEvent->GetDurationSeconds();
+			long eventEnd = std::clamp(eventEndUnclamped, TIME_CLAMP_MIDNIGHT_LOWER, TIME_CLAMP_MIDNIGHT_UPPER);
+
+			// Remove from in progress if current time is past eventEnd
+			if (current_time > eventEnd) {
+				it = this->notificationBoxInProgress.erase(it);
+				continue;
+			}
+		}
+
+		// Handle periodic event
+		if (
+			eventPtr->GetEventType().compare("periodic") == 0 ||
+			eventPtr->GetEventType().compare("periodic_timer") == 0 ||
+			eventPtr->GetEventType().compare("periodic_timer_convergences") == 0
+			) {
+			PeriodicEvent* periodicEventPtr = static_cast<PeriodicEvent*>(eventPtr);
+
+			if (periodicEventPtr->GetNotifyInProgress() == false) {
+				it = this->notificationBoxInProgress.erase(it);
+				continue;
+			}
+		}
+
+		// Move to next element
+		++it;
+	}
+
+
 }
 
 Event* Addon::GetEvent(const std::string& eventName) {
@@ -198,7 +394,679 @@ void Addon::ExportEventsJson() {
 }
 
 void Addon::LoadCoreWorldbossesFallback() {
+	// WorldBosses
+	{
+		worldBossesNotifications->SetEditMode(true);
 
+		// Taidha
+		{
+			float x = 48872.0f;
+			float y = 33548.0f;
+			int notifyOffsetSeconds = 900;
+			int midnightOffsetSeconds = 0;
+			int duration = 900;
+
+			int timesPerDay = 8;
+			int offset = 10800;
+
+			std::string baseName = "Admiral Taidha Covington";
+
+			for (int i = 0; i < timesPerDay; i++) {
+
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					midnightOffsetSeconds + (i * offset),
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+			}
+		}
+
+
+		// Svanir Shaman
+		{
+			float x = 48872.0f;
+			float y = 33548.0f;
+			int notifyOffsetSeconds = 900;
+			int midnightOffsetSeconds = 900;
+			int duration = 900;
+
+			int timesPerDay = 12;
+			int offset = 7200;
+
+			std::string baseName = "Svanir Shaman Chief";
+
+			for (int i = 0; i < timesPerDay; i++) {
+
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					midnightOffsetSeconds + (i * offset),
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+			}
+		}
+
+		// Svanir Shaman
+		{
+			float x = 56071.0f;
+			float y = 29379.0f;
+			int notifyOffsetSeconds = 900;
+			int midnightOffsetSeconds = 900;
+			int duration = 900;
+
+			int timesPerDay = 12;
+			int offset = 7200;
+
+			std::string baseName = "Svanir Shaman Chief";
+
+			for (int i = 0; i < timesPerDay; i++) {
+
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					midnightOffsetSeconds + (i * offset),
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+			}
+		}
+
+		// Megadestroyer
+		{
+			float x = 51939.0f;
+			float y = 39395.0f;
+			int notifyOffsetSeconds = 900;
+			int midnightOffsetSeconds = 1800;
+			int duration = 900;
+
+			int timesPerDay = 8;
+			int offset = 10800;
+
+			std::string baseName = "Megadestroyer";
+
+			for (int i = 0; i < timesPerDay; i++) {
+
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					midnightOffsetSeconds + (i * offset),
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+			}
+		}
+
+
+		// Fire elemental
+		{
+			float x = 40346.0f;
+			float y = 33755.0f;
+			int notifyOffsetSeconds = 900;
+			int midnightOffsetSeconds = 2700;
+			int duration = 900;
+
+			int timesPerDay = 12;
+			int offset = 7200;
+
+			std::string baseName = "Fire Elemental";
+
+			for (int i = 0; i < timesPerDay; i++) {
+
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					midnightOffsetSeconds + (i * offset),
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+			}
+		}
+
+
+		// Shatterer
+		{
+			float x = 62512.0f;
+			float y = 29023.0f;
+			int notifyOffsetSeconds = 900;
+			int midnightOffsetSeconds = 3600;
+			int duration = 900;
+
+			int timesPerDay = 8;
+			int offset = 10800;
+
+			std::string baseName = "Shatterer";
+
+			for (int i = 0; i < timesPerDay; i++) {
+
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					midnightOffsetSeconds + (i * offset),
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+			}
+		}
+
+
+		// Great Jungle Wurm
+		{
+			float x = 42365.0f;
+			float y = 33145.0f;
+			int notifyOffsetSeconds = 900;
+			int midnightOffsetSeconds = 4500;
+			int duration = 900;
+
+			int timesPerDay = 12;
+			int offset = 7200;
+
+			std::string baseName = "Great Jungle Wurm";
+
+			for (int i = 0; i < timesPerDay; i++) {
+
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					midnightOffsetSeconds + (i * offset),
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+			}
+		}
+
+		// Modniir Ulgoth
+		{
+			float x = 49079.0f;
+			float y = 26174.0f;
+			int notifyOffsetSeconds = 900;
+			int midnightOffsetSeconds = 5400;
+			int duration = 900;
+
+			int timesPerDay = 8;
+			int offset = 10800;
+
+			std::string baseName = "Modniir Ulgoth";
+
+			for (int i = 0; i < timesPerDay; i++) {
+
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					midnightOffsetSeconds + (i * offset),
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+			}
+		}
+
+
+		// Shadow Behemoth
+		{
+			float x = 44837.0f;
+			float y = 29997.0f;
+			int notifyOffsetSeconds = 900;
+			int midnightOffsetSeconds = 6300;
+			int duration = 900;
+
+			int timesPerDay = 12;
+			int offset = 7200;
+
+			std::string baseName = "Shadow Behemoth";
+
+			for (int i = 0; i < timesPerDay; i++) {
+
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					midnightOffsetSeconds + (i * offset),
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+			}
+		}
+
+
+		// Golem Mark II
+		{
+			float x = 53954.0f;
+			float y = 38916.0f;
+			int notifyOffsetSeconds = 900;
+			int midnightOffsetSeconds = 7200;
+			int duration = 900;
+
+			int timesPerDay = 8;
+			int offset = 10800;
+
+			std::string baseName = "Golem Mark II";
+
+			for (int i = 0; i < timesPerDay; i++) {
+
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					midnightOffsetSeconds + (i * offset),
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+			}
+		}
+
+
+		// Claw of Jormag
+		{
+			float x = 56032.0f;
+			float y = 25417.0f;
+			int notifyOffsetSeconds = 900;
+			int midnightOffsetSeconds = 9000;
+			int duration = 900;
+
+			int timesPerDay = 8;
+			int offset = 10800;
+
+			std::string baseName = "Claw of Jormag";
+
+			for (int i = 0; i < timesPerDay; i++) {
+
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					midnightOffsetSeconds + (i * offset),
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+			}
+		}
+
+
+		// Tequatl
+		{
+			float x = 48412.0f;
+			float y = 38488.0f;
+			int notifyOffsetSeconds = 900;
+			//int midnightOffsetSeconds = 0;
+			int duration = 900;
+
+			int timesPerDay = 6;
+			int offset = 10800;
+
+			std::string baseName = "Tequatl";
+
+			int i = 0;
+
+			// 0
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					0, // MIDNIGHT UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 1
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					10800,// 3 AM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 2
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					25200, // 7AM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 3
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					41400, // 11:30AM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 4
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					57600, // 4PM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 5
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					68400, // 7PM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+		}
+
+
+		// Karka Queen
+		{
+			float x = 46346.0f;
+			float y = 35978.0f;
+			int notifyOffsetSeconds = 900;
+			//int midnightOffsetSeconds = 9000;
+			int duration = 900;
+
+			int timesPerDay = 6;
+			int offset = 10800;
+
+			std::string baseName = "Karka Queen";
+
+			int i = 0;
+
+			// 0
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					7200, // 2AM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 1
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					21600,// 6 AM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 2
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					37800, // 10:30 UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 3
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					54000, // 3PM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 4
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					64800, // 6PM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 5
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					82800, // 11PM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+		}
+
+
+		// Evolved Jungle Wurm
+		{
+			float x = 49480.0f;
+			float y = 34069.0f;
+			int notifyOffsetSeconds = 900;
+			//int midnightOffsetSeconds = 9000;
+			int duration = 900;
+
+			int timesPerDay = 6;
+			int offset = 10800;
+
+			std::string baseName = "Evolved Jungle Wurm";
+
+			int i = 0;
+
+			// 0
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					3600, // 1AM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 1
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					14400,// 4 AM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 2
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					28800, // 8AM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 3
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					45000, // 12:30PM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 4
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					61200, // 5PM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+
+			// 5
+			{
+				CoreWorldbossEvent* ev = new  CoreWorldbossEvent(
+					baseName + " " + std::to_string(i + 1),
+					x,
+					y,
+					notifyOffsetSeconds,
+					72000, // 8PM UTC
+					duration,
+					"000000"
+				);
+
+				Addon::AddCoreWorldbossEvent(ev);
+				i++;
+			}
+		}
+
+
+		// Disable edit mode and sort
+		worldBossesNotifications->SetEditMode(false);
+	}
 }
 
 void Addon::LoadEventsFallback() {
@@ -1326,47 +2194,4 @@ void Addon::LoadEventsFallback() {
 		Addon::AddEvent(wizard_tower);
 		Addon::AddEvent(convergences);
 	}
-
-
-	// WorldBosses
-	// Taidha block
-	{
-		float x = 0;
-		float y = 0;
-		int notifyOffsetSeconds = 900;
-		int midnightOffsetSeconds = 0;
-		int duration = 900;
-		
-		int timesPerDay = 8;
-		int offset = 10800;
-
-		std::string baseName = "Admiral Taidha Covington";
-
-		for (int i = 0; i < timesPerDay; i++) {
-
-			CoreWorldbossEvent* taidha = new  CoreWorldbossEvent(
-				baseName + std::to_string(i+1),
-				x,
-				y,
-				notifyOffsetSeconds,
-				midnightOffsetSeconds + (i * offset),
-				duration,
-				"000000"
-			);
-
-			Addon::AddCoreWorldbossEvent(taidha);
-		}
-	}
-
-	// TODO: Svanir Shaman Chief
-	// TODO: Megadestroyer
-	// TODO: Fire Elemental
-	// TODO: The Shatterer
-	// TODO: Great Jungle Wurm
-	// TODO: Modniir Ulgoth
-	// TODO: Shadow Behemoth
-	// TODO: Golem Mark II
-	// TODO: Claw of Jormag
-	// TODO: Tequatl
-	// TODO: Karka Queen
 }

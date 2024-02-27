@@ -5,11 +5,12 @@ CyclicalCoreWorldbossEventQueue::CyclicalCoreWorldbossEventQueue() {
     head = nullptr;
 }
 
+
 CyclicalCoreWorldbossEventQueue::~CyclicalCoreWorldbossEventQueue() {
-    while (queue.empty()) {
+    while (!queue.empty()) {
         CoreWorldbossEvent* element = queue.front();
         queue.pop();
-        delete element;
+        // element possibly leaks memory but windows is fucking trash OS
     }
 }
 
@@ -20,7 +21,18 @@ void CyclicalCoreWorldbossEventQueue::push(CoreWorldbossEvent* value) {
         head = value;
     }
     queue.push(value);
-    
+
+    if (editMode == false) {
+        this->sort();
+    }
+}
+
+void CyclicalCoreWorldbossEventQueue::sort() {
+    // Skip on empty queue
+    if (queue.empty()) {
+        return;
+    }
+
     // Transfer elements to a vector
     std::vector<CoreWorldbossEvent*> tempVector;
     while (!queue.empty()) {
@@ -35,7 +47,7 @@ void CyclicalCoreWorldbossEventQueue::push(CoreWorldbossEvent* value) {
     for (const auto& element : tempVector) {
         queue.push(element);
     }
-    
+
     // Find head again after sort
     CoreWorldbossEvent* frontElement = queue.front();
     while (frontElement != head) {
@@ -60,7 +72,13 @@ CoreWorldbossEvent* CyclicalCoreWorldbossEventQueue::peek() {
 }
 
 void CyclicalCoreWorldbossEventQueue::printState() {
-    std::string buffer = "CyclicalCoreWorldbossEventQueue state => ";
+    std::string buffer = "";
+    if (editMode == true) {
+        buffer += "[EDIT MODE] ";
+    }
+    buffer += "CyclicalCoreWorldbossEventQueue state => ";
+    
+    
     if (!queue.empty()) {
         CoreWorldbossEvent* initial = queue.front();
         do {
@@ -77,6 +95,15 @@ void CyclicalCoreWorldbossEventQueue::printState() {
 }
 
 CoreWorldbossEvent* CyclicalCoreWorldbossEventQueue::popEvent() {
+    // It is not possible to pop in edit mode
+    if (editMode == true) {
+        return nullptr;
+    }
+    // Return null pointer on empty queue
+    if (queue.empty()) {
+        return nullptr;
+    }
+
     CoreWorldbossEvent* frontElement = queue.front();
     queue.pop();
     queue.push(frontElement);
@@ -86,4 +113,29 @@ CoreWorldbossEvent* CyclicalCoreWorldbossEventQueue::popEvent() {
 
 void CyclicalCoreWorldbossEventQueue::pop() {
     CyclicalCoreWorldbossEventQueue::popEvent();
+}
+
+
+bool CyclicalCoreWorldbossEventQueue::SetEditMode(bool modeState)
+{
+    // Desired mode already set
+    if (editMode == modeState) {
+        return false;
+    }
+
+    // Enabling edit mode
+    if (modeState == true) {
+        modeState = true;
+        return true;
+    }
+
+    // Disable edit mode and sort
+    if (modeState == false) {
+        modeState = false;
+        this->sort();
+        return true;
+    }
+
+    // just in case
+    return false;
 }

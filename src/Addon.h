@@ -3,12 +3,14 @@
 #include <fstream>
 #include <queue>  
 #include <functional> 
+#include <algorithm>
 
 #include "Globals.h"
 #include "utils/Render.h"
 #include "utils/Map.h"
 #include "utils/Strings.h"
 #include "utils/BoundingBox.h"
+#include "utils/Time.h"
 #include "Event.h"
 #include "PeriodicEvent.h"
 #include "CoreWorldbossEvent.h"
@@ -25,8 +27,18 @@ public:
 
     void Render(); // Addon render function
 
+    /*
+     *      Behaviour
+     */
+
+     // Global render enabled-disabled flag
+    bool render;
+    // Show/Hide notification boxes
+    bool showNotifications;
+
 private:
     void RenderEvents();
+    void RenderNotifications();
     void Update();
 
     void LoadEvents();
@@ -38,8 +50,20 @@ private:
     void AddEvent(Event *event);
     void AddCoreWorldbossEvent(Event* event);
 
+    
+    /*
+     *      Events
+     */ 
+
+    // All available events
     std::unordered_map<std::string, Event*> events;
+    // Available core world bosses
     CyclicalCoreWorldbossEventQueue* worldBossesNotifications;
+    // Notification box - event that are in progress
+    std::vector<Event*> notificationBoxInProgress;
+    // Notification box - event that are upcoming
+    std::vector<Event*> notificationBoxUpcoming;
+
 };
 
 

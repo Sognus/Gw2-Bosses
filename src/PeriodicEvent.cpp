@@ -2,7 +2,8 @@
 
 
 PeriodicEvent::PeriodicEvent() {
-
+    notifyInProgress = false;
+    notifyUpcoming = false;
 }
 
 PeriodicEvent::PeriodicEvent(
@@ -12,7 +13,8 @@ PeriodicEvent::PeriodicEvent(
     int periodicitySeconds,
     std::string hexColor
 ) : Event(name, location, "periodic", hexColor), periodicity_seconds(periodicitySeconds), midnight_offset_seconds(midnightOffsetSeconds) {
-    // Init
+    notifyInProgress = false;
+    notifyUpcoming = false;
 }
 
 PeriodicEvent::PeriodicEvent(
@@ -23,7 +25,8 @@ PeriodicEvent::PeriodicEvent(
     int periodicitySeconds,
     std::string hexColor
 ) : Event(name, x, y, "periodic", hexColor), periodicity_seconds(periodicitySeconds), midnight_offset_seconds(midnightOffsetSeconds) {
-    // Init
+    notifyInProgress = false;
+    notifyUpcoming = false;
 }
 
 
@@ -175,6 +178,28 @@ void PeriodicEvent::SetMidnightOffsetSeconds(int newMidnightOffsetSeconds) {
     midnight_offset_seconds = newMidnightOffsetSeconds;
 }
 
+bool PeriodicEvent::GetNotifyUpcoming() {
+    return this->notifyUpcoming;
+}
+bool PeriodicEvent::GetNotifyInProgress() {
+    return this->notifyInProgress;
+}
+
+void PeriodicEvent::SetNotifyUpcoming(bool flag) {
+    // Either upcoming or in progress
+    if (this->notifyInProgress == true && flag == true) {
+        this->notifyInProgress = false;
+    }
+    this->notifyUpcoming = flag;
+}
+void PeriodicEvent::SetNotifyInProgress(bool flag) {
+    // Either in progress or upcoming
+    if (this->notifyUpcoming == true && flag == true) {
+        this->notifyUpcoming = false;
+    }
+    this->notifyInProgress = flag;
+}
+
 json PeriodicEvent::ToJson() const {
     json eventData = Event::ToJson(); // Serialize base Event data
 
@@ -213,8 +238,6 @@ void PeriodicEvent::FromJson(const json& jsonData) {
     }
 }
 
-
-
 PeriodicEvent* PeriodicEvent::CreateFromJson(const json& jsonData) {
     PeriodicEvent* eventInstance = new PeriodicEvent();
     eventInstance->FromJson(jsonData);
@@ -224,3 +247,4 @@ PeriodicEvent* PeriodicEvent::CreateFromJson(const json& jsonData) {
 // Destructor
 PeriodicEvent::~PeriodicEvent() {
 }
+

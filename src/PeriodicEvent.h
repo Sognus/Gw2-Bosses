@@ -90,6 +90,12 @@ public:
     // Setter for midnight_offset_seconds
     void SetMidnightOffsetSeconds(int newMidnightOffsetSeconds);
 
+    // Getters and setters for notify
+    bool GetNotifyUpcoming();
+    bool GetNotifyInProgress();
+    void SetNotifyUpcoming(bool flag);
+    void SetNotifyInProgress(bool flag);
+
     // Functions to serialize and deserialize the Event to and from a JSON object
     json ToJson() const override;
     void FromJson(const json& json) override;
@@ -102,6 +108,9 @@ private:
     int periodicity_seconds;
     std::vector<json> periodic_entries;
     int midnight_offset_seconds; // Added midnight offset as a private field
+
+    bool notifyUpcoming;
+    bool notifyInProgress;
 
 protected:
     PeriodicEvent();

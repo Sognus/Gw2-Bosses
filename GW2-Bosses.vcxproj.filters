@@ -75,6 +75,9 @@
     <ClCompile Include="src\CyclicalCoreWorldbossEventQueue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\Time.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\circle-blue-no-antialias.png">
@@ -163,6 +166,9 @@
     <ClInclude Include="src\CyclicalCoreWorldbossEventQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\Time.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GW2-Bosses.rc">
@@ -171,6 +177,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="patchnotes.md">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="README.md">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

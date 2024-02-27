@@ -2,10 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by GW2-Bosses.rc
 //
-#define TEXTURE_CIRCLE_RED              101
-#define TEXTURE_CIRCLE_BLUE             102
-#define IDB_PNG3                        103
-#define TEXTURE_CIRCLE_GREEN            103
 
 // Next default values for new objects
 // 
