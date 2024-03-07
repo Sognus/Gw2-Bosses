@@ -84,6 +84,7 @@
     <Image Include="resources\boss_upcoming.png" />
   </ItemGroup>
   <ItemGroup>
+    <ResourceCompile Include="GW2-Bosses.rc" />
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
