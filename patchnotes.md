@@ -1,3 +1,8 @@
+## Version 1.1.1.0
+
+### Fixed
+- Reference cleanup: Addon shortcut unregister on addon unload
+
 ## Version 1.1.0.0
 
 ### Added
@@ -5,10 +10,6 @@
 
 ### Changed
 - Core world bosses notification box default behavior is hidden on start.  
-
-### Improved
-
-### Fixed
 
 ---
 
