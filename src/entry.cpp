@@ -65,7 +65,6 @@ void AddonShortcut()
 		return;
 	}
 
-
 	if (ImGui::Checkbox("Render events and bosses on map", &addon->render)) {
 
 	}
@@ -125,10 +124,15 @@ void AddonUnload()
 	APIDefs->UnregisterKeybind(KEY_BOSSES_TOGGLE_RENDER.c_str());
 	APIDefs->UnregisterKeybind(KEY_BOSSES_TOGGLE_NOTIFICATION.c_str());
 
+	// Unregister shortcut
+	APIDefs->RemoveShortcut(GW2_BOSSES_SHORTCUT.c_str());
+
 	// Unregister render
 	APIDefs->UnregisterRender(AddonRender);
 	// Unregister events
 	APIDefs->UnsubscribeEvent(IDENTITY_EVENT.c_str(), OnMumbleIdentityUpdate);
+
+
 
 	delete addon;
 }
@@ -140,8 +144,8 @@ extern "C" __declspec(dllexport) AddonDefinition * GetAddonDef()
 	AddonDef->APIVersion = NEXUS_API_VERSION;
 	AddonDef->Name = "World bosses";
 	Version.Major = 1;
-	Version.Minor = 0;
-	Version.Build = 0;
+	Version.Minor = 1;
+	Version.Build = 1;
 	Version.Revision = 0;
 	AddonDef->Version = Version;
 	AddonDef->Author = "Sognus";
