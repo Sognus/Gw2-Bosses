@@ -1,7 +1,10 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by GW2-Bosses.rc
+// Used by Resource.rc
 //
+#define IMAGE_COREWORLDBOSSES_IN_PROGRESS 102
+#define IDB_PNG2                        103
+#define IMAGE_COREWORLDBOSSES_UPCOMING  103
 
 // Next default values for new objects
 // 

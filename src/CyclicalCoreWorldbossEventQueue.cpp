@@ -2,7 +2,8 @@
 
 
 CyclicalCoreWorldbossEventQueue::CyclicalCoreWorldbossEventQueue() {
-    head = nullptr;
+    this->head = nullptr;
+    this->editMode = false;
 }
 
 

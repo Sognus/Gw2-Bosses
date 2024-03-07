@@ -15,4 +15,8 @@ void render_periodic_circular_event(PeriodicEvent event);
 
 void render_periodic_circular_event_convergences(PeriodicEvent event);
 
+void render_map_notification_upcoming(Event* notificationEvent);
+
+void render_map_notification_in_progress(Event* notificationEvent);
+
 #endif //RENDER_H

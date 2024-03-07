@@ -817,5 +817,73 @@ void render_periodic_circular_event_convergences(PeriodicEvent event) {
 
 }
 
+void render_map_notification(Event* notificationEvent, Texture* texture) {
+	ImGuiIO& io = ImGui::GetIO();
+	ImVec2 mousePos = io.MousePos;
+
+	BoundingBox screen = BoundingBox(0, 0, io.DisplaySize.y, io.DisplaySize.x);
+	BoundingBox viewport = map_get_bounding_box();
+
+	// Calculate scaling factors for X and Y axes;
+	ImVec2 mapScaleX = map_get_scale();
+
+	// Update necessary data for render
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	ImVec2 location = map_coords_to_pixels(notificationEvent->GetLocation(), viewport, mapScaleX);
+
+	float mapZoomScale = map_zoom_scale();
+	float mapObjectScale = map_object_scale();
+
+	float size = 100.0f * mapObjectScale;
+
+	// CHECK IF EVENT IS OUTSIDE VIEWPORT
+	BoundingBox eventBox = BoundingBox(location, size, true);
+
+	if (!screen.Overlaps(eventBox)) {
+		return;
+	}
+
+	ImVec2 cursorStack = ImGui::GetCursorPos();
+	ImVec2 renderLocation = ImVec2(location.x - size / 2, location.y - size / 2);
+	ImGui::SetCursorPos(renderLocation);
+	ImGui::Image(texture->Resource, ImVec2(size, size));
+	ImGui::SetCursorPos(cursorStack);
+
+	if (eventBox.OverlapsVector(mousePos)) {
+		std::string eventName = notificationEvent->GetName();
+		size_t spacePos = eventName.find_last_of(" ");
+		std::string name;
+
+		if (spacePos != std::string::npos) {
+			name = eventName.substr(0, spacePos);
+		}
+		else {
+			name = eventName;
+		}
+		ImGui::SetTooltip(name.c_str());
+	}
+
+}
+
+void render_map_notification_upcoming(Event* notificationEvent)
+{
+	Texture * texture = 
+		(resource_textures.find(GW2BOSSES_RESOURCE_COREWORLDBOSSES_UPCOMING) != resource_textures.end()) ? 
+		resource_textures[GW2BOSSES_RESOURCE_COREWORLDBOSSES_UPCOMING] :
+		nullptr;
+	render_map_notification(notificationEvent, texture);
+}
+
+void render_map_notification_in_progress(Event* notificationEvent)
+{
+	Texture* texture =
+		(resource_textures.find(GW2BOSSES_RESOURCE_COREWORLDBOSSES_IN_PROGRESS) != resource_textures.end()) ?
+		resource_textures[GW2BOSSES_RESOURCE_COREWORLDBOSSES_IN_PROGRESS] :
+		nullptr;
+	render_map_notification(notificationEvent, texture);
+}
+
+
+
 // Re-enable warning
 #pragma warning(default : 4244)

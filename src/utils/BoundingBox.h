@@ -58,6 +58,7 @@ public:
     float GetBottom() const;
 
     bool Overlaps(const BoundingBox& other) const;
+    bool OverlapsVector(const ImVec2& other) const;
     float OverlapDegree(const BoundingBox& other) const;
 
     BoundingBox Merge(const BoundingBox& other) const;

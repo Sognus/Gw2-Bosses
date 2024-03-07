@@ -15,6 +15,9 @@ Mumble::Data* MumbleLink = nullptr;
 NexusLinkData* NexusLink = nullptr;
 Mumble::Identity* MumbleIdentity = nullptr;
 
+std::unordered_map<std::string, Texture*> resource_textures;
+
+
 // Addon
 Addon* addon;
 AddonVersion Version;
@@ -47,6 +50,31 @@ void ProcessKeybind(const char* aIdentifier) {
 	}
 }
 
+void ReceiveTexture(const char* aIdentifier, Texture* aTexture)
+{
+	std::string stdIdentifier = aIdentifier;
+	if (stdIdentifier.empty() || aTexture == nullptr) {
+		return;
+	}
+	resource_textures[stdIdentifier] = aTexture;
+}
+
+void AddonShortcut()
+{
+	if (!addon) {
+		return;
+	}
+
+
+	if (ImGui::Checkbox("Render events and bosses on map", &addon->render)) {
+
+	}
+
+	if (ImGui::Checkbox("Show notification box", &addon->showNotifications))
+	{
+	}
+}
+
 
 void AddonRender() {
 	if (!addon) {
@@ -76,8 +104,16 @@ void AddonLoad(AddonAPI* aHostApi)
 	APIDefs->RegisterKeybindWithString(KEY_BOSSES_TOGGLE_RENDER.c_str(), ProcessKeybind, "CTRL+SHIFT+B");
 	APIDefs->RegisterKeybindWithString(KEY_BOSSES_TOGGLE_NOTIFICATION.c_str(), ProcessKeybind, "CTRL+SHIFT+O");
 
+
 	// Addon init
 	addon = new Addon();
+
+	// Nexus shortcut
+	APIDefs->AddSimpleShortcut(GW2_BOSSES_SHORTCUT.c_str(), AddonShortcut);
+
+	// Resources
+	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_IN_PROGRESS.c_str(), IMAGE_COREWORLDBOSSES_IN_PROGRESS, hSelf, ReceiveTexture);
+	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_UPCOMING.c_str(), IMAGE_COREWORLDBOSSES_UPCOMING, hSelf, ReceiveTexture);
 
 	// Render register
 	APIDefs->RegisterRender(ERenderType::ERenderType_Render, AddonRender);

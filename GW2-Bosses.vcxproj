@@ -50,13 +50,6 @@
     <ClCompile Include="src\utils\Time.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="resources\circle-blue-no-antialias.png" />
-    <Image Include="resources\circle-blue.png" />
-    <Image Include="resources\circle-green-no-antialias.png" />
-    <Image Include="resources\circle-green.png" />
-    <Image Include="resources\circle-red.png" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\Addon.h" />
     <ClInclude Include="src\Constants.h" />
@@ -83,11 +76,16 @@
     <ClInclude Include="src\utils\Time.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="GW2-Bosses.rc" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="patchnotes.md" />
     <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\boss_in_progress.png" />
+    <Image Include="resources\boss_upcoming.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="GW2-Bosses.rc" />
+    <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -198,6 +196,24 @@
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
     </ResourceCompile>
+    <PreBuildEvent>
+      <Command>@echo off
+
+set filePath=$(ProjectDir)build
+
+if not exist "%filePath%" (
+    echo Error: File not found at %file_path%
+    set buildVersion=0
+    echo %buildVersion% &gt; %filePath%  
+    goto :EOF
+)
+
+set /p buildVersionFile=&lt;"%filePath%"
+set /a buildVersion=buildVersionFile + 1
+echo %buildVersion% &gt; %filePath% 
+
+echo Build number updated: %buildVersionFile% -^&gt; %buildVersion%</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -221,6 +237,24 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
     </Link>
+    <PreBuildEvent>
+      <Command>@echo off
+
+set filePath=$(ProjectDir)build
+
+if not exist "%filePath%" (
+    echo Error: File not found at %file_path%
+    set buildVersion=0
+    echo %buildVersion% &gt; %filePath%  
+    goto :EOF
+)
+
+set /p buildVersionFile=&lt;"%filePath%"
+set /a buildVersion=buildVersionFile + 1
+echo %buildVersion% &gt; %filePath% 
+
+echo Build number updated: %buildVersionFile% -^&gt; %buildVersion%</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

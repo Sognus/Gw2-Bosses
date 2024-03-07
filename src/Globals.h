@@ -22,6 +22,7 @@
 
 #include "Constants.h"
 #include "Addon.h"
+#include "../resource.h"
 
 extern AddonAPI* APIDefs;
 extern AddonDefinition* AddonDef;
@@ -30,5 +31,7 @@ extern NexusLinkData* NexusLink;
 extern Mumble::Identity* MumbleIdentity;
 
 extern Addon* addon;
+extern std::unordered_map<std::string, Texture*> resource_textures;
+
 
 #endif // GLOBALS_H

@@ -25,6 +25,10 @@ public:
     Addon();  // Constructor
     ~Addon(); // Destructor
 
+     /*
+      *      Render
+      */
+
     void Render(); // Addon render function
 
     /*
@@ -37,9 +41,18 @@ public:
     bool showNotifications;
 
 private:
+    /*
+     *      Render & Update
+     */
+
     void RenderEvents();
+    void RenderNotificationsMap();
     void RenderNotifications();
     void Update();
+    
+    /*
+     *      Events
+     */ 
 
     void LoadEvents();
     void LoadEventsFallback();
@@ -47,13 +60,8 @@ private:
     void ExportEventsJson();
 
     Event* GetEvent(const std::string& eventName);
-    void AddEvent(Event *event);
+    void AddEvent(Event* event);
     void AddCoreWorldbossEvent(Event* event);
-
-    
-    /*
-     *      Events
-     */ 
 
     // All available events
     std::unordered_map<std::string, Event*> events;
