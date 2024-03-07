@@ -198,6 +198,24 @@
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
     </ResourceCompile>
+    <PreBuildEvent>
+      <Command>@echo off
+
+set filePath=$(ProjectDir)build
+
+if not exist "%filePath%" (
+    echo Error: File not found at %file_path%
+    set buildVersion=0
+    echo %buildVersion% &gt; %filePath%  
+    goto :EOF
+)
+
+set /p buildVersionFile=&lt;"%filePath%"
+set /a buildVersion=buildVersionFile + 1
+echo %buildVersion% &gt; %filePath% 
+
+echo "Build number updated: %buildVersionFile% -&gt; %buildVersion%"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -221,6 +239,24 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
     </Link>
+    <PreBuildEvent>
+      <Command>@echo off
+
+set filePath=$(ProjectDir)build
+
+if not exist "%filePath%" (
+    echo Error: File not found at %file_path%
+    set buildVersion=0
+    echo %buildVersion% &gt; %filePath%  
+    goto :EOF
+)
+
+set /p buildVersionFile=&lt;"%filePath%"
+set /a buildVersion=buildVersionFile + 1
+echo %buildVersion% &gt; %filePath% 
+
+echo "Build number updated: %buildVersionFile% -&gt; %buildVersion%"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
