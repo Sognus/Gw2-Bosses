@@ -8,7 +8,7 @@ Addon::Addon() {
 
 	// Default behaviour 
 	render = true;
-	showNotifications = true;
+	showNotifications = false;
 }
 
 Addon::~Addon() {

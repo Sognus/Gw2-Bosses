@@ -1,3 +1,16 @@
+## Version NEXT
+
+### Added
+
+### Changed
+- Core world bosses notification box default behavior is hidden on start.  
+
+### Improved
+
+### Fixed
+
+---
+
 ## Version 1.0.0.0:
 
 It is recommended to delete data.json in addon's folder if it exist to avoid any issues. 
