@@ -22,9 +22,6 @@
     <Filter Include="Header Files\API">
       <UniqueIdentifier>{881777ae-3d1c-4302-878f-69741ae79c5f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Tests">
-      <UniqueIdentifier>{f0d9162a-867f-43b2-a955-5e636ffe9fe4}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\entry.cpp">
@@ -80,23 +77,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="resources\circle-blue-no-antialias.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="resources\circle-blue.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="resources\circle-green-no-antialias.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="resources\circle-green.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="resources\circle-red.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="src\imgui\imstb_truetype.h">
       <Filter>Imgui</Filter>
     </ClInclude>
@@ -117,9 +97,6 @@
     </ClInclude>
     <ClInclude Include="src\imgui\imconfig.h">
       <Filter>Imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files\API</Filter>
     </ClInclude>
     <ClInclude Include="src\mumble\Mumble.h">
       <Filter>Header Files\API</Filter>
@@ -169,11 +146,9 @@
     <ClInclude Include="src\utils\Time.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="GW2-Bosses.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="patchnotes.md">
@@ -182,5 +157,18 @@
     <None Include="README.md">
       <Filter>Source Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\boss_in_progress.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\boss_upcoming.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

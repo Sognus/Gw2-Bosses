@@ -35,6 +35,7 @@ void Addon::Render() {
 			render_debug_crosshair();
 		#endif
 		this->RenderEvents();
+		this->RenderNotificationsMap();
 	}
 	ImGui::End();
 
@@ -157,6 +158,18 @@ void Addon::RenderEvents() {
 				}
 			}
 		}
+	}
+}
+
+void Addon::RenderNotificationsMap() {
+	// Do not render when render is disabled
+	if (!render) return;
+
+	for (Event* notificationEvent : notificationBoxUpcoming) {
+		render_map_notification_upcoming(notificationEvent);
+	}
+	for (Event* notificationEvent : notificationBoxInProgress) {
+		render_map_notification_in_progress(notificationEvent);
 	}
 }
 
