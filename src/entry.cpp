@@ -59,6 +59,22 @@ void ReceiveTexture(const char* aIdentifier, Texture* aTexture)
 	resource_textures[stdIdentifier] = aTexture;
 }
 
+void AddonShortcut()
+{
+	if (!addon) {
+		return;
+	}
+
+
+	if (ImGui::Checkbox("Render events and bosses on map", &addon->render)) {
+
+	}
+
+	if (ImGui::Checkbox("Show notification box", &addon->showNotifications))
+	{
+	}
+}
+
 
 void AddonRender() {
 	if (!addon) {
@@ -91,6 +107,9 @@ void AddonLoad(AddonAPI* aHostApi)
 
 	// Addon init
 	addon = new Addon();
+
+	// Nexus shortcut
+	APIDefs->AddSimpleShortcut(GW2_BOSSES_SHORTCUT.c_str(), AddonShortcut);
 
 	// Resources
 	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_IN_PROGRESS.c_str(), IMAGE_COREWORLDBOSSES_IN_PROGRESS, hSelf, ReceiveTexture);
