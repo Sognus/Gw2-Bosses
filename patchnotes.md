@@ -1,3 +1,10 @@
+## Version 1.1.2.0
+
+## Fixed
+- Fixed a bug that caused core world bosses map notification to be rendered when map was not opened
+- Fixed a bug that caused core world bosses map notification to be rendered outside gameplay
+- Reference cleanup update: Addon shortcut unregister corrected to unregister simple shortcut. 
+
 ## Version 1.1.1.0
 
 ### Fixed

@@ -125,7 +125,7 @@ void AddonUnload()
 	APIDefs->UnregisterKeybind(KEY_BOSSES_TOGGLE_NOTIFICATION.c_str());
 
 	// Unregister shortcut
-	APIDefs->RemoveShortcut(GW2_BOSSES_SHORTCUT.c_str());
+	APIDefs->RemoveSimpleShortcut(GW2_BOSSES_SHORTCUT.c_str());
 
 	// Unregister render
 	APIDefs->UnregisterRender(AddonRender);
@@ -145,7 +145,7 @@ extern "C" __declspec(dllexport) AddonDefinition * GetAddonDef()
 	AddonDef->Name = "World bosses";
 	Version.Major = 1;
 	Version.Minor = 1;
-	Version.Build = 1;
+	Version.Build = 2;
 	Version.Revision = 0;
 	AddonDef->Version = Version;
 	AddonDef->Author = "Sognus";
