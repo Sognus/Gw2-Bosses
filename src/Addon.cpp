@@ -164,6 +164,8 @@ void Addon::RenderEvents() {
 void Addon::RenderNotificationsMap() {
 	// Do not render when render is disabled
 	if (!render) return;
+	// Do not render when user is not looking at map
+	if (!MumbleLink->Context.IsMapOpen || !NexusLink->IsGameplay) return;
 
 	for (Event* notificationEvent : notificationBoxUpcoming) {
 		render_map_notification_upcoming(notificationEvent);
