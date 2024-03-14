@@ -4,6 +4,7 @@
 #include <unordered_map> // HashMap
 
 #include "Globals.h"
+#include "GW2BossesVersion.h"
 
 // MODULE
 HMODULE hSelf;
@@ -82,6 +83,13 @@ void AddonRender() {
 	addon->Render();
 }
 
+void AddonOptionsRender() {
+	if (!addon) {
+		return;
+	}
+	addon->RenderOptions();
+}
+
 
 void OnMumbleIdentityUpdate(void* aEventArgs)
 {
@@ -113,9 +121,11 @@ void AddonLoad(AddonAPI* aHostApi)
 	// Resources
 	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_IN_PROGRESS.c_str(), IMAGE_COREWORLDBOSSES_IN_PROGRESS, hSelf, ReceiveTexture);
 	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_UPCOMING.c_str(), IMAGE_COREWORLDBOSSES_UPCOMING, hSelf, ReceiveTexture);
+	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_GRAY.c_str(), IMAGE_COREWORLDBOSSES_GRAY, hSelf, ReceiveTexture);
 
 	// Render register
 	APIDefs->RegisterRender(ERenderType::ERenderType_Render, AddonRender);
+	APIDefs->RegisterRender(ERenderType_OptionsRender, AddonOptionsRender);
 }
 
 void AddonUnload()
@@ -129,11 +139,11 @@ void AddonUnload()
 
 	// Unregister render
 	APIDefs->UnregisterRender(AddonRender);
+	APIDefs->UnregisterRender(AddonOptionsRender);
 	// Unregister events
 	APIDefs->UnsubscribeEvent(IDENTITY_EVENT.c_str(), OnMumbleIdentityUpdate);
 
-
-
+	// Destruct addon instance
 	delete addon;
 }
 
@@ -143,12 +153,12 @@ extern "C" __declspec(dllexport) AddonDefinition * GetAddonDef()
 	AddonDef->Signature = -1;
 	AddonDef->APIVersion = NEXUS_API_VERSION;
 	AddonDef->Name = "World bosses";
-	Version.Major = 1;
-	Version.Minor = 1;
-	Version.Build = 2;
-	Version.Revision = 0;
+	Version.Major = VERSION_MAJOR;
+	Version.Minor = VERSION_MINOR;
+	Version.Build = VERSION_BUILD;
+	Version.Revision = VERSION_REVISION;
 	AddonDef->Version = Version;
-	AddonDef->Author = "Sognus";
+	AddonDef->Author = "Sognus.1204";
 	AddonDef->Description = "Adds meta events and world bosses notifications to in-game map.";
 	AddonDef->Load = AddonLoad;
 	AddonDef->Unload = AddonUnload;

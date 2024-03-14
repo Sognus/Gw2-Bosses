@@ -8,9 +8,9 @@ CyclicalCoreWorldbossEventQueue::CyclicalCoreWorldbossEventQueue() {
 
 
 CyclicalCoreWorldbossEventQueue::~CyclicalCoreWorldbossEventQueue() {
-    while (!queue.empty()) {
-        CoreWorldbossEvent* element = queue.front();
-        queue.pop();
+    while (!deque.empty()) {
+        CoreWorldbossEvent* element = deque.front();
+        deque.pop_front();
         // element possibly leaks memory but windows is fucking trash OS
     }
 }
@@ -18,10 +18,10 @@ CyclicalCoreWorldbossEventQueue::~CyclicalCoreWorldbossEventQueue() {
 
 // Expensive af
 void CyclicalCoreWorldbossEventQueue::push(CoreWorldbossEvent* value) {
-    if (queue.empty()) {
+    if (deque.empty()) {
         head = value;
     }
-    queue.push(value);
+    deque.push_back(value);
 
     if (editMode == false) {
         this->sort();
@@ -30,15 +30,15 @@ void CyclicalCoreWorldbossEventQueue::push(CoreWorldbossEvent* value) {
 
 void CyclicalCoreWorldbossEventQueue::sort() {
     // Skip on empty queue
-    if (queue.empty()) {
+    if (deque.empty()) {
         return;
     }
 
     // Transfer elements to a vector
     std::vector<CoreWorldbossEvent*> tempVector;
-    while (!queue.empty()) {
-        tempVector.push_back(queue.front());
-        queue.pop();
+    while (!deque.empty()) {
+        tempVector.push_back(deque.front());
+        deque.pop_front();
     }
 
     // Sort the vector using your comparison method
@@ -46,30 +46,37 @@ void CyclicalCoreWorldbossEventQueue::sort() {
 
     // Re-populate the queue with sorted elements
     for (const auto& element : tempVector) {
-        queue.push(element);
+        deque.push_back(element);
     }
 
-    // Find head again after sort
-    CoreWorldbossEvent* frontElement = queue.front();
+    // Find head again after sort - either same element or first of 
+    
+    CoreWorldbossEvent* frontElement = deque.front();
+/*   
     while (frontElement != head) {
-        queue.push(frontElement);
-        queue.pop();
-        frontElement = queue.front();
+        deque.push_back(frontElement);
+        deque.pop_front();
+        frontElement = deque.front();
     }
+*/
+    if (frontElement != head) {
+        frontElement = deque.front();
+    }
+
 }
 
 
 /* Please not
 void CyclicalCoreWorldbossEventQueue::remove(CoreWorldbossEvent* toRemove) {
-
+w   
 }
 */
 
 CoreWorldbossEvent* CyclicalCoreWorldbossEventQueue::peek() {
-    if (queue.empty()) {
+    if (deque.empty()) {
         return nullptr;
     }
-    return queue.front();
+    return deque.front();
 }
 
 void CyclicalCoreWorldbossEventQueue::printState() {
@@ -80,16 +87,16 @@ void CyclicalCoreWorldbossEventQueue::printState() {
     buffer += "CyclicalCoreWorldbossEventQueue state => ";
     
     
-    if (!queue.empty()) {
-        CoreWorldbossEvent* initial = queue.front();
+    if (!deque.empty()) {
+        CoreWorldbossEvent* initial = deque.front();
         do {
-            CoreWorldbossEvent* frontElement = queue.front();
-            queue.pop();
-            queue.push(frontElement);
+            CoreWorldbossEvent* frontElement = deque.front();
+            deque.pop_front();
+            deque.push_back(frontElement);
 
             buffer = buffer + "[" + frontElement->GetName() + " = " + std::to_string(frontElement->GetMidnightOffsetSeconds()) + "] ";
 
-        } while (queue.front() != initial);
+        } while (deque.front() != initial);
     }
 
     APIDefs->Log(ELogLevel::ELogLevel_DEBUG, buffer.c_str());
@@ -101,14 +108,14 @@ CoreWorldbossEvent* CyclicalCoreWorldbossEventQueue::popEvent() {
         return nullptr;
     }
     // Return null pointer on empty queue
-    if (queue.empty()) {
+    if (deque.empty()) {
         return nullptr;
     }
 
-    CoreWorldbossEvent* frontElement = queue.front();
-    queue.pop();
-    queue.push(frontElement);
-    head = queue.front();
+    CoreWorldbossEvent* frontElement = deque.front();
+    deque.pop_front();
+    deque.push_back(frontElement);
+    head = deque.front();
     return frontElement;
 }
 

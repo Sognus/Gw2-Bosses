@@ -7,8 +7,22 @@ Addon::Addon() {
 	Addon::LoadEvents();
 
 	// Default behaviour 
-	render = true;
-	showNotifications = false;
+	this->render = true;
+	this->showNotifications = false;
+
+	this->additionalOffsetChoices = {
+		{0, "disabled"},
+		{15, "15 minutes"},
+		{30, "30 minutes"},
+		{45, "45 minutes"},
+		{60, "1 hour"},
+		{75, "1 hour 15 minutes"},
+		{90, "1 hour 30 minutes"},
+		{105, "1 hour 45 minutes"},
+		{120, "2 hours"}
+	};
+
+	this->additionalNotifyOffsetIndex = 1;
 }
 
 Addon::~Addon() {
@@ -20,11 +34,70 @@ Addon::~Addon() {
 	delete worldBossesNotifications;
 }
 
+void Addon::RenderOptions() {
+	if (ImGui::BeginTabBar("Test", ImGuiTabBarFlags_None)) {
+	
+		if (ImGui::BeginTabItem("General")) {
+			
+			ImGui::TextDisabled("Notification control");
+
+			if (ImGui::Checkbox("Render events and bosses on map", &this->render)) {
+
+			}
+
+			if (ImGui::Checkbox("Show notification box", &this->showNotifications))
+			{
+			}
+
+			std::string comboPreview = "no selection";
+			if (this->additionalNotifyOffsetIndex >= 0 && this->additionalNotifyOffsetIndex < this->additionalOffsetChoices.size()) {
+				comboPreview = this->additionalOffsetChoices[this->additionalNotifyOffsetIndex].text;
+			}
+
+			ImGui::TextDisabled("Notification time");
+
+			if (ImGui::BeginCombo("##combo", comboPreview.c_str()))
+			{
+				for (int i = 0; i < additionalOffsetChoices.size(); ++i)
+				{
+					bool isSelected = (this->additionalNotifyOffsetIndex == i);
+					if (ImGui::Selectable(additionalOffsetChoices[i].text.c_str(), isSelected))
+						this->additionalNotifyOffsetIndex = i;
+
+					if (isSelected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
+
+			ImGui::EndTabItem();
+		}
+
+		/*
+		if (ImGui::BeginTabItem("Plenga")) {
+			ImGui::Text("plenga text");
+			ImGui::EndTabItem();
+		}
+		*/
+
+
+
+		ImGui::EndTabBar();
+	}
+	
+
+	
+	
+
+}
 
 void Addon::Render() {
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
 	ImGui::SetNextWindowSize(io.DisplaySize);
+
+	// Update data
+	this->Update();
 
 	// Render events
 	if (ImGui::Begin("GW2_BOSSES_EVENTS", (bool*)0, 
@@ -41,9 +114,6 @@ void Addon::Render() {
 
 	// Render notifications
 	this->RenderNotifications();
-
-
-	this->Update();
 }
 
 void Addon::LoadEvents() {
@@ -180,51 +250,70 @@ void Addon::RenderNotifications() {
 	// Dont show if not gameplay
 	if(!NexusLink->IsGameplay) return;
 
+	long current_time = get_time_since_midnight();
+
 	if (ImGui::Begin("GW2 BOSSES: Notifications", (bool*)0, 0)) {
-		// TODO: show more than 1 boss
-		// idea is to have some kind of constant that will multiply 15 minute like start - (notifyOffset * CONSTANT)
-		// then here in render it should do stuff like divide notifyOffset by 15 minutes and sort it to different boxes
 
-		// TODO:
-		// In render there must be InProgress and in Upcoming flag set 
-		// Set it by angle of current being in angle of pie part between startAngle and EndAngle
-		// Different pie parts will need flags if they should trigger 
+		std::string collapsingHeaderText = "Upcoming core world bosses ";
+		if (this->additionalNotifyOffsetIndex > 0 && this->additionalNotifyOffsetIndex < this->additionalOffsetChoices.size()) {
+			collapsingHeaderText += "(next " + this->additionalOffsetChoices[this->additionalNotifyOffsetIndex].text + ")";
+		}
+		else {
+			collapsingHeaderText += "(disabled)";
+		}
 
-		// TODO: Add localized time after ImGui::Text(name.c_str());
-		// TODO: With sorting add list of active metaevents to some other box InProgress and Upcoming
+		if (ImGui::CollapsingHeader(collapsingHeaderText.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+			if (this->additionalNotifyOffsetIndex > 0) {
+				for (Event* notificationEvent : notificationBoxUpcoming) {
+					if (notificationEvent->GetEventType().starts_with("core_world_bosses")) {
+						CoreWorldbossEvent* coreEvent = static_cast<CoreWorldbossEvent*>(notificationEvent);
 
-		if (ImGui::CollapsingHeader("Upcoming core world bosses (next 15 minutes)", ImGuiTreeNodeFlags_DefaultOpen)) {
-			for (Event* notificationEvent : notificationBoxUpcoming) {
-				std::string eventName = notificationEvent->GetName();
-				size_t spacePos = eventName.find_last_of(" ");
-				std::string name;
-				
-				if (spacePos != std::string::npos) {
-					name = eventName.substr(0, spacePos);
+						std::string eventName = coreEvent->GetName();
+						size_t spacePos = eventName.find_last_of(" ");
+						std::string name;
+
+						if (spacePos != std::string::npos) {
+							name = eventName.substr(0, spacePos);
+						}
+						else {
+							name = eventName;
+						}
+
+						int timeUntil = coreEvent->GetMidnightOffsetSeconds() - current_time;
+						std::string textFormatted = name + " (in " + format_countdown_time(timeUntil) + ")";
+
+						ImGui::Text(textFormatted.c_str());
+						ImGui::Separator();
+
+					}
+					// TODO: Other event type
 				}
-				else {
-					name = eventName;
-				}
-
-				ImGui::Text(name.c_str());
-				ImGui::Separator();
 			}
 		}
 		if (ImGui::CollapsingHeader("Core world bosses in progress", ImGuiTreeNodeFlags_DefaultOpen)) {
 			for (Event* notificationEvent : notificationBoxInProgress) {
-				std::string eventName = notificationEvent->GetName();
-				size_t spacePos = eventName.find_last_of(" ");
-				std::string name;
+				if (notificationEvent->GetEventType().starts_with("core_world_bosses")) {
+					CoreWorldbossEvent* coreEvent = static_cast<CoreWorldbossEvent*>(notificationEvent);
 
-				if (spacePos != std::string::npos) {
-					name = eventName.substr(0, spacePos);
-				}
-				else {
-					name = eventName;
-				}
+					std::string eventName = coreEvent->GetName();
+					size_t spacePos = eventName.find_last_of(" ");
+					std::string name;
 
-				ImGui::Text(name.c_str());
-				ImGui::Separator();
+					if (spacePos != std::string::npos) {
+						name = eventName.substr(0, spacePos);
+					}
+					else {
+						name = eventName;
+					}
+
+					int timeUntil = (coreEvent->GetMidnightOffsetSeconds() + coreEvent->GetDurationSeconds()) - current_time;
+					std::string textFormatted = name + " (active " + format_countdown_time(timeUntil) + ")";
+
+					ImGui::Text(textFormatted.c_str());
+					ImGui::Separator();
+
+				}
+				// TODO: Other event type
 			}
 		}
 	}
@@ -233,6 +322,12 @@ void Addon::RenderNotifications() {
 
 void Addon::Update() {
 	long current_time = get_time_since_midnight();
+
+	int additionalNotifyOffsetSeconds = 0;
+	// Check if choices vector is big enough
+	if (this->additionalNotifyOffsetIndex >= 0 && this->additionalNotifyOffsetIndex < this->additionalOffsetChoices.size()) {
+		additionalNotifyOffsetSeconds = this->additionalOffsetChoices[this->additionalNotifyOffsetIndex].value * 60;
+	}
 
 	// Get events into upcoming notification 
 	while (true) {
@@ -243,22 +338,29 @@ void Addon::Update() {
 			break;
 		}
 
+
 		// Get notification start
 		long eventStart = coreEvent->GetMidnightOffsetSeconds();
-		long notificationUnclamped = eventStart - coreEvent->GetNotifyOffsetSeconds();
+		long notificationUnclamped = eventStart - (additionalNotifyOffsetSeconds);
 		long notificationStart = std::clamp(notificationUnclamped, TIME_CLAMP_MIDNIGHT_LOWER, TIME_CLAMP_MIDNIGHT_UPPER);
 		long eventEndUnclamped = eventStart + coreEvent->GetDurationSeconds();
 		long eventEnd = std::clamp(eventEndUnclamped, TIME_CLAMP_MIDNIGHT_LOWER, TIME_CLAMP_MIDNIGHT_UPPER);
 
 		// Add to upcoming
 		if (current_time >= notificationStart && current_time < eventStart) {
-			this->notificationBoxUpcoming.push_back(coreEvent);
+			// Check if item is not present
+			if (std::find(notificationBoxUpcoming.begin(), notificationBoxUpcoming.end(), coreEvent) == notificationBoxUpcoming.end()) {
+				this->notificationBoxUpcoming.push_back(coreEvent);
+			}
 			// Event was handled pop queue
 			worldBossesNotifications->pop();
 		}
 		// Add to in progress
 		else if (current_time >= eventStart && current_time <= eventEnd) {
-			this->notificationBoxInProgress.push_back(coreEvent);
+			// Check if item is not present
+			if (std::find(notificationBoxInProgress.begin(), notificationBoxInProgress.end(), coreEvent) == notificationBoxInProgress.end()) {
+				this->notificationBoxInProgress.push_back(coreEvent);
+			}
 			worldBossesNotifications->pop();
 		}
 		// Go through all past events - usually only for initialization/first update
@@ -271,6 +373,9 @@ void Addon::Update() {
 		}
 	}
 
+	// Enable edit mode to not sort immediately
+	this->worldBossesNotifications->SetEditMode(true);
+
 	// Move events from upcomming to in progress
 	for (auto it = this->notificationBoxUpcoming.begin(); it != this->notificationBoxUpcoming.end(); /* no increment */) {
 		Event* eventPtr = *it;
@@ -279,11 +384,22 @@ void Addon::Update() {
 		if (eventPtr->GetEventType().starts_with("core_world_bosses")) {
 			CoreWorldbossEvent* coreEvent = static_cast<CoreWorldbossEvent*>(eventPtr);
 			long eventStart = coreEvent->GetMidnightOffsetSeconds();
-			long notificationUnclamped = eventStart - coreEvent->GetNotifyOffsetSeconds();
+			long notificationUnclamped = eventStart - (additionalNotifyOffsetSeconds);
 			long notificationStart = std::clamp(notificationUnclamped, TIME_CLAMP_MIDNIGHT_LOWER, TIME_CLAMP_MIDNIGHT_UPPER);
 			long eventEndUnclamped = eventStart + coreEvent->GetDurationSeconds();
 			long eventEnd = std::clamp(eventEndUnclamped, TIME_CLAMP_MIDNIGHT_LOWER, TIME_CLAMP_MIDNIGHT_UPPER);
 			
+
+			// Event is not upcoming anymore, but is before 
+			if (current_time < notificationStart) {
+				// Add back to cyclical queue
+				this->worldBossesNotifications->push(coreEvent);
+				// Remove from upcoming
+				it = this->notificationBoxUpcoming.erase(it);
+				// Skip remaining
+				continue;
+			}
+
 			// Event is still upcoming - skipping
 			if (current_time >= notificationStart && current_time < eventStart) {
 				++it;
@@ -324,6 +440,9 @@ void Addon::Update() {
 		++it;
 	}
 
+	// Resort cyclical queue by disabling edit mode
+	this->worldBossesNotifications->SetEditMode(false);
+
 	// Remove events from in progress
 	for (auto it = this->notificationBoxInProgress.begin(); it != this->notificationBoxInProgress.end(); /* no increment */) {
 		Event* eventPtr = *it;
@@ -332,11 +451,14 @@ void Addon::Update() {
 		if (eventPtr->GetEventType().starts_with("core_world_bosses")) {
 			CoreWorldbossEvent* coreEvent = static_cast<CoreWorldbossEvent*>(eventPtr);
 			long eventStart = coreEvent->GetMidnightOffsetSeconds();
+			long notificationUnclamped = eventStart - (additionalNotifyOffsetSeconds);
+			long notificationStart = std::clamp(notificationUnclamped, TIME_CLAMP_MIDNIGHT_LOWER, TIME_CLAMP_MIDNIGHT_UPPER);
 			long eventEndUnclamped = eventStart + coreEvent->GetDurationSeconds();
 			long eventEnd = std::clamp(eventEndUnclamped, TIME_CLAMP_MIDNIGHT_LOWER, TIME_CLAMP_MIDNIGHT_UPPER);
 
-			// Remove from in progress if current time is past eventEnd
-			if (current_time > eventEnd) {
+
+			// Remove from in progress if current time is past eventEnd or event is just upcoming 
+			if (current_time > eventEnd || current_time < eventStart) {
 				it = this->notificationBoxInProgress.erase(it);
 				continue;
 			}
