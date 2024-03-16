@@ -149,6 +149,12 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\GW2BossesVersion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BuildVersion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="patchnotes.md">
@@ -157,12 +163,18 @@
     <None Include="README.md">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="todo.md">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\boss_in_progress.png">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="resources\boss_upcoming.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\boss_gray.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

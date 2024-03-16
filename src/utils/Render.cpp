@@ -849,7 +849,11 @@ void render_map_notification(Event* notificationEvent, Texture* texture) {
 	ImGui::Image(texture->Resource, ImVec2(size, size));
 	ImGui::SetCursorPos(cursorStack);
 
+
+
 	if (eventBox.OverlapsVector(mousePos)) {
+		std::string formattedTooltip = "";
+
 		std::string eventName = notificationEvent->GetName();
 		size_t spacePos = eventName.find_last_of(" ");
 		std::string name;
@@ -860,18 +864,50 @@ void render_map_notification(Event* notificationEvent, Texture* texture) {
 		else {
 			name = eventName;
 		}
-		ImGui::SetTooltip(name.c_str());
+
+		if (notificationEvent->GetEventType().starts_with("core_world_bosses")) {
+			CoreWorldbossEvent* coreEvent = static_cast<CoreWorldbossEvent*>(notificationEvent);
+			long current_time = get_time_since_midnight();
+			int time = coreEvent->GetMidnightOffsetSeconds() - current_time;
+			std::string bracketText = time < 0 ? "active" : "in";
+			time = abs(time);
+			formattedTooltip = name + " (" + bracketText + " " + format_countdown_time(time) + ")";
+		}
+		else {
+			formattedTooltip = name;
+
+		}
+
+		ImGui::SetTooltip(formattedTooltip.c_str());
+
 	}
 
 }
 
 void render_map_notification_upcoming(Event* notificationEvent)
 {
-	Texture * texture = 
-		(resource_textures.find(GW2BOSSES_RESOURCE_COREWORLDBOSSES_UPCOMING) != resource_textures.end()) ? 
-		resource_textures[GW2BOSSES_RESOURCE_COREWORLDBOSSES_UPCOMING] :
-		nullptr;
-	render_map_notification(notificationEvent, texture);
+	if (notificationEvent->GetEventType().starts_with("core_world_bosses")) {
+		CoreWorldbossEvent* coreEvent = static_cast<CoreWorldbossEvent*>(notificationEvent);
+		long current_time = get_time_since_midnight();
+
+		int timeUntil = (coreEvent->GetMidnightOffsetSeconds()) - current_time;
+
+
+		Texture* texture =
+			(resource_textures.find(GW2BOSSES_RESOURCE_COREWORLDBOSSES_UPCOMING) != resource_textures.end()) ?
+			resource_textures[GW2BOSSES_RESOURCE_COREWORLDBOSSES_UPCOMING] :
+			nullptr;
+
+		if (timeUntil > SECONDS(0, 15, 0)) {
+			texture = (resource_textures.find(GW2BOSSES_RESOURCE_COREWORLDBOSSES_GRAY) != resource_textures.end()) ?
+				resource_textures[GW2BOSSES_RESOURCE_COREWORLDBOSSES_GRAY] :
+				nullptr;
+		}
+
+
+
+		render_map_notification(notificationEvent, texture);
+	}
 }
 
 void render_map_notification_in_progress(Event* notificationEvent)

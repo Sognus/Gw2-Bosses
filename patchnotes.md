@@ -1,6 +1,25 @@
+## Version 1.2.0.0
+
+### Added
+- Added addon options to Nexus options -> Addons -> World bosses (options currently limited and not persistent)
+
+### Improved
+- Improved upcoming notification box to allow up to 2 hours of upcoming core world bosses via new option in Nexus options -> Addons -> World Bosses
+- Improved upcoming and in progress notification boxes to show countdown
+- Improved notification map render tooltip to included countdown
+- Improved build and release process to read addon version from one location instead having to change version at multiple places
+
+
+### Changed
+- Changed core boss events to deque backend (might increase memory usage)
+- Switched from batch to python based pre-build script
+- Any core world bosses upcoming for more than 15 minutes are rendered with gray icon
+
+---
+
 ## Version 1.1.2.0
 
-## Fixed
+### Fixed
 - Fixed a bug that caused core world bosses map notification to be rendered when map was not opened
 - Fixed a bug that caused core world bosses map notification to be rendered outside gameplay
 - Reference cleanup update: Addon shortcut unregister corrected to unregister simple shortcut. 

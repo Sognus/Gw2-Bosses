@@ -1,5 +1,5 @@
 #include <vector>
-#include <queue>
+#include <deque>
 #include "Globals.h"
 #include "CoreWorldbossEvent.h"
 
@@ -12,16 +12,20 @@ class CyclicalCoreWorldbossEventQueue {
 private: 
     // Edit mode to disable sorting when adding bulk of data
     bool editMode;
-    void sort();
 
 protected:
-    std::queue<CoreWorldbossEvent*> queue;
+    std::deque<CoreWorldbossEvent*> deque;
     CoreWorldbossEvent* head;
 public:
     CyclicalCoreWorldbossEventQueue();
     ~CyclicalCoreWorldbossEventQueue();
 
     void push(CoreWorldbossEvent* value);
+
+    /// <summary>
+    /// Force the queue sort
+    /// </summary>
+    void sort();
 
     // Please not
     //void remove(CoreWorldbossEvent* toRemove);

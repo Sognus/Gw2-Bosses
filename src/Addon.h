@@ -20,16 +20,24 @@
 #ifndef ADDON_H
 #define ADDON_H
 
+struct ComboBoxItem {
+    int value;
+    std::string text;
+};
+
+
 class Addon {
 public:
     Addon();  // Constructor
     ~Addon(); // Destructor
+
 
      /*
       *      Render
       */
 
     void Render(); // Addon render function
+    void RenderOptions(); // Addon options render function
 
     /*
      *      Behaviour
@@ -39,6 +47,9 @@ public:
     bool render;
     // Show/Hide notification boxes
     bool showNotifications;
+    // Aditional notify offset
+    int additionalNotifyOffsetIndex;
+    std::vector<ComboBoxItem> additionalOffsetChoices;
 
 private:
     /*
