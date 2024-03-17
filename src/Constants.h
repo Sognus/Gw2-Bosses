@@ -45,7 +45,7 @@ const ImU32 BLUE = IM_COL32(0, 0, 255, 255);
 
 const float ENTRY_RADIUS = 30.0f;
 const float ENTRY_ARC_OFFSET = -(M_PI / 2);
-const float ENTRY_SEGMENTS = 256.0f;
+const float ENTRY_SEGMENTS = 64.0f;
 const float ENTRY_NAME_OFFSET = 5.0f;
 
 const float ENTRY_MAX_ZOOM_TEXT_VISIBILITY = 6.4f;
