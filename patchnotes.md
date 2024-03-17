@@ -1,3 +1,8 @@
+## Version 1.2.1.0
+
+### Improved
+- Improved performance of meta events circular render 
+
 ## Version 1.2.0.0
 
 ### Added
