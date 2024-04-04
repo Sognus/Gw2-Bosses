@@ -156,7 +156,7 @@ extern "C" __declspec(dllexport) AddonDefinition * GetAddonDef()
 	Version.Major = VERSION_MAJOR;
 	Version.Minor = VERSION_MINOR;
 	Version.Build = VERSION_BUILD;
-	Version.Revision = VERSION_REVISION;
+	Version.Revision = GET_REVISION();
 	AddonDef->Version = Version;
 	AddonDef->Author = "Sognus.1204";
 	AddonDef->Description = "Adds meta events and world bosses notifications to in-game map.";

@@ -43,6 +43,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\PeriodicEvent.cpp" />
+    <ClCompile Include="src\tinyxml2\tinyxml2.cpp" />
+    <ClCompile Include="src\tinyxml2\xmltest.cpp" />
     <ClCompile Include="src\utils\BoundingBox.cpp" />
     <ClCompile Include="src\utils\Map.cpp" />
     <ClCompile Include="src\utils\Render.cpp" />
@@ -71,6 +73,7 @@
     <ClInclude Include="src\nexus\Nexus.h" />
     <ClInclude Include="src\nlohmann\json.hpp" />
     <ClInclude Include="src\PeriodicEvent.h" />
+    <ClInclude Include="src\tinyxml2\tinyxml2.h" />
     <ClInclude Include="src\utils\BoundingBox.h" />
     <ClInclude Include="src\utils\Map.h" />
     <ClInclude Include="src\utils\Render.h" />

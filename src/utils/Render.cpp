@@ -194,13 +194,13 @@ void render_periodic_event(PeriodicEvent event) {
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 	ImVec2 location = map_coords_to_pixels(event.GetLocation(), viewport, mapScaleX);
 
-	float mapZoomScale = map_zoom_scale();
-	float mapObjectScale = map_object_scale();
+	double mapZoomScale = map_zoom_scale();
+	double mapObjectScale = map_object_scale();
 
-	float width = 200.0f * mapZoomScale; // Zoom in = more wide
-	float height = 50.0f * mapObjectScale; // Zoom in = less tall
+	double width = 200.0f * mapZoomScale; // Zoom in = more wide
+	double height = 50.0f * mapObjectScale; // Zoom in = less tall
 
-	float width_per_second = width / event.GetPeriodicitySeconds();
+	double width_per_second = width / event.GetPeriodicitySeconds();
 
 	const std::vector<json>& entries = event.GetPeriodicEntries();
 
@@ -410,6 +410,8 @@ void render_periodic_circular_event(PeriodicEvent event) {
 	BoundingBox screen = BoundingBox(0, 0, io.DisplaySize.y, io.DisplaySize.x);
 	BoundingBox viewport = map_get_bounding_box();
 
+	float sizex = viewport.GetSizeX();
+
 	// Calculate scaling factors for X and Y axes;
 	ImVec2 mapScaleX = map_get_scale();
 
@@ -419,7 +421,6 @@ void render_periodic_circular_event(PeriodicEvent event) {
 
 	float mapZoomScale = map_zoom_scale();
 	float mapObjectScale = map_object_scale();
-
 	float size = 50.0f * mapObjectScale;
 
 	// CHECK IF EVENT IS OUTSIDE VIEWPORT

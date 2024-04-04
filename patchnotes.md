@@ -1,3 +1,13 @@
+## Version 1.3.0.0
+
+### Added
+- Addon render is currently DPI aware (see notes)
+- Addon will now match ingame settings Use DPI scale
+- Added addon options Nexus options -> Addons -> World bosses -> General to manually override system's API scale setting. Value 1.0 means 100% DPI (96 on windows). 
+
+### Known issues
+- Calculation of event render position is slightly wrong for larger interface sizes, especially when changing the map view. This affects older versions as well and has no easy solution at the moment.   
+
 ## Version 1.2.1.0
 
 ### Improved

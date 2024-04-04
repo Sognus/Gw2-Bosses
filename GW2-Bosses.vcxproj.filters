@@ -22,6 +22,12 @@
     <Filter Include="Header Files\API">
       <UniqueIdentifier>{881777ae-3d1c-4302-878f-69741ae79c5f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{29e8950d-e45d-4526-8057-0523d4c8072e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\tinyxml2">
+      <UniqueIdentifier>{38ea379a-3f17-425b-a593-9092b35a6bd5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\entry.cpp">
@@ -74,6 +80,12 @@
     </ClCompile>
     <ClCompile Include="src\utils\Time.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tinyxml2\tinyxml2.cpp">
+      <Filter>Libraries\tinyxml2</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tinyxml2\xmltest.cpp">
+      <Filter>Libraries\tinyxml2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -154,6 +166,9 @@
     </ClInclude>
     <ClInclude Include="BuildVersion.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tinyxml2\tinyxml2.h">
+      <Filter>Libraries\tinyxml2</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

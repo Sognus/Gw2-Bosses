@@ -10,6 +10,10 @@ Addon::Addon() {
 	this->render = true;
 	this->showNotifications = false;
 
+	this->DPIScaleOverride = false;
+	this->DPIScaleOverride = 1.0f;
+
+	// Choices for offset combo box
 	this->additionalOffsetChoices = {
 		{0, "disabled"},
 		{15, "15 minutes"},
@@ -22,7 +26,11 @@ Addon::Addon() {
 		{120, "2 hours"}
 	};
 
+	// Currently selected combo box entry
 	this->additionalNotifyOffsetIndex = 1;
+
+	// Currently selected event editor entry from combo box
+	this->editorSelectedEventName = "";
 }
 
 Addon::~Addon() {
@@ -35,7 +43,7 @@ Addon::~Addon() {
 }
 
 void Addon::RenderOptions() {
-	if (ImGui::BeginTabBar("Test", ImGuiTabBarFlags_None)) {
+	if (ImGui::BeginTabBar("GW2 Bosses Tab Bar", ImGuiTabBarFlags_None)) {
 	
 		if (ImGui::BeginTabItem("General")) {
 			
@@ -70,15 +78,57 @@ void Addon::RenderOptions() {
 				ImGui::EndCombo();
 			}
 
+			ImGui::Separator();
+
+			ImGui::TextDisabled("DPI Scaling override");
+			ImGui::Checkbox("##DPI override", &this->enableDPIScaleOverride);
+
+			if (this->DPIScaleOverride) {
+				ImGui::TextDisabled("DPI Scaling value");
+				ImGui::InputFloat("##DPI scaling value", &this->DPIScaleOverride, 0.0f, 0.0f, "%.2f", 0);
+			}
+
+
+
 			ImGui::EndTabItem();
 		}
 
-		/*
-		if (ImGui::BeginTabItem("Plenga")) {
-			ImGui::Text("plenga text");
+		if (ImGui::BeginTabItem("Editor")) {
+			ImGui::TextDisabled("Choose event");
+
+
+			if (ImGui::BeginCombo("##Events", this->editorSelectedEventName.c_str())) {
+
+				bool isSelectedNone = (editorSelectedEventName.empty());
+				if (ImGui::Selectable("None", isSelectedNone))
+					editorSelectedEventName.clear();
+				if (isSelectedNone)
+					ImGui::SetItemDefaultFocus();
+
+				for (const auto& pair : events) {
+					const std::string& eventName = pair.first;
+					bool isSelected = (editorSelectedEventName == eventName);
+					if (ImGui::Selectable(eventName.c_str(), isSelected))
+						editorSelectedEventName = eventName;
+					if (isSelected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
+
+			ImGui::Separator();
+
+			if (!this->editorSelectedEventName.empty() && events.find(this->editorSelectedEventName) != events.end()) {
+
+				std::string selectedLabelText = std::string("Selected: ") + this->editorSelectedEventName.c_str();
+				ImGui::TextDisabled(selectedLabelText.c_str());
+			
+			
+			}
+
+
 			ImGui::EndTabItem();
 		}
-		*/
 
 
 

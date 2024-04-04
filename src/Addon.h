@@ -43,6 +43,10 @@ public:
      *      Behaviour
      */
 
+    // DPI scale
+    bool enableDPIScaleOverride;
+    float DPIScaleOverride;
+
      // Global render enabled-disabled flag
     bool render;
     // Show/Hide notification boxes
@@ -50,6 +54,8 @@ public:
     // Aditional notify offset
     int additionalNotifyOffsetIndex;
     std::vector<ComboBoxItem> additionalOffsetChoices;
+    // Editor selection
+    std::string editorSelectedEventName;
 
 private:
     /*
