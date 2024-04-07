@@ -90,11 +90,11 @@ float BoundingBox::GetBottom() const {
 }
 
 bool BoundingBox::Overlaps(const BoundingBox& other) const {
-    return (right > other.left && left < other.right && bottom > other.top && top < other.bottom);
+    return (right >= other.left && left <= other.right && bottom >= other.top && top <= other.bottom);
 }
 
 bool BoundingBox::OverlapsVector(const ImVec2& other) const {
-    return (other.x > left && other.x < right && other.y > top && other.y < bottom);
+    return (other.x >= left && other.x <= right && other.y >= top && other.y <= bottom);
 }
 
 

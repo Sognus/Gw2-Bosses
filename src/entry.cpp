@@ -18,6 +18,8 @@ Mumble::Identity* MumbleIdentity = nullptr;
 
 std::unordered_map<std::string, Texture*> resource_textures;
 
+bool isLeftMouseDoubleClicked = false;
+
 
 // Addon
 Addon* addon;
@@ -34,6 +36,22 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	}
 	return TRUE;
 }
+
+UINT AddonWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (uMsg == WM_LBUTTONDOWN)
+	{
+		isLeftMouseDoubleClicked = true;
+		
+	}
+	else if (uMsg == WM_LBUTTONUP)
+	{
+		isLeftMouseDoubleClicked = false;
+	}
+
+	return uMsg;
+}
+
 
 void ProcessKeybind(const char* aIdentifier) {
 	std::string keybind = aIdentifier;
@@ -123,6 +141,9 @@ void AddonLoad(AddonAPI* aHostApi)
 	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_UPCOMING.c_str(), IMAGE_COREWORLDBOSSES_UPCOMING, hSelf, ReceiveTexture);
 	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_GRAY.c_str(), IMAGE_COREWORLDBOSSES_GRAY, hSelf, ReceiveTexture);
 
+	// WND proc - Nexus bad, breaking imgui IO
+	APIDefs->RegisterWndProc(AddonWndProc);
+
 	// Render register
 	APIDefs->RegisterRender(ERenderType::ERenderType_Render, AddonRender);
 	APIDefs->RegisterRender(ERenderType_OptionsRender, AddonOptionsRender);
@@ -140,6 +161,10 @@ void AddonUnload()
 	// Unregister render
 	APIDefs->UnregisterRender(AddonRender);
 	APIDefs->UnregisterRender(AddonOptionsRender);
+	
+	// WND proc - Nexus bad, breaking imgui IO
+	APIDefs->UnregisterWndProc(AddonWndProc);
+
 	// Unregister events
 	APIDefs->UnsubscribeEvent(IDENTITY_EVENT.c_str(), OnMumbleIdentityUpdate);
 

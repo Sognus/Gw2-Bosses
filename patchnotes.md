@@ -1,12 +1,15 @@
 ## Version 1.3.0.0
 
 ### Added
-- Addon render is currently DPI aware (see notes)
+- Added Nexus options -> Addons -> World bosses -> Editor that allows users to change properties of events, mark for alert  
+- Added feature of ctrl+click to select event for Nexus options -> Addons -> World bosses -> Editor
+- Addon render is currently DPI aware (see known issues)
 - Addon will now match ingame settings Use DPI scale
 - Added addon options Nexus options -> Addons -> World bosses -> General to manually override system's API scale setting. Value 1.0 means 100% DPI (96 on windows). 
 
 ### Known issues
-- Calculation of event render position is slightly wrong for larger interface sizes, especially when changing the map view. This affects older versions as well and has no easy solution at the moment.   
+- Calculation of event render position is slightly wrong for larger interface sizes, especially when changing the map view. This affects older versions as well and has no easy solution at the moment. 
+- Change of DPI scale is slightly delayed after checked/unchecked in Guild Wars 2 settings, this is not a bug.
 
 ## Version 1.2.1.0
 

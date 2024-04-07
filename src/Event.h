@@ -32,12 +32,24 @@ public:
     float GetPercentage() const;
     void SetPercentage(float newPercentage);
 
-    ImVec2 GetLocation() const;
+    /// <summary>
+    /// Getter for location by value
+    /// </summary>
+    /// <returns></returns>
+    ImVec2 GetLocation();
+
+    /// <summary>
+    /// Getter for location by ref
+    /// </summary>
+    /// <returns></returns>
+    ImVec2& GetLocationPtr();
+
+    void SetLocation(ImVec2 location);
 
     std::string GetEventType() const;
     void SetEventType(std::string newEventType);
 
-    std::string GetColorHex() const;
+    std::string GetColorHex();
     void SetColorHex(std::string newColorHex);
 
     // Functions to serialize and deserialize the Event to and from a JSON object

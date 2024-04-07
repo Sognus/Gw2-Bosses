@@ -56,6 +56,7 @@ public:
     std::vector<ComboBoxItem> additionalOffsetChoices;
     // Editor selection
     std::string editorSelectedEventName;
+    Event* editorEditedEvent;
 
 private:
     /*

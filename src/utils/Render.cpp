@@ -423,8 +423,8 @@ void render_periodic_circular_event(PeriodicEvent event) {
 	float mapObjectScale = map_object_scale();
 	float size = 50.0f * mapObjectScale;
 
-	// CHECK IF EVENT IS OUTSIDE VIEWPORT
-	BoundingBox eventBox = BoundingBox(location, size, true);
+	// CHECK IF EVENT IS OUTSIDE VIEWPORT - full size of box
+	BoundingBox eventBox = BoundingBox(location, size, false);
 
 	if (!screen.Overlaps(eventBox)) {
 		return;
@@ -570,6 +570,15 @@ void render_periodic_circular_event(PeriodicEvent event) {
 		ImGui::Text(buffer);
 	}
 
+	// Mouse is inside event box
+	if (eventBox.OverlapsVector(io.MousePos)) {
+		// Handle ctrl click - editor select
+		if (io.KeyCtrl && isLeftMouseDoubleClicked) {
+			addon->editorSelectedEventName = event.GetName();
+		}
+	}
+ 	
+
 }
 
 
@@ -630,8 +639,8 @@ void render_periodic_circular_event_convergences(PeriodicEvent event) {
 
 	float size = 50.0f * mapObjectScale;
 
-	// CHECK IF EVENT IS OUTSIDE VIEWPORT
-	BoundingBox eventBox = BoundingBox(location, size, true);
+	// CHECK IF EVENT IS OUTSIDE VIEWPORT - full size of box
+	BoundingBox eventBox = BoundingBox(location, size, false);
 
 	if (!screen.Overlaps(eventBox)) {
 		return;
@@ -816,6 +825,13 @@ void render_periodic_circular_event_convergences(PeriodicEvent event) {
 		ImGui::Text(buffer);
 	}
 
+	// Mouse is inside event box
+	if (eventBox.OverlapsVector(io.MousePos)) {
+		// Handle ctrl click - editor select
+		if (io.KeyCtrl && isLeftMouseDoubleClicked) {
+			addon->editorSelectedEventName = event.GetName();
+		}
+	}
 }
 
 void render_map_notification(Event* notificationEvent, Texture* texture) {
@@ -880,7 +896,14 @@ void render_map_notification(Event* notificationEvent, Texture* texture) {
 		}
 
 		ImGui::SetTooltip(formattedTooltip.c_str());
+	}
 
+	// Mouse is inside event box
+	if (eventBox.OverlapsVector(io.MousePos)) {
+		// Handle ctrl click - editor select
+		if (io.KeyCtrl && isLeftMouseDoubleClicked) {
+			addon->editorSelectedEventName = notificationEvent->GetName();
+		}
 	}
 
 }

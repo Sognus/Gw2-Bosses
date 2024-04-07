@@ -31,6 +31,7 @@ Addon::Addon() {
 
 	// Currently selected event editor entry from combo box
 	this->editorSelectedEventName = "";
+	this->editorEditedEvent = nullptr;
 }
 
 Addon::~Addon() {
@@ -118,12 +119,44 @@ void Addon::RenderOptions() {
 
 			ImGui::Separator();
 
-			if (!this->editorSelectedEventName.empty() && events.find(this->editorSelectedEventName) != events.end()) {
+			// Choosed event
+			auto choosedEventPair = events.find(this->editorSelectedEventName);
 
-				std::string selectedLabelText = std::string("Selected: ") + this->editorSelectedEventName.c_str();
+			if (!this->editorSelectedEventName.empty() && choosedEventPair != events.end()) {
+				// Create currently edited copy if it doesnt exist or is different from current event
+				if (this->editorEditedEvent == nullptr || this->editorEditedEvent->GetName() != this->editorSelectedEventName) {
+					if (this->editorEditedEvent) {
+						delete this->editorEditedEvent;
+						this->editorEditedEvent = nullptr;
+					}
+					// TODO: Check if PeriodicEvent and similar child objects works as well
+					this->editorEditedEvent = new Event(*choosedEventPair->second);
+
+				}
+
+				std::string selectedLabelText = std::string("Selected: ") + this->editorEditedEvent->GetName().c_str();
 				ImGui::TextDisabled(selectedLabelText.c_str());
-			
-			
+				
+				ImGui::Separator();
+
+				// Common events variables
+				ImGui::TextDisabled("Location");
+				ImVec2& location = this->editorEditedEvent->GetLocationPtr();
+				
+				ImGui::Text("X: ");
+				ImGui::SameLine();
+				ImGui::InputFloat("##x", &location.x, 0, 0, "%.2f", ImGuiInputTextFlags_CharsDecimal);
+
+				ImGui::Text("Y: ");
+				ImGui::SameLine();
+				ImGui::InputFloat("##y", &location.y, 0, 0, "%.2f", ImGuiInputTextFlags_CharsDecimal);
+
+
+
+				if(ImGui::Button("Save")) {
+					// Modify data of original 
+					choosedEventPair->second->SetLocation(location);
+				}
 			}
 
 
