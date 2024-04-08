@@ -31,7 +31,9 @@ Addon::Addon() {
 
 	// Currently selected event editor entry from combo box
 	this->editorSelectedEventName = "";
-	this->editorEditedEvent = nullptr;
+	this->editorBuffer = {
+		nullptr, {0}
+	};
 }
 
 Addon::~Addon() {
@@ -45,9 +47,9 @@ Addon::~Addon() {
 
 void Addon::RenderOptions() {
 	if (ImGui::BeginTabBar("GW2 Bosses Tab Bar", ImGuiTabBarFlags_None)) {
-	
+
 		if (ImGui::BeginTabItem("General")) {
-			
+
 			ImGui::TextDisabled("Notification control");
 
 			if (ImGui::Checkbox("Render events and bosses on map", &this->render)) {
@@ -123,26 +125,33 @@ void Addon::RenderOptions() {
 			auto choosedEventPair = events.find(this->editorSelectedEventName);
 
 			if (!this->editorSelectedEventName.empty() && choosedEventPair != events.end()) {
+
 				// Create currently edited copy if it doesnt exist or is different from current event
-				if (this->editorEditedEvent == nullptr || this->editorEditedEvent->GetName() != this->editorSelectedEventName) {
-					if (this->editorEditedEvent) {
-						delete this->editorEditedEvent;
-						this->editorEditedEvent = nullptr;
+				if (this->editorBuffer.editorEditedEvent == nullptr || this->editorBuffer.editorEditedEvent->GetName() != this->editorSelectedEventName) {
+					if (this->editorBuffer.editorEditedEvent) {
+						delete this->editorBuffer.editorEditedEvent;
+						// Set 
+						this->editorBuffer.editorEditedEvent = nullptr;
+						char setBuffer[7] = {0};
+						std::strncpy(this->editorBuffer.hexBuffer, setBuffer, sizeof(this->editorBuffer.hexBuffer) - 1);
+
 					}
 					// TODO: Check if PeriodicEvent and similar child objects works as well
-					this->editorEditedEvent = new Event(*choosedEventPair->second);
-
+					this->editorBuffer.editorEditedEvent = new Event(*choosedEventPair->second);
+					// Set hexBuffer
+					std::strncpy(this->editorBuffer.hexBuffer, this->editorBuffer.editorEditedEvent->GetColorHex().c_str(), sizeof(this->editorBuffer.hexBuffer) - 1);
+					this->editorBuffer.hexBuffer[sizeof(this->editorBuffer.hexBuffer) - 1] = '\0';
 				}
 
-				std::string selectedLabelText = std::string("Selected: ") + this->editorEditedEvent->GetName().c_str();
+				std::string selectedLabelText = std::string("Selected: ") + this->editorBuffer.editorEditedEvent->GetName().c_str();
 				ImGui::TextDisabled(selectedLabelText.c_str());
-				
+
 				ImGui::Separator();
 
 				// Common events variables
 				ImGui::TextDisabled("Location");
-				ImVec2& location = this->editorEditedEvent->GetLocationPtr();
-				
+				ImVec2& location = this->editorBuffer.editorEditedEvent->GetLocationPtr();
+
 				ImGui::Text("X: ");
 				ImGui::SameLine();
 				ImGui::InputFloat("##x", &location.x, 0, 0, "%.2f", ImGuiInputTextFlags_CharsDecimal);
@@ -151,26 +160,53 @@ void Addon::RenderOptions() {
 				ImGui::SameLine();
 				ImGui::InputFloat("##y", &location.y, 0, 0, "%.2f", ImGuiInputTextFlags_CharsDecimal);
 
+				ImGui::Separator();
+				ImGui::TextDisabled("Base color (HEX)");
+				ImGui::Text("#");
+				ImGui::SameLine();
+				bool validHex = true;
+				if (ImGui::InputText("##base color input", this->editorBuffer.hexBuffer, sizeof(this->editorBuffer.hexBuffer), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue))
+				{
+					// Check if input is exactly 6 characters long
+					if (strlen(this->editorBuffer.hexBuffer) == 6) {
+						// Check if all characters are valid hexadecimal digits
+						for (int i = 0; i < 6; i++) {
+							if (!isxdigit(this->editorBuffer.hexBuffer[i])) {
+								validHex = false;
+								break;
+							}
+						}
+						if (validHex) {
+							// Set color if input is valid
+							this->editorBuffer.editorEditedEvent->SetColorHex(std::string(this->editorBuffer.hexBuffer));
+						}
+						else {
+							strcpy(this->editorBuffer.hexBuffer, this->editorBuffer.editorEditedEvent->GetColorHex().c_str());
+						}
+					}
+					else {
+						// If input is not exactly 6 characters long, revert to the previous valid color
+						strcpy(this->editorBuffer.hexBuffer, this->editorBuffer.editorEditedEvent->GetColorHex().c_str());
+					}
+				}
 
+				ImGui::Separator();
 
-				if(ImGui::Button("Save")) {
+				if (ImGui::Button("Save")) {
 					// Modify data of original 
 					choosedEventPair->second->SetLocation(location);
+					choosedEventPair->second->SetColorHex(this->editorBuffer.editorEditedEvent->GetColorHex());
+
 				}
+
+
 			}
-
-
 			ImGui::EndTabItem();
+
 		}
-
-
-
 		ImGui::EndTabBar();
-	}
-	
 
-	
-	
+	}
 
 }
 

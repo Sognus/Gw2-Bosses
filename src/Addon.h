@@ -25,6 +25,11 @@ struct ComboBoxItem {
     std::string text;
 };
 
+struct EditorBuffer {
+    Event* editorEditedEvent;
+    char hexBuffer[7];
+};
+
 
 class Addon {
 public:
@@ -56,7 +61,7 @@ public:
     std::vector<ComboBoxItem> additionalOffsetChoices;
     // Editor selection
     std::string editorSelectedEventName;
-    Event* editorEditedEvent;
+    EditorBuffer editorBuffer;
 
 private:
     /*
