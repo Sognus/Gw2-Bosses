@@ -146,7 +146,7 @@ void AddonLoad(AddonAPI* aHostApi)
 
 	// Render register
 	APIDefs->RegisterRender(ERenderType::ERenderType_Render, AddonRender);
-	APIDefs->RegisterRender(ERenderType_OptionsRender, AddonOptionsRender);
+	APIDefs->RegisterRender(ERenderType::ERenderType_OptionsRender, AddonOptionsRender);
 }
 
 void AddonUnload()

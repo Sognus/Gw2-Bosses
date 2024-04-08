@@ -25,9 +25,58 @@ struct ComboBoxItem {
     std::string text;
 };
 
+class SizedMemoryChar {
+public:
+    char* ptr;
+    size_t size;
+
+    /// <summary>
+    /// Constructor to create buffer from const char* string - null terminator included
+    /// </summary>
+    /// <param name="str"></param>
+    SizedMemoryChar(const char* str) {
+        size = strlen(str);
+        ptr = new char[size + 1]; // +1 for null terminator
+        std::strcpy(ptr, str);
+    }
+
+    /// <summary>
+    /// Constructor to create empty buffer of SizedMemoryChar - null terminator not included
+    /// </summary>
+    /// <param name="bufferSize"></param>
+    SizedMemoryChar(size_t bufferSize) : size(bufferSize) {
+        ptr = new char[size];
+        std::memset(ptr, 0, size);
+    }
+
+
+
+    void Set(const char* data) {
+        size_t dataSize = strlen(data);
+        if (dataSize > size) {
+            // If dataSize exceeds buffer size, only copy until the buffer size
+            dataSize = size;
+        }
+        std::strncpy(ptr, data, dataSize);
+        // Null-terminate the string
+        ptr[dataSize] = '\0';
+    }
+
+    void Set(std::string data) {
+        this->Set(data.c_str());
+    }
+
+
+    // Destructor
+    ~SizedMemoryChar() {
+        delete[] ptr;
+    }
+
+};
+
 struct EditorBuffer {
     Event* editorEditedEvent;
-    char hexBuffer[7];
+    SizedMemoryChar* hexBuffer;
 };
 
 
