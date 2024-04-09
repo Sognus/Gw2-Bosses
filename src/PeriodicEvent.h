@@ -101,6 +101,9 @@ public:
     void FromJson(const json& json) override;
     static PeriodicEvent* CreateFromJson(const json& json);
 
+    // Deep Copy
+    PeriodicEvent* DeepCopy();
+
     // Destructor
     ~PeriodicEvent() override;
 

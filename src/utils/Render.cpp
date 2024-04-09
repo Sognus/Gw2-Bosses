@@ -403,7 +403,7 @@ bool is_point_inside_arc(ImVec2 point, ImVec2 center, float radius, float startA
 	}
 }
 
-void render_periodic_circular_event(PeriodicEvent event) {
+void render_periodic_circular_event(PeriodicEvent pEvent) {
 	ImGuiIO& io = ImGui::GetIO();
 	ImVec2 mousePos = io.MousePos;
 
@@ -417,7 +417,7 @@ void render_periodic_circular_event(PeriodicEvent event) {
 
 	// Update necessary data for render
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
-	ImVec2 location = map_coords_to_pixels(event.GetLocation(), viewport, mapScaleX);
+	ImVec2 location = map_coords_to_pixels(pEvent.GetLocation(), viewport, mapScaleX);
 
 	float mapZoomScale = map_zoom_scale();
 	float mapObjectScale = map_object_scale();
@@ -430,16 +430,27 @@ void render_periodic_circular_event(PeriodicEvent event) {
 		return;
 	}
 
+	int ringSize = 1.0;
+	ImU32 ringColor = IM_COL32(212, 175, 55, 255);
+	// Nullcheck
+	if (addon != nullptr && addon->editorBuffer.editorEditedEvent != nullptr) {
+		// Check if currently edited addon is same as currently rendered addon
+		if (strcmp(pEvent.GetName().c_str(), addon->editorSelectedEventName.c_str()) == 0) {
+			ringSize = 2;
+			ringColor = IM_COL32(118, 212, 55, 255);
+		}
+	}
+
 	// Draw base circle
-	render_ring(
+	render_ring( 
 		drawList,
 		location,						// center
 		size,							// inner radius
-		size + 1.0f,					// outer radius
-		IM_COL32(212, 175, 55, 255),	// color
+		size + ringSize,				// outer radius
+		ringColor,	// color
 		ENTRY_SEGMENTS);				// segments 
 
-	const std::vector<json>& entries = event.GetPeriodicEntries();
+	const std::vector<json>& entries = pEvent.GetPeriodicEntries();
 	int current_entry_index = -1;
 	int next_entry_index = -1;
 
@@ -457,11 +468,11 @@ void render_periodic_circular_event(PeriodicEvent event) {
 		ImU32 color = hex_to_color(hex_color);
 
 		// Size of offset 
-		float offset = (offset_seconds / event.GetPeriodicitySeconds()) * 100; // %
+		float offset = (offset_seconds / pEvent.GetPeriodicitySeconds()) * 100; // %
 		float offset_angle_radians = (offset / 100.f) * (2.0f * M_PI); // rad
 
 		// Size of arc 
-		float percentage = (duration_seconds / event.GetPeriodicitySeconds()) * 100; // %
+		float percentage = (duration_seconds / pEvent.GetPeriodicitySeconds()) * 100; // %
 		float totalAngle = (percentage / 100.f) * (2.0f * M_PI); // rad
 
 		float angleStep = totalAngle / ENTRY_SEGMENTS;
@@ -557,7 +568,7 @@ void render_periodic_circular_event(PeriodicEvent event) {
 		std::string nextEntryDesc = next_entry == nullptr ? "?" : next_entry["description"];
 		snprintf(buffer, sizeof(buffer),
 			"%s - %s\n\nNext: %s",
-			event.GetName().c_str(),
+			pEvent.GetName().c_str(),
 			currentEntryDesc.c_str(),
 			nextEntryDesc.c_str()
 		);
@@ -573,8 +584,13 @@ void render_periodic_circular_event(PeriodicEvent event) {
 	// Mouse is inside event box
 	if (eventBox.OverlapsVector(io.MousePos)) {
 		// Handle ctrl click - editor select
-		if (io.KeyCtrl && isLeftMouseDoubleClicked) {
-			addon->editorSelectedEventName = event.GetName();
+		if (isControlPressed && isLeftMouseClicked) {
+			if (addon != nullptr) {
+				if (addon->editorSelectedEventName != pEvent.GetName()) {
+					addon->editorSelectedEventName = pEvent.GetName();
+					addon->editorBuffer.editorEditedEvent = pEvent.DeepCopy();
+				}
+			}
 		}
 	}
  	
@@ -620,7 +636,7 @@ std::string calculate_tooltip_time_absolute(long seconds_since_midnight) {
 
 
 
-void render_periodic_circular_event_convergences(PeriodicEvent event) {
+void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 	ImGuiIO& io = ImGui::GetIO();
 	ImVec2 mousePos = io.MousePos;
 
@@ -632,7 +648,7 @@ void render_periodic_circular_event_convergences(PeriodicEvent event) {
 
 	// Update necessary data for render
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
-	ImVec2 location = map_coords_to_pixels(event.GetLocation(), viewport, mapScaleX);
+	ImVec2 location = map_coords_to_pixels(pEvent.GetLocation(), viewport, mapScaleX);
 
 	float mapZoomScale = map_zoom_scale();
 	float mapObjectScale = map_object_scale();
@@ -646,16 +662,27 @@ void render_periodic_circular_event_convergences(PeriodicEvent event) {
 		return;
 	}
 
+	int ringSize = 1.0;
+	ImU32 ringColor = IM_COL32(212, 175, 55, 255);
+	// Nullcheck
+	if (addon != nullptr && addon->editorBuffer.editorEditedEvent != nullptr) {
+		// Check if currently edited addon is same as currently rendered addon
+		if (strcmp(pEvent.GetName().c_str(), addon->editorSelectedEventName.c_str()) == 0) {
+			ringSize = 2;
+			ringColor = IM_COL32(118, 212, 55, 255);
+		}
+	}
+
 	// Draw base circle
 	render_ring(
 		drawList,
 		location,						// center
 		size,							// inner radius
-		size + 1.0f,					// outer radius
-		IM_COL32(212, 175, 55, 255),	// color
+		size + ringSize,				// outer radius
+		ringColor,	// color
 		ENTRY_SEGMENTS);				// segments 
 
-	std::string event_hex_color = event.GetColorHex();
+	std::string event_hex_color = pEvent.GetColorHex();
 	ImU32 event_color = hex_to_color(event_hex_color);
 	drawList->AddCircleFilled(location, size, event_color, ENTRY_SEGMENTS);
 
@@ -664,7 +691,7 @@ void render_periodic_circular_event_convergences(PeriodicEvent event) {
 		ImGui::SetTooltip("No convergence");
 	}
 
-	const std::vector<json>& entries = event.GetPeriodicEntries();
+	const std::vector<json>& entries = pEvent.GetPeriodicEntries();
 	int current_entry_index = -1;
 	int next_entry_index = -1;
 
@@ -799,7 +826,7 @@ void render_periodic_circular_event_convergences(PeriodicEvent event) {
 		std::string currentEntryDesc = current_entry == nullptr ? "?" : current_entry["description"];
 		std::string nextEntryDesc = next_entry == nullptr ? "?" : next_entry["description"];
 
-		if (event.GetName().compare(currentEntryDesc) == 0) {
+		if (pEvent.GetName().compare(currentEntryDesc) == 0) {
 			snprintf(buffer, sizeof(buffer),
 				"%s\n\nNext: %s",
 				currentEntryDesc.c_str(),
@@ -809,7 +836,7 @@ void render_periodic_circular_event_convergences(PeriodicEvent event) {
 		else {
 			snprintf(buffer, sizeof(buffer),
 				"%s - %s\n\nNext: %s",
-				event.GetName().c_str(),
+				pEvent.GetName().c_str(),
 				currentEntryDesc.c_str(),
 				nextEntryDesc.c_str()
 			);
@@ -828,8 +855,13 @@ void render_periodic_circular_event_convergences(PeriodicEvent event) {
 	// Mouse is inside event box
 	if (eventBox.OverlapsVector(io.MousePos)) {
 		// Handle ctrl click - editor select
-		if (io.KeyCtrl && isLeftMouseDoubleClicked) {
-			addon->editorSelectedEventName = event.GetName();
+		if (isControlPressed && isLeftMouseClicked) {
+			if (addon != nullptr) {
+				if (addon->editorSelectedEventName != pEvent.GetName()) {
+					addon->editorSelectedEventName = pEvent.GetName();
+					addon->editorBuffer.editorEditedEvent = pEvent.DeepCopy();
+				}
+			}
 		}
 	}
 }
@@ -858,6 +890,17 @@ void render_map_notification(Event* notificationEvent, Texture* texture) {
 
 	if (!screen.Overlaps(eventBox)) {
 		return;
+	}
+
+	// Nullcheck
+	if (addon != nullptr && addon->editorBuffer.editorEditedEvent != nullptr) {
+		// Check if currently edited addon is same as currently rendered addon
+		if (strcmp(notificationEvent->GetName().c_str(), addon->editorSelectedEventName.c_str()) == 0) {
+			ImVec2 outlineRectMin = ImVec2(location.x - size / 2, location.y - size / 2);
+			ImVec2 outlineRectMax = ImVec2(location.x + size / 2, location.y + size / 2);
+			ImU32 outLineColor = IM_COL32(118, 212, 55, 255);
+			drawList->AddRect(outlineRectMin, outlineRectMax, outLineColor, 0.0f, 15, 2.5f);
+		}
 	}
 
 	ImVec2 cursorStack = ImGui::GetCursorPos();
@@ -901,8 +944,13 @@ void render_map_notification(Event* notificationEvent, Texture* texture) {
 	// Mouse is inside event box
 	if (eventBox.OverlapsVector(io.MousePos)) {
 		// Handle ctrl click - editor select
-		if (io.KeyCtrl && isLeftMouseDoubleClicked) {
-			addon->editorSelectedEventName = notificationEvent->GetName();
+		if (isControlPressed && isLeftMouseClicked) {
+			if (addon != nullptr) {
+				if (addon->editorSelectedEventName != notificationEvent->GetName()) {
+					addon->editorSelectedEventName = notificationEvent->GetName();
+					addon->editorBuffer.editorEditedEvent = notificationEvent->DeepCopy();
+				}
+			}
 		}
 	}
 

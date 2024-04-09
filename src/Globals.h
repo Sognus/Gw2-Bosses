@@ -33,7 +33,8 @@ extern Mumble::Identity* MumbleIdentity;
 extern Addon* addon;
 extern std::unordered_map<std::string, Texture*> resource_textures;
 
-extern bool isLeftMouseDoubleClicked;
+extern bool isLeftMouseClicked;
+extern bool isControlPressed;
 
 
 #endif // GLOBALS_H

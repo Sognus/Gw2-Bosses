@@ -101,6 +101,11 @@ CoreWorldbossEvent* CoreWorldbossEvent::CreateFromJson(const json& json) {
     return eventInstance;
 }
 
+CoreWorldbossEvent* CoreWorldbossEvent::DeepCopy()
+{
+    return new CoreWorldbossEvent(*this);
+}
+
 json CoreWorldbossEvent::ToJson() const {
     json eventData = Event::ToJson();
     eventData["midnight_offset_seconds"] = midnight_offset_seconds;

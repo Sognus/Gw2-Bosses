@@ -59,6 +59,9 @@ public:
     void FromJson(const json& jsonData) override;
     static CoreWorldbossEvent* CreateFromJson(const json& jsonData);
 
+    // Deep Copy
+    CoreWorldbossEvent* DeepCopy();
+
     // Destructor
     virtual ~CoreWorldbossEvent();
 

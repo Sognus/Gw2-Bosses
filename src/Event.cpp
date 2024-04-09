@@ -92,6 +92,10 @@ Event* Event::CreateFromJson(const json& json) {
     return eventInstance;
 }
 
+Event* Event::DeepCopy() {
+    return new Event(*this);
+}
+
 // Destructor
 Event::~Event() {
 

@@ -57,6 +57,9 @@ public:
     void FromJson(const json& json) override;
     static Event* CreateFromJson(const json& json);
 
+    // Deep copy
+    Event* DeepCopy();
+
     // Destructor
     virtual ~Event();
 

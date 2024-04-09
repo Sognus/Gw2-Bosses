@@ -18,7 +18,8 @@ Mumble::Identity* MumbleIdentity = nullptr;
 
 std::unordered_map<std::string, Texture*> resource_textures;
 
-bool isLeftMouseDoubleClicked = false;
+bool isLeftMouseClicked = false;
+bool isControlPressed = false;
 
 
 // Addon
@@ -41,12 +42,22 @@ UINT AddonWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (uMsg == WM_LBUTTONDOWN)
 	{
-		isLeftMouseDoubleClicked = true;
+		isLeftMouseClicked = true;
 		
 	}
 	else if (uMsg == WM_LBUTTONUP)
 	{
-		isLeftMouseDoubleClicked = false;
+		isLeftMouseClicked = false;
+	}
+	else if (uMsg == WM_KEYDOWN) {
+		if (wParam == VK_CONTROL) {
+			isControlPressed = true;
+		}
+	}
+	else if (uMsg == WM_KEYUP) {
+		if (wParam == VK_CONTROL) {
+			isControlPressed = false;
+		}
 	}
 
 	return uMsg;

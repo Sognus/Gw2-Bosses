@@ -244,6 +244,11 @@ PeriodicEvent* PeriodicEvent::CreateFromJson(const json& jsonData) {
     return eventInstance;
 }
 
+PeriodicEvent* PeriodicEvent::DeepCopy()
+{
+    return new PeriodicEvent(*this);
+}
+
 // Destructor
 PeriodicEvent::~PeriodicEvent() {
 }

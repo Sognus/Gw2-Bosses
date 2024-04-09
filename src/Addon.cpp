@@ -139,7 +139,7 @@ void Addon::RenderOptions() {
 
 						}
 						// TODO: Check if PeriodicEvent and similar child objects works as well
-						this->editorBuffer.editorEditedEvent = new Event(*choosedEventPair->second);
+						this->editorBuffer.editorEditedEvent = choosedEventPair->second->DeepCopy();
 						// Set hexBuffer
 						this->editorBuffer.hexBuffer->Set(this->editorBuffer.editorEditedEvent->GetColorHex());
 					}
@@ -226,11 +226,11 @@ void Addon::Render() {
 		ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs |
 		ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoScrollbar |
 		ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_NoNavInputs |
-		ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoCollapse)) {
+		ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration )) {
 		#ifdef _DEBUG
 			render_debug_crosshair();
 		#endif
-		this->RenderEvents();
+		this->RenderEvents(); 
 		this->RenderNotificationsMap();
 		ImGui::End();
 	}
@@ -439,8 +439,9 @@ void Addon::RenderNotifications() {
 				// TODO: Other event type
 			}
 		}
-	}
 	ImGui::End();
+	}
+
 }
 
 void Addon::Update() {
