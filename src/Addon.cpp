@@ -214,12 +214,22 @@ void Addon::RenderOptions() {
 }
 
 void Addon::Render() {
+	// Update data
+	this->Update();
+
+
+	// Render notifications 
+	this->RenderNotifications();
+
+	// Skip render part if map is not open or 
+	if (!MumbleLink->Context.IsMapOpen || !NexusLink->IsGameplay) return;
+
+	// Skip render if all renders all disabled - proceed if atleast one is enabled
+	if (!this->showNotifications && !this->render) return;
+
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
 	ImGui::SetNextWindowSize(io.DisplaySize);
-
-	// Update data
-	this->Update();
 
 	// Render events
 	if (ImGui::Begin("GW2_BOSSES_EVENTS", (bool*)0, 
@@ -234,9 +244,6 @@ void Addon::Render() {
 		this->RenderNotificationsMap();
 		ImGui::End();
 	}
-
-	// Render notifications
-	this->RenderNotifications();
 }
 
 void Addon::LoadEvents() {
@@ -310,10 +317,8 @@ void Addon::LoadEvents() {
 }
 
 void Addon::RenderEvents() {
-	// Do not render when render is disabled
-	if (!render) return;
-	// Do not render when user is not looking at map
-	if (!MumbleLink->Context.IsMapOpen || !NexusLink->IsGameplay) return;
+	// Skip if render is disabled
+	if (!this->render) return;
 
 	// Render events
 	for (const auto& kvp : events) {
@@ -355,10 +360,8 @@ void Addon::RenderEvents() {
 }
 
 void Addon::RenderNotificationsMap() {
-	// Do not render when render is disabled
-	if (!render) return;
-	// Do not render when user is not looking at map
-	if (!MumbleLink->Context.IsMapOpen || !NexusLink->IsGameplay) return;
+	// Skip if notifications or render are disabled
+	if (!this->render || !this->showNotifications) return;
 
 	for (Event* notificationEvent : notificationBoxUpcoming) {
 		render_map_notification_upcoming(notificationEvent);
@@ -370,8 +373,6 @@ void Addon::RenderNotificationsMap() {
 
 void Addon::RenderNotifications() {
 	if (!this->showNotifications) return;
-	// Dont show if not gameplay
-	if(!NexusLink->IsGameplay) return;
 
 	long current_time = get_time_since_midnight();
 
