@@ -18,6 +18,9 @@ Mumble::Identity* MumbleIdentity = nullptr;
 
 std::unordered_map<std::string, Texture*> resource_textures;
 
+bool isLeftMouseClicked = false;
+bool isControlPressed = false;
+
 
 // Addon
 Addon* addon;
@@ -34,6 +37,32 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	}
 	return TRUE;
 }
+
+UINT AddonWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (uMsg == WM_LBUTTONDOWN)
+	{
+		isLeftMouseClicked = true;
+		
+	}
+	else if (uMsg == WM_LBUTTONUP)
+	{
+		isLeftMouseClicked = false;
+	}
+	else if (uMsg == WM_KEYDOWN) {
+		if (wParam == VK_CONTROL) {
+			isControlPressed = true;
+		}
+	}
+	else if (uMsg == WM_KEYUP) {
+		if (wParam == VK_CONTROL) {
+			isControlPressed = false;
+		}
+	}
+
+	return uMsg;
+}
+
 
 void ProcessKeybind(const char* aIdentifier) {
 	std::string keybind = aIdentifier;
@@ -99,7 +128,7 @@ void OnMumbleIdentityUpdate(void* aEventArgs)
 void AddonLoad(AddonAPI* aHostApi)
 {
 	APIDefs = aHostApi;
-	ImGui::SetCurrentContext(APIDefs->ImguiContext);
+	ImGui::SetCurrentContext((ImGuiContext*)APIDefs->ImguiContext);
 	ImGui::SetAllocatorFunctions((void* (*)(size_t, void*))APIDefs->ImguiMalloc, (void(*)(void*, void*))APIDefs->ImguiFree); // on imgui 1.80+
 
 	// Addon host
@@ -123,23 +152,30 @@ void AddonLoad(AddonAPI* aHostApi)
 	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_UPCOMING.c_str(), IMAGE_COREWORLDBOSSES_UPCOMING, hSelf, ReceiveTexture);
 	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_GRAY.c_str(), IMAGE_COREWORLDBOSSES_GRAY, hSelf, ReceiveTexture);
 
+	// WND proc - Nexus bad, breaking imgui IO
+	APIDefs->RegisterWndProc(AddonWndProc);
+
 	// Render register
 	APIDefs->RegisterRender(ERenderType::ERenderType_Render, AddonRender);
-	APIDefs->RegisterRender(ERenderType_OptionsRender, AddonOptionsRender);
+	APIDefs->RegisterRender(ERenderType::ERenderType_OptionsRender, AddonOptionsRender);
 }
 
 void AddonUnload()
 {
 	// Unregister keybinds
-	APIDefs->UnregisterKeybind(KEY_BOSSES_TOGGLE_RENDER.c_str());
-	APIDefs->UnregisterKeybind(KEY_BOSSES_TOGGLE_NOTIFICATION.c_str());
+	APIDefs->DeregisterKeybind(KEY_BOSSES_TOGGLE_RENDER.c_str());
+	APIDefs->DeregisterKeybind(KEY_BOSSES_TOGGLE_NOTIFICATION.c_str());
 
 	// Unregister shortcut
 	APIDefs->RemoveSimpleShortcut(GW2_BOSSES_SHORTCUT.c_str());
 
 	// Unregister render
-	APIDefs->UnregisterRender(AddonRender);
-	APIDefs->UnregisterRender(AddonOptionsRender);
+	APIDefs->DeregisterRender(AddonRender);
+	APIDefs->DeregisterRender(AddonOptionsRender);
+	
+	// WND proc - Nexus bad, breaking imgui IO
+	APIDefs->DeregisterWndProc(AddonWndProc);
+
 	// Unregister events
 	APIDefs->UnsubscribeEvent(IDENTITY_EVENT.c_str(), OnMumbleIdentityUpdate);
 
@@ -152,11 +188,11 @@ extern "C" __declspec(dllexport) AddonDefinition * GetAddonDef()
 	AddonDef = new AddonDefinition();
 	AddonDef->Signature = -1;
 	AddonDef->APIVersion = NEXUS_API_VERSION;
-	AddonDef->Name = "World bosses";
+	AddonDef->Name = ADDON_NAME.c_str();
 	Version.Major = VERSION_MAJOR;
 	Version.Minor = VERSION_MINOR;
 	Version.Build = VERSION_BUILD;
-	Version.Revision = VERSION_REVISION;
+	Version.Revision = GET_REVISION();
 	AddonDef->Version = Version;
 	AddonDef->Author = "Sognus.1204";
 	AddonDef->Description = "Adds meta events and world bosses notifications to in-game map.";

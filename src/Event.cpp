@@ -33,8 +33,13 @@ void Event::SetPercentage(float newPercentage) {
     percentage = newPercentage;
 }
 
-ImVec2 Event::GetLocation() const {
+ImVec2 Event::GetLocation() {
     return location;
+}
+
+void Event::SetLocation(ImVec2 newLocation)
+{
+    location = newLocation;
 }
 
 std::string Event::GetEventType() const {
@@ -45,9 +50,14 @@ void Event::SetEventType(std::string newEventType) {
     event_type = newEventType;
 }
 
-std::string Event::GetColorHex() const {
+std::string Event::GetColorHex() {
     return color_hex;
 }
+
+ImVec2& Event::GetLocationPtr() {
+    return location;
+}
+
 
 void Event::SetColorHex(std::string newColorHex) {
     color_hex = newColorHex;
@@ -80,6 +90,10 @@ Event* Event::CreateFromJson(const json& json) {
     Event* eventInstance = new Event();
     eventInstance->FromJson(json);
     return eventInstance;
+}
+
+Event* Event::DeepCopy() {
+    return new Event(*this);
 }
 
 // Destructor

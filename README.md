@@ -18,7 +18,7 @@ Install via the [Nexus](https://raidcore.gg/Nexus) Addon Library or download the
 
 `CTRL+SHIFT+O` - Toggle visibility of notification box
 
-## Colors and customization
+## Customization
 
 Currently there is no easy way to customize rendered events, it is a feature planned for future. If you want to change color, open data.json and change `color_hex` value of event which color you want to change. Then unload and load addon again.
 

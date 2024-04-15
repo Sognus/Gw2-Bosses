@@ -10,6 +10,10 @@ Addon::Addon() {
 	this->render = true;
 	this->showNotifications = false;
 
+	this->DPIScaleOverride = false;
+	this->DPIScaleOverride = 1.0f;
+
+	// Choices for offset combo box
 	this->additionalOffsetChoices = {
 		{0, "disabled"},
 		{15, "15 minutes"},
@@ -22,12 +26,19 @@ Addon::Addon() {
 		{120, "2 hours"}
 	};
 
+	// Currently selected combo box entry
 	this->additionalNotifyOffsetIndex = 1;
+
+	// Currently selected event editor entry from combo box
+	this->editorSelectedEventName = "";
+	this->editorBuffer = {
+		nullptr, new SizedMemoryChar(7)
+	};
 }
 
 Addon::~Addon() {
 	// Clean events
-	APIDefs->Log(ELogLevel::ELogLevel_DEBUG, "Bosses addon destructor called");
+	APIDefs->Log(ELogLevel::ELogLevel_DEBUG, ADDON_NAME.c_str(), "Bosses addon being unloaded");
 	for (auto& kv : events) {
 		delete kv.second;
 	}
@@ -35,85 +46,204 @@ Addon::~Addon() {
 }
 
 void Addon::RenderOptions() {
-	if (ImGui::BeginTabBar("Test", ImGuiTabBarFlags_None)) {
-	
-		if (ImGui::BeginTabItem("General")) {
-			
-			ImGui::TextDisabled("Notification control");
+	if (ImGui::BeginChild("GW2_BOSSES_OPTIONS")) {
 
-			if (ImGui::Checkbox("Render events and bosses on map", &this->render)) {
+		if (ImGui::BeginTabBar("GW2 Bosses Tab Bar", ImGuiTabBarFlags_None)) {
 
-			}
+			if (ImGui::BeginTabItem("General")) {
 
-			if (ImGui::Checkbox("Show notification box", &this->showNotifications))
-			{
-			}
+				ImGui::TextDisabled("Notification control");
 
-			std::string comboPreview = "no selection";
-			if (this->additionalNotifyOffsetIndex >= 0 && this->additionalNotifyOffsetIndex < this->additionalOffsetChoices.size()) {
-				comboPreview = this->additionalOffsetChoices[this->additionalNotifyOffsetIndex].text;
-			}
+				if (ImGui::Checkbox("Render events and bosses on map", &this->render)) {
 
-			ImGui::TextDisabled("Notification time");
-
-			if (ImGui::BeginCombo("##combo", comboPreview.c_str()))
-			{
-				for (int i = 0; i < additionalOffsetChoices.size(); ++i)
-				{
-					bool isSelected = (this->additionalNotifyOffsetIndex == i);
-					if (ImGui::Selectable(additionalOffsetChoices[i].text.c_str(), isSelected))
-						this->additionalNotifyOffsetIndex = i;
-
-					if (isSelected)
-						ImGui::SetItemDefaultFocus();
 				}
-				ImGui::EndCombo();
+
+				if (ImGui::Checkbox("Show notification box", &this->showNotifications))
+				{
+				}
+
+				std::string comboPreview = "no selection";
+				if (this->additionalNotifyOffsetIndex >= 0 && this->additionalNotifyOffsetIndex < this->additionalOffsetChoices.size()) {
+					comboPreview = this->additionalOffsetChoices[this->additionalNotifyOffsetIndex].text;
+				}
+
+				ImGui::TextDisabled("Notification time");
+
+				if (ImGui::BeginCombo("##combo", comboPreview.c_str()))
+				{
+					for (int i = 0; i < additionalOffsetChoices.size(); ++i)
+					{
+						bool isSelected = (this->additionalNotifyOffsetIndex == i);
+						if (ImGui::Selectable(additionalOffsetChoices[i].text.c_str(), isSelected))
+							this->additionalNotifyOffsetIndex = i;
+
+						if (isSelected)
+							ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+
+				ImGui::Separator();
+
+				ImGui::TextDisabled("DPI Scaling override");
+				ImGui::Checkbox("##DPI override", &this->enableDPIScaleOverride);
+
+				if (this->DPIScaleOverride) {
+					ImGui::TextDisabled("DPI Scaling value");
+					ImGui::InputFloat("##DPI scaling value", &this->DPIScaleOverride, 0.0f, 0.0f, "%.2f", 0);
+				}
+
+
+
+				ImGui::EndTabItem();
 			}
 
-			ImGui::EndTabItem();
+			if (ImGui::BeginTabItem("Editor")) {
+				ImGui::TextDisabled("Choose event");
+
+
+				if (ImGui::BeginCombo("##Events", this->editorSelectedEventName.c_str())) {
+
+					bool isSelectedNone = (editorSelectedEventName.empty());
+					if (ImGui::Selectable("None", isSelectedNone))
+						editorSelectedEventName.clear();
+					if (isSelectedNone)
+						ImGui::SetItemDefaultFocus();
+
+					for (const auto& pair : events) {
+						const std::string& eventName = pair.first;
+						bool isSelected = (editorSelectedEventName == eventName);
+						if (ImGui::Selectable(eventName.c_str(), isSelected))
+							editorSelectedEventName = eventName;
+						if (isSelected)
+							ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+				}
+
+				ImGui::Separator();
+
+				// Choosed event
+				auto choosedEventPair = events.find(this->editorSelectedEventName);
+
+				if (!this->editorSelectedEventName.empty() && choosedEventPair != events.end()) {
+
+					// Create currently edited copy if it doesnt exist or is different from current event
+					if (this->editorBuffer.editorEditedEvent == nullptr || this->editorBuffer.editorEditedEvent->GetName() != this->editorSelectedEventName) {
+						if (this->editorBuffer.editorEditedEvent) {
+							delete this->editorBuffer.editorEditedEvent;
+							delete this->editorBuffer.hexBuffer;
+							// Set 
+							this->editorBuffer.editorEditedEvent = nullptr;
+							this->editorBuffer.hexBuffer = new SizedMemoryChar(7);
+
+						}
+						// Make deep copy of event to not live-edit data
+						this->editorBuffer.editorEditedEvent = choosedEventPair->second->DeepCopy();
+						// Set hexBuffer
+						this->editorBuffer.hexBuffer->Set(this->editorBuffer.editorEditedEvent->GetColorHex());
+					}
+
+					std::string selectedLabelText = std::string("Selected: ") + this->editorBuffer.editorEditedEvent->GetName().c_str();
+					ImGui::TextDisabled(selectedLabelText.c_str());
+
+					ImGui::Separator();
+
+					// Common events variables
+					ImGui::TextDisabled("Location");
+					ImVec2& location = this->editorBuffer.editorEditedEvent->GetLocationPtr();
+
+					ImGui::Text("X: ");
+					ImGui::SameLine();
+					ImGui::InputFloat("##x", &location.x, 0, 0, "%.2f", ImGuiInputTextFlags_CharsDecimal);
+
+					ImGui::Text("Y: ");
+					ImGui::SameLine();
+					ImGui::InputFloat("##y", &location.y, 0, 0, "%.2f", ImGuiInputTextFlags_CharsDecimal);
+
+					ImGui::Separator();
+					ImGui::TextDisabled("Base color (HEX)");
+					ImGui::Text("#");
+					ImGui::SameLine();
+					bool validHex = true;
+					if (ImGui::InputText("##base color input", this->editorBuffer.hexBuffer->ptr, this->editorBuffer.hexBuffer->size, 0))
+					{
+						// Check if input is exactly 6 characters long
+						if (strlen(this->editorBuffer.hexBuffer->ptr) == 6) {
+							// Check if all characters are valid hexadecimal digits
+							for (int i = 0; i < 6; i++) {
+								if (!isxdigit(this->editorBuffer.hexBuffer->ptr[i])) {
+									validHex = false;
+									break;
+								}
+							}
+							if (validHex) {
+								// Set color if input is valid
+								this->editorBuffer.editorEditedEvent->SetColorHex(std::string(this->editorBuffer.hexBuffer->ptr));
+							}
+							else {
+								this->editorBuffer.hexBuffer->Set(this->editorBuffer.editorEditedEvent->GetColorHex());
+							}
+						}
+						else {
+							// If input is not exactly 6 characters long, revert to the previous valid color
+							this->editorBuffer.hexBuffer->Set(this->editorBuffer.editorEditedEvent->GetColorHex());
+						}
+					}
+
+					ImGui::Separator();
+
+					if (ImGui::Button("Save")) {
+						// Modify data of original 
+						choosedEventPair->second->SetLocation(location);
+						choosedEventPair->second->SetColorHex(this->editorBuffer.editorEditedEvent->GetColorHex());
+
+					}
+
+
+				}
+				ImGui::EndTabItem();
+
+			}
+			ImGui::EndTabBar();
+
 		}
-
-		/*
-		if (ImGui::BeginTabItem("Plenga")) {
-			ImGui::Text("plenga text");
-			ImGui::EndTabItem();
-		}
-		*/
-
-
-
-		ImGui::EndTabBar();
+		ImGui::EndChild();
 	}
-	
-
-	
-	
 
 }
 
 void Addon::Render() {
+	// Update data
+	this->Update();
+
+
+	// Render notifications 
+	this->RenderNotifications();
+
+	// Skip render part if map is not open or 
+	if (!MumbleLink->Context.IsMapOpen || !NexusLink->IsGameplay) return;
+
+	// Skip render if all renders all disabled - proceed if atleast one is enabled
+	if (!this->showNotifications && !this->render) return;
+
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
 	ImGui::SetNextWindowSize(io.DisplaySize);
-
-	// Update data
-	this->Update();
 
 	// Render events
 	if (ImGui::Begin("GW2_BOSSES_EVENTS", (bool*)0, 
 		ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs |
 		ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoScrollbar |
-		ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoResize)) {
+		ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_NoNavInputs |
+		ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration )) {
 		#ifdef _DEBUG
 			render_debug_crosshair();
 		#endif
-		this->RenderEvents();
+		this->RenderEvents(); 
 		this->RenderNotificationsMap();
+		ImGui::End();
 	}
-	ImGui::End();
-
-	// Render notifications
-	this->RenderNotifications();
 }
 
 void Addon::LoadEvents() {
@@ -128,7 +258,7 @@ void Addon::LoadEvents() {
 		catch (const std::exception& e) {
 			std::string message = "Could not create addon directory: ";
 			message.append(pathFolder);
-			APIDefs->Log(ELogLevel::ELogLevel_CRITICAL, message.c_str());
+			APIDefs->Log(ELogLevel::ELogLevel_CRITICAL, ADDON_NAME.c_str(), message.c_str());
 
 			// Suppress the warning for the unused variable 'e'
 			#pragma warning(suppress: 4101)
@@ -187,10 +317,8 @@ void Addon::LoadEvents() {
 }
 
 void Addon::RenderEvents() {
-	// Do not render when render is disabled
-	if (!render) return;
-	// Do not render when user is not looking at map
-	if (!MumbleLink->Context.IsMapOpen || !NexusLink->IsGameplay) return;
+	// Skip if render is disabled
+	if (!this->render) return;
 
 	// Render events
 	for (const auto& kvp : events) {
@@ -232,10 +360,8 @@ void Addon::RenderEvents() {
 }
 
 void Addon::RenderNotificationsMap() {
-	// Do not render when render is disabled
-	if (!render) return;
-	// Do not render when user is not looking at map
-	if (!MumbleLink->Context.IsMapOpen || !NexusLink->IsGameplay) return;
+	// Skip if notifications or render are disabled
+	if (!this->render) return;
 
 	for (Event* notificationEvent : notificationBoxUpcoming) {
 		render_map_notification_upcoming(notificationEvent);
@@ -247,8 +373,6 @@ void Addon::RenderNotificationsMap() {
 
 void Addon::RenderNotifications() {
 	if (!this->showNotifications) return;
-	// Dont show if not gameplay
-	if(!NexusLink->IsGameplay) return;
 
 	long current_time = get_time_since_midnight();
 
@@ -316,8 +440,9 @@ void Addon::RenderNotifications() {
 				// TODO: Other event type
 			}
 		}
-	}
 	ImGui::End();
+	}
+
 }
 
 void Addon::Update() {
@@ -526,7 +651,7 @@ void Addon::ExportEventsJson() {
 	}
 	else {
 		std::string message = "Unable to open file " + jsonDataPath + " for saving events";
-		APIDefs->Log(ELogLevel::ELogLevel_CRITICAL, message.c_str());
+		APIDefs->Log(ELogLevel::ELogLevel_CRITICAL, ADDON_NAME.c_str(), message.c_str()); 
 	}
 }
 

@@ -16,8 +16,7 @@
 #include <string>
 
 #include "nexus/Nexus.h"
-#include "imgui\imgui.h"
-#include "imgui\imgui_extensions.h"
+#include "imgui/imgui.h"
 #include "mumble/Mumble.h"
 
 #include "Constants.h"
@@ -32,6 +31,9 @@ extern Mumble::Identity* MumbleIdentity;
 
 extern Addon* addon;
 extern std::unordered_map<std::string, Texture*> resource_textures;
+
+extern bool isLeftMouseClicked;
+extern bool isControlPressed;
 
 
 #endif // GLOBALS_H

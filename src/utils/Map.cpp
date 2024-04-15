@@ -1,6 +1,11 @@
 #include "../Globals.h"
 #include "BoundingBox.h"
 
+#include "../tinyxml2/tinyxml2.h"
+
+int dpi_scale_cache_last_tick = 0;
+bool dpi_scale_cache = false;
+
 
 float map_get_min_zoom(Mumble::EUIScale uiSize) {
 	switch (uiSize) {
@@ -32,24 +37,126 @@ float map_get_max_zoom(Mumble::EUIScale uiSize) {
 
 Mumble::EUIScale get_ui_scale() {
 	if (!MumbleIdentity) {
-		APIDefs->Log(ELogLevel::ELogLevel_WARNING, "get_ui_scale: Mumble Identity not initialized");
+		APIDefs->Log(ELogLevel::ELogLevel_WARNING, ADDON_NAME.c_str(), "get_ui_scale: Mumble Identity not initialized");
 		return Mumble::EUIScale::Normal;
 	}
 	return MumbleIdentity->UISize;
 }
 
 
+float get_system_dpi_scale_percentage() {
+	return GetDpiForSystem() / 96.0f;
+}
+
+bool is_use_dpi_scale_checked() {
+	// Check current path of XML settings
+	char appDataLocationCstr[1000];
+	int s = GetEnvironmentVariableA("APPDATA", appDataLocationCstr, 1000);
+
+	if (s == 0) {
+		APIDefs->Log(ELogLevel_WARNING, ADDON_NAME.c_str(), "DPI Scale: Could not read GW2 settings location.");
+		return false;
+	}
+
+	std::string documentPath = std::string(appDataLocationCstr) + "\\Guild Wars 2\\GFXSettings.Gw2-64.exe.xml";
+
+	tinyxml2::XMLDocument document;
+	if (document.LoadFile(documentPath.c_str()) != tinyxml2::XML_SUCCESS) {
+		std::string message = std::string("DPI scaling: Could not load settings file: ") + documentPath;
+		APIDefs->Log(ELogLevel_WARNING, ADDON_NAME.c_str(), message.c_str());
+		return false;
+	}
+
+	tinyxml2::XMLElement* root = document.FirstChildElement("GSA_SDK");
+	if (!root) {
+		std::string message = std::string("DPI scaling: Could not parse settings: GSA_SDK does not exist");
+		APIDefs->Log(ELogLevel_WARNING, ADDON_NAME.c_str(), message.c_str());
+		return false;
+	}
+
+	tinyxml2::XMLElement* gameSettings = root->FirstChildElement("GAMESETTINGS");
+	if (!gameSettings) {
+		std::string message = std::string("DPI scaling: Could not parse settings: GSA_SDK->GAMESETTINGS does not exist");
+		APIDefs->Log(ELogLevel_WARNING, ADDON_NAME.c_str(), message.c_str());
+		return false;
+	}
+
+	tinyxml2::XMLElement* option = gameSettings->FirstChildElement("OPTION");
+	while (option) {
+		const char* name = option->Attribute("Name");
+		if (name && std::string(name) == "dpiScaling") {
+			const char* value = option->Attribute("Value");
+			if (value) {
+				// Check if value is true
+				std::string valueStr = value;
+				return valueStr.compare("true") == 0;
+			}
+		}
+		option = option->NextSiblingElement("OPTION");
+	}
+
+	std::string message = std::string("DPI scaling: Could not parse settings: GSA_SDK->GAMESETTINGS->dpiScaling does not exist");
+	APIDefs->Log(ELogLevel_WARNING, ADDON_NAME.c_str(), message.c_str());
+	return false;
+}
+
+bool is_use_dpi_scale_checked_cached() {
+	// Wait 60 frames before querying dpi_scale again
+	if (MumbleLink->UITick - dpi_scale_cache_last_tick >= 30) {
+		dpi_scale_cache_last_tick = MumbleLink->UITick;
+		dpi_scale_cache = is_use_dpi_scale_checked();
+	}
+	return dpi_scale_cache;
+}
+
+
+
+float get_current_dpi_scale() {
+	if (!is_use_dpi_scale_checked_cached()) {
+		return 1.0f;
+	}
+	return get_system_dpi_scale_percentage();
+}
+
+
 float get_map_scale_normal() {
 	Mumble::EUIScale UI_SCALE = get_ui_scale();
 	
+	// Get compass scale from Mumble
 	float mapScale = MumbleLink->Context.Compass.Scale;
+	mapScale = round(mapScale * 1000) / 1000;
 	
+	// Check if DPI scale is used
+	bool useDPI = is_use_dpi_scale_checked_cached();
 
-	if (Mumble::EUIScale::Normal != UI_SCALE) {
+	// Calculate DPI scale
+	if (!useDPI && !addon->enableDPIScaleOverride) {
+
 		const float NORMAL_MAP_MIN_ZOOM = map_get_min_zoom(Mumble::EUIScale::Normal);
 		const float NORMAL_MAP_MAX_ZOOM = map_get_max_zoom(Mumble::EUIScale::Normal);
 		const float MAP_MIN_ZOOM = map_get_min_zoom(UI_SCALE);
 		const float MAP_MAX_ZOOM = map_get_max_zoom(UI_SCALE);
+
+		// Calculate the percentage between MAP_MIN_ZOOM and MAP_MAX_ZOOM
+		float percentage = (mapScale - MAP_MIN_ZOOM) / (MAP_MAX_ZOOM - MAP_MIN_ZOOM);
+		percentage = std::clamp(percentage, 0.0f, 1.0f);
+
+		// Map the percentage to the range NORMAL_MAP_MIN_ZOOM to NORMAL_MAP_MAX_ZOOM
+		float tempMapScale = percentage * (NORMAL_MAP_MAX_ZOOM - NORMAL_MAP_MIN_ZOOM) + NORMAL_MAP_MIN_ZOOM;
+		mapScale = std::clamp(tempMapScale, NORMAL_MAP_MIN_ZOOM, NORMAL_MAP_MAX_ZOOM);
+	}
+	else {
+
+		float dpiScale = get_current_dpi_scale();
+
+		if (addon->enableDPIScaleOverride) {
+			dpiScale = addon->DPIScaleOverride;
+		}
+
+		const float NORMAL_MAP_MIN_ZOOM = map_get_min_zoom(Mumble::EUIScale::Normal);
+		const float NORMAL_MAP_MAX_ZOOM = map_get_max_zoom(Mumble::EUIScale::Normal);
+		const float MAP_MIN_ZOOM = map_get_min_zoom(UI_SCALE) * dpiScale;
+		const float MAP_MAX_ZOOM = map_get_max_zoom(UI_SCALE) * dpiScale;
 
 		// Calculate the percentage between MAP_MIN_ZOOM and MAP_MAX_ZOOM
 		float percentage = (mapScale - MAP_MIN_ZOOM) / (MAP_MAX_ZOOM - MAP_MIN_ZOOM);

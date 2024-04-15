@@ -50,12 +50,14 @@ const float ENTRY_NAME_OFFSET = 5.0f;
 
 const float ENTRY_MAX_ZOOM_TEXT_VISIBILITY = 6.4f;
 
+// Addon constants
+const std::string ADDON_NAME = "World bosses";
+const std::string GW2_BOSSES_SHORTCUT = "QAS_BOSSES";
+
 // Nexus constants
 const std::string NLINK_NAME = "DL_NEXUS_LINK";
 const std::string IDENTITY_EVENT = "EV_MUMBLE_IDENTITY_UPDATED";
 const std::string MUMBLE_LINK_RESOURCE = "DL_MUMBLE_LINK";
-
-const std::string GW2_BOSSES_SHORTCUT = "QAS_BOSSES";
 
 // Keybinds
 const std::string KEY_BOSSES_TOGGLE_RENDER = "KEY_BOSSES_TOGGLE_RENDER";
