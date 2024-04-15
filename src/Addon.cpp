@@ -138,7 +138,7 @@ void Addon::RenderOptions() {
 							this->editorBuffer.hexBuffer = new SizedMemoryChar(7);
 
 						}
-						// TODO: Check if PeriodicEvent and similar child objects works as well
+						// Make deep copy of event to not live-edit data
 						this->editorBuffer.editorEditedEvent = choosedEventPair->second->DeepCopy();
 						// Set hexBuffer
 						this->editorBuffer.hexBuffer->Set(this->editorBuffer.editorEditedEvent->GetColorHex());
