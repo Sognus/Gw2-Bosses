@@ -7,3 +7,6 @@
 [submodule "src/tinyxml2"]
 	path = src/tinyxml2
 	url = https://github.com/leethomason/tinyxml2.git
+[submodule "src/imgui"]
+	path = src/imgui
+	url = https://github.com/RaidcoreGG/imgui.git

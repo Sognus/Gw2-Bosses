@@ -16,8 +16,7 @@
 #include <string>
 
 #include "nexus/Nexus.h"
-#include "imgui\imgui.h"
-#include "imgui\imgui_extensions.h"
+#include "imgui/imgui.h"
 #include "mumble/Mumble.h"
 
 #include "Constants.h"

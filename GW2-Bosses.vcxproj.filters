@@ -13,12 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Imgui">
-      <UniqueIdentifier>{5f8a30db-8109-499b-a60a-591224387707}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Imgui">
-      <UniqueIdentifier>{b5646572-5fc9-4455-b04d-c4b5523808a7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\API">
       <UniqueIdentifier>{881777ae-3d1c-4302-878f-69741ae79c5f}</UniqueIdentifier>
     </Filter>
@@ -28,25 +22,13 @@
     <Filter Include="Libraries\tinyxml2">
       <UniqueIdentifier>{38ea379a-3f17-425b-a593-9092b35a6bd5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libraries\imgui">
+      <UniqueIdentifier>{6aa6998f-4dd6-41a4-a10a-1c432b986b02}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\entry.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\imgui\imgui_widgets.cpp">
-      <Filter>Source Files\Imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\imgui\imgui_tables.cpp">
-      <Filter>Source Files\Imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\imgui\imgui_draw.cpp">
-      <Filter>Source Files\Imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\imgui\imgui_demo.cpp">
-      <Filter>Source Files\Imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\imgui\imgui.cpp">
-      <Filter>Source Files\Imgui</Filter>
     </ClCompile>
     <ClCompile Include="src\Addon.cpp">
       <Filter>Source Files</Filter>
@@ -87,29 +69,23 @@
     <ClCompile Include="src\tinyxml2\xmltest.cpp">
       <Filter>Libraries\tinyxml2</Filter>
     </ClCompile>
+    <ClCompile Include="src\imgui\imgui.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui\imgui_demo.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui\imgui_draw.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui\imgui_tables.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui\imgui_widgets.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\imgui\imstb_truetype.h">
-      <Filter>Imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\imgui\imstb_textedit.h">
-      <Filter>Imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\imgui\imstb_rectpack.h">
-      <Filter>Imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\imgui\imgui_internal.h">
-      <Filter>Imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\imgui\imgui_extensions.h">
-      <Filter>Imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\imgui\imgui.h">
-      <Filter>Imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\imgui\imconfig.h">
-      <Filter>Imgui</Filter>
-    </ClInclude>
     <ClInclude Include="src\mumble\Mumble.h">
       <Filter>Header Files\API</Filter>
     </ClInclude>
@@ -169,6 +145,24 @@
     </ClInclude>
     <ClInclude Include="src\tinyxml2\tinyxml2.h">
       <Filter>Libraries\tinyxml2</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui\imconfig.h">
+      <Filter>Libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui\imgui.h">
+      <Filter>Libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui\imgui_internal.h">
+      <Filter>Libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui\imstb_rectpack.h">
+      <Filter>Libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui\imstb_textedit.h">
+      <Filter>Libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui\imstb_truetype.h">
+      <Filter>Libraries\imgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -99,7 +99,7 @@ void CyclicalCoreWorldbossEventQueue::printState() {
         } while (deque.front() != initial);
     }
 
-    APIDefs->Log(ELogLevel::ELogLevel_DEBUG, buffer.c_str());
+    APIDefs->Log(ELogLevel::ELogLevel_DEBUG, ADDON_NAME.c_str(), buffer.c_str());
 }
 
 CoreWorldbossEvent* CyclicalCoreWorldbossEventQueue::popEvent() {

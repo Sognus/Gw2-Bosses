@@ -37,7 +37,7 @@ float map_get_max_zoom(Mumble::EUIScale uiSize) {
 
 Mumble::EUIScale get_ui_scale() {
 	if (!MumbleIdentity) {
-		APIDefs->Log(ELogLevel::ELogLevel_WARNING, "get_ui_scale: Mumble Identity not initialized");
+		APIDefs->Log(ELogLevel::ELogLevel_WARNING, ADDON_NAME.c_str(), "get_ui_scale: Mumble Identity not initialized");
 		return Mumble::EUIScale::Normal;
 	}
 	return MumbleIdentity->UISize;
@@ -54,7 +54,7 @@ bool is_use_dpi_scale_checked() {
 	int s = GetEnvironmentVariableA("APPDATA", appDataLocationCstr, 1000);
 
 	if (s == 0) {
-		APIDefs->Log(ELogLevel_WARNING, "DPI Scale: Could not read GW2 settings location.");
+		APIDefs->Log(ELogLevel_WARNING, ADDON_NAME.c_str(), "DPI Scale: Could not read GW2 settings location.");
 		return false;
 	}
 
@@ -63,21 +63,21 @@ bool is_use_dpi_scale_checked() {
 	tinyxml2::XMLDocument document;
 	if (document.LoadFile(documentPath.c_str()) != tinyxml2::XML_SUCCESS) {
 		std::string message = std::string("DPI scaling: Could not load settings file: ") + documentPath;
-		APIDefs->Log(ELogLevel_WARNING, message.c_str());
+		APIDefs->Log(ELogLevel_WARNING, ADDON_NAME.c_str(), message.c_str());
 		return false;
 	}
 
 	tinyxml2::XMLElement* root = document.FirstChildElement("GSA_SDK");
 	if (!root) {
 		std::string message = std::string("DPI scaling: Could not parse settings: GSA_SDK does not exist");
-		APIDefs->Log(ELogLevel_WARNING, message.c_str());
+		APIDefs->Log(ELogLevel_WARNING, ADDON_NAME.c_str(), message.c_str());
 		return false;
 	}
 
 	tinyxml2::XMLElement* gameSettings = root->FirstChildElement("GAMESETTINGS");
 	if (!gameSettings) {
 		std::string message = std::string("DPI scaling: Could not parse settings: GSA_SDK->GAMESETTINGS does not exist");
-		APIDefs->Log(ELogLevel_WARNING, message.c_str());
+		APIDefs->Log(ELogLevel_WARNING, ADDON_NAME.c_str(), message.c_str());
 		return false;
 	}
 
@@ -96,7 +96,7 @@ bool is_use_dpi_scale_checked() {
 	}
 
 	std::string message = std::string("DPI scaling: Could not parse settings: GSA_SDK->GAMESETTINGS->dpiScaling does not exist");
-	APIDefs->Log(ELogLevel_WARNING, message.c_str());
+	APIDefs->Log(ELogLevel_WARNING, ADDON_NAME.c_str(), message.c_str());
 	return false;
 }
 

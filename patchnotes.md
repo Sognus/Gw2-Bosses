@@ -11,6 +11,10 @@
 ### Improved
 - Reordered and re-conditioned render calls to skip render if its not desired (performance and input handling improvemenents)
 
+### Changed
+- Changed to use Nexus-recommended Imgui submodule for project building
+- Changed to use Nexus API revision 3, instead of revision 1
+
 ### Known issues
 - Calculation of event render position is slightly wrong for larger interface sizes, especially when changing the map view. This affects older versions as well and has no easy solution at the moment. 
 - Change of DPI scale is slightly delayed after checked/unchecked in Guild Wars 2 settings, this is not a bug.

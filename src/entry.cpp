@@ -128,7 +128,7 @@ void OnMumbleIdentityUpdate(void* aEventArgs)
 void AddonLoad(AddonAPI* aHostApi)
 {
 	APIDefs = aHostApi;
-	ImGui::SetCurrentContext(APIDefs->ImguiContext);
+	ImGui::SetCurrentContext((ImGuiContext*)APIDefs->ImguiContext);
 	ImGui::SetAllocatorFunctions((void* (*)(size_t, void*))APIDefs->ImguiMalloc, (void(*)(void*, void*))APIDefs->ImguiFree); // on imgui 1.80+
 
 	// Addon host
@@ -163,18 +163,18 @@ void AddonLoad(AddonAPI* aHostApi)
 void AddonUnload()
 {
 	// Unregister keybinds
-	APIDefs->UnregisterKeybind(KEY_BOSSES_TOGGLE_RENDER.c_str());
-	APIDefs->UnregisterKeybind(KEY_BOSSES_TOGGLE_NOTIFICATION.c_str());
+	APIDefs->DeregisterKeybind(KEY_BOSSES_TOGGLE_RENDER.c_str());
+	APIDefs->DeregisterKeybind(KEY_BOSSES_TOGGLE_NOTIFICATION.c_str());
 
 	// Unregister shortcut
 	APIDefs->RemoveSimpleShortcut(GW2_BOSSES_SHORTCUT.c_str());
 
 	// Unregister render
-	APIDefs->UnregisterRender(AddonRender);
-	APIDefs->UnregisterRender(AddonOptionsRender);
+	APIDefs->DeregisterRender(AddonRender);
+	APIDefs->DeregisterRender(AddonOptionsRender);
 	
 	// WND proc - Nexus bad, breaking imgui IO
-	APIDefs->UnregisterWndProc(AddonWndProc);
+	APIDefs->DeregisterWndProc(AddonWndProc);
 
 	// Unregister events
 	APIDefs->UnsubscribeEvent(IDENTITY_EVENT.c_str(), OnMumbleIdentityUpdate);
@@ -188,7 +188,7 @@ extern "C" __declspec(dllexport) AddonDefinition * GetAddonDef()
 	AddonDef = new AddonDefinition();
 	AddonDef->Signature = -1;
 	AddonDef->APIVersion = NEXUS_API_VERSION;
-	AddonDef->Name = "World bosses";
+	AddonDef->Name = ADDON_NAME.c_str();
 	Version.Major = VERSION_MAJOR;
 	Version.Minor = VERSION_MINOR;
 	Version.Build = VERSION_BUILD;

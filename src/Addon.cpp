@@ -38,7 +38,7 @@ Addon::Addon() {
 
 Addon::~Addon() {
 	// Clean events
-	APIDefs->Log(ELogLevel::ELogLevel_DEBUG, "Bosses addon being unloaded");
+	APIDefs->Log(ELogLevel::ELogLevel_DEBUG, ADDON_NAME.c_str(), "Bosses addon being unloaded");
 	for (auto& kv : events) {
 		delete kv.second;
 	}
@@ -258,7 +258,7 @@ void Addon::LoadEvents() {
 		catch (const std::exception& e) {
 			std::string message = "Could not create addon directory: ";
 			message.append(pathFolder);
-			APIDefs->Log(ELogLevel::ELogLevel_CRITICAL, message.c_str());
+			APIDefs->Log(ELogLevel::ELogLevel_CRITICAL, ADDON_NAME.c_str(), message.c_str());
 
 			// Suppress the warning for the unused variable 'e'
 			#pragma warning(suppress: 4101)
@@ -361,7 +361,7 @@ void Addon::RenderEvents() {
 
 void Addon::RenderNotificationsMap() {
 	// Skip if notifications or render are disabled
-	if (!this->render || !this->showNotifications) return;
+	if (!this->render) return;
 
 	for (Event* notificationEvent : notificationBoxUpcoming) {
 		render_map_notification_upcoming(notificationEvent);
@@ -651,7 +651,7 @@ void Addon::ExportEventsJson() {
 	}
 	else {
 		std::string message = "Unable to open file " + jsonDataPath + " for saving events";
-		APIDefs->Log(ELogLevel::ELogLevel_CRITICAL, message.c_str());
+		APIDefs->Log(ELogLevel::ELogLevel_CRITICAL, ADDON_NAME.c_str(), message.c_str()); 
 	}
 }
 
