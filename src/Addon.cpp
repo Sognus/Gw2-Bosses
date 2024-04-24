@@ -9,9 +9,12 @@ Addon::Addon() {
 	// Default behaviour 
 	this->render = true;
 	this->showNotifications = false;
+	this->useNexusNotifications = true;
 
 	this->DPIScaleOverride = false;
 	this->DPIScaleOverride = 1.0f;
+
+	this->showDebugCrosshair = false;
 
 	// Choices for offset combo box
 	this->additionalOffsetChoices = {
@@ -52,9 +55,20 @@ void Addon::RenderOptions() {
 
 			if (ImGui::BeginTabItem("General")) {
 
+			#ifdef _DEBUG
+				ImGui::TextDisabled("Debug");
+				if (ImGui::Checkbox("Render crosshair", &this->showDebugCrosshair)) {
+
+				}
+			#endif
+
 				ImGui::TextDisabled("Notification control");
 
 				if (ImGui::Checkbox("Render events and bosses on map", &this->render)) {
+
+				}
+
+				if (ImGui::Checkbox("Use Nexus alerts for notificatioins", &this->useNexusNotifications)) {
 
 				}
 
@@ -238,7 +252,9 @@ void Addon::Render() {
 		ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_NoNavInputs |
 		ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration )) {
 		#ifdef _DEBUG
-			render_debug_crosshair();
+			if (this->showDebugCrosshair) {
+				render_debug_crosshair();
+			}
 		#endif
 		this->RenderEvents(); 
 		this->RenderNotificationsMap();
@@ -371,6 +387,69 @@ void Addon::RenderNotificationsMap() {
 	}
 }
 
+std::string getEventName(Event* aEvent) {
+	if (!aEvent) return "<EVENT NULL>";
+	
+	if (aEvent->GetEventType().starts_with("core_world_bosses")) {
+		CoreWorldbossEvent* coreEvent = static_cast<CoreWorldbossEvent*>(aEvent);
+
+			std::string eventName = coreEvent->GetName();
+			size_t spacePos = eventName.find_last_of(" ");
+			std::string name;
+
+			if (spacePos != std::string::npos) {
+				name = eventName.substr(0, spacePos);
+			}
+			else {
+				name = eventName;
+			}
+
+		return name;
+	}
+
+	if (aEvent->GetEventType().starts_with("periodic")) {
+		return aEvent->GetName();
+	}
+
+	return "<EVENT UNKNOWN TYPE>";
+}
+
+void Addon::SendUpcomingEventAlert(Event* aEvent) {
+	if (!this->useNexusNotifications) return;
+
+	long current_time = get_time_since_midnight();
+
+	std::string name = getEventName(aEvent);
+	std::string message = name + " will start ";
+
+	// TODO: Format time until
+	// TODO: Skip sending alerts for limited time after addon load
+
+	if (aEvent->GetEventType().starts_with("core_world_bosses")) {
+		CoreWorldbossEvent* coreEvent = static_cast<CoreWorldbossEvent*>(aEvent);
+
+		// Translate when will event start
+		int timeUntil = coreEvent->GetMidnightOffsetSeconds() - current_time;
+		message += "in " + format_countdown_time_minutes(timeUntil) + "!";
+	}
+	else {
+		message += "soon!";
+	}
+
+
+	APIDefs->SendAlert(message.c_str());
+
+}
+
+void Addon::SendInProgressEventAlert(Event* aEvent) {
+	if (!this->useNexusNotifications) return;
+
+	std::string name = getEventName(aEvent);
+	std::string message = name + " just started!";
+
+	APIDefs->SendAlert(message.c_str());
+};
+
 void Addon::RenderNotifications() {
 	if (!this->showNotifications) return;
 
@@ -445,6 +524,7 @@ void Addon::RenderNotifications() {
 
 }
 
+
 void Addon::Update() {
 	long current_time = get_time_since_midnight();
 
@@ -475,6 +555,7 @@ void Addon::Update() {
 		if (current_time >= notificationStart && current_time < eventStart) {
 			// Check if item is not present
 			if (std::find(notificationBoxUpcoming.begin(), notificationBoxUpcoming.end(), coreEvent) == notificationBoxUpcoming.end()) {
+				this->SendUpcomingEventAlert(coreEvent);
 				this->notificationBoxUpcoming.push_back(coreEvent);
 			}
 			// Event was handled pop queue
@@ -484,6 +565,7 @@ void Addon::Update() {
 		else if (current_time >= eventStart && current_time <= eventEnd) {
 			// Check if item is not present
 			if (std::find(notificationBoxInProgress.begin(), notificationBoxInProgress.end(), coreEvent) == notificationBoxInProgress.end()) {
+				this->SendInProgressEventAlert(coreEvent);
 				this->notificationBoxInProgress.push_back(coreEvent);
 			}
 			worldBossesNotifications->pop();
@@ -533,6 +615,8 @@ void Addon::Update() {
 
 			// Event is between start and end - push erase from upcoming and move to in progress
 			if (current_time >= eventStart && current_time <= eventEnd) {
+				// Send alert
+				this->SendInProgressEventAlert(coreEvent);	
 				// Move to in progress
 				this->notificationBoxInProgress.push_back(eventPtr);
 				// Erase and move to next iterator
@@ -2325,7 +2409,7 @@ void Addon::LoadEventsFallback() {
 
 		amnytas->SetEventType("periodic_timer");
 	}
-
+	 
 	// Wizard's Tower block
 	PeriodicEvent* wizard_tower;
 	{

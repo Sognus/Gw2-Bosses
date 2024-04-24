@@ -1,3 +1,11 @@
+## Version NEXT
+
+### Added
+- Experimental usage of Nexus' alerts for core world boss events (enable/disable in options)
+
+### Changed
+- Debug version now have special debug controls
+
 ## Version 1.3.0.0
 
 ### Added

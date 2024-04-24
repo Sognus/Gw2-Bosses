@@ -19,4 +19,6 @@ long get_time_since_midnight();
 
 std::string format_countdown_time(int seconds);
 
+std::string format_countdown_time_minutes(int seconds);
+
 #endif // GW2_BOSSES_TIME
