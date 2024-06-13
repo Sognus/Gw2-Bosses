@@ -379,47 +379,36 @@ void Addon::RenderNotificationsMap() {
 	// Skip if notifications or render are disabled
 	if (!this->render) return;
 
+	bool editEventSet = this->editorBuffer.editorEditedEvent != nullptr;
+	bool editEventRendered = false;
+
 	for (Event* notificationEvent : notificationBoxUpcoming) {
+		if (editEventSet && this->editorBuffer.editorEditedEvent->GetName() == notificationEvent->GetName()) {
+			editEventRendered = true;
+		}
 		render_map_notification_upcoming(notificationEvent);
 	}
 	for (Event* notificationEvent : notificationBoxInProgress) {
+		if (editEventSet&& this->editorBuffer.editorEditedEvent->GetName() == notificationEvent->GetName()) {
+			editEventRendered = true;
+		}
 		render_map_notification_in_progress(notificationEvent);
 	}
-}
 
-std::string getEventName(Event* aEvent) {
-	if (!aEvent) return "<EVENT NULL>";
-	
-	if (aEvent->GetEventType().starts_with("core_world_bosses")) {
-		CoreWorldbossEvent* coreEvent = static_cast<CoreWorldbossEvent*>(aEvent);
-
-			std::string eventName = coreEvent->GetName();
-			size_t spacePos = eventName.find_last_of(" ");
-			std::string name;
-
-			if (spacePos != std::string::npos) {
-				name = eventName.substr(0, spacePos);
-			}
-			else {
-				name = eventName;
-			}
-
-		return name;
+	if (editEventSet && !editEventRendered) {
+		render_map_notification_currently_edited(this->editorBuffer.editorEditedEvent);
 	}
-
-	if (aEvent->GetEventType().starts_with("periodic")) {
-		return aEvent->GetName();
-	}
-
-	return "<EVENT UNKNOWN TYPE>";
 }
 
 void Addon::SendUpcomingEventAlert(Event* aEvent) {
+	// Skip if globally disabled
 	if (!this->useNexusNotifications) return;
+	// Skip if not locally enabled
+	if (!aEvent->markedForAlert) return;
 
 	long current_time = get_time_since_midnight();
 
-	std::string name = getEventName(aEvent);
+	std::string name = aEvent->GetFormattedEventName();
 	std::string message = name + " will start ";
 
 	// TODO: Format time until
@@ -442,9 +431,12 @@ void Addon::SendUpcomingEventAlert(Event* aEvent) {
 }
 
 void Addon::SendInProgressEventAlert(Event* aEvent) {
+	// Skip if globally disabled
 	if (!this->useNexusNotifications) return;
+	// Skip if not locally enabled
+	if (!aEvent->markedForAlert) return;
 
-	std::string name = getEventName(aEvent);
+	std::string name = aEvent->GetFormattedEventName();
 	std::string message = name + " just started!";
 
 	APIDefs->SendAlert(message.c_str());

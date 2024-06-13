@@ -101,6 +101,26 @@ CoreWorldbossEvent* CoreWorldbossEvent::CreateFromJson(const json& json) {
     return eventInstance;
 }
 
+/// <summary>
+/// Formats name by stripping ID from it
+/// </summary>
+/// <returns></returns>
+std::string CoreWorldbossEvent::GetFormattedEventName()
+{
+    size_t spacePos = this->name.find_last_of(" ");
+    std::string formattedName;
+
+    if (spacePos != std::string::npos) {
+        formattedName = this->name.substr(0, spacePos);
+    }
+    else {
+        formattedName = this->name;
+    }
+
+    return formattedName;
+
+}
+
 CoreWorldbossEvent* CoreWorldbossEvent::DeepCopy()
 {
     return new CoreWorldbossEvent(*this);

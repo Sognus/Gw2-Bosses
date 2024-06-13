@@ -991,6 +991,14 @@ void render_map_notification_in_progress(Event* notificationEvent)
 	render_map_notification(notificationEvent, texture);
 }
 
+void render_map_notification_currently_edited(Event* notificationEvent) {
+	Texture* texture =
+		(resource_textures.find(GW2BOSSES_RESOURCE_COREWORLDBOSSES_IN_EDIT) != resource_textures.end()) ?
+		resource_textures[GW2BOSSES_RESOURCE_COREWORLDBOSSES_IN_EDIT] :
+		nullptr;
+	render_map_notification(notificationEvent, texture);
+}
+
 
 
 // Re-enable warning

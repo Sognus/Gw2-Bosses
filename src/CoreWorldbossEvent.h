@@ -59,8 +59,10 @@ public:
     void FromJson(const json& jsonData) override;
     static CoreWorldbossEvent* CreateFromJson(const json& jsonData);
 
+    std::string GetFormattedEventName() override;
+
     // Deep Copy
-    CoreWorldbossEvent* DeepCopy();
+    virtual CoreWorldbossEvent* DeepCopy();
 
     // Destructor
     virtual ~CoreWorldbossEvent();

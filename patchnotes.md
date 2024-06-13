@@ -4,6 +4,7 @@
 - Experimental usage of Nexus' alerts for core world boss events (enable/disable in options)
 
 ### Changed
+- Core world boss event that is not active and is currently being edited is shown as green cog on the map. 
 - Debug version now have special debug controls
 
 ## Version 1.3.0.0
