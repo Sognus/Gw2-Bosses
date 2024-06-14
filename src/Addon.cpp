@@ -379,7 +379,7 @@ void Addon::RenderNotificationsMap() {
 	// Skip if notifications or render are disabled
 	if (!this->render) return;
 
-	bool editEventSet = this->editorBuffer.editorEditedEvent != nullptr;
+	bool editEventSet = this->editorBuffer.editorEditedEvent != nullptr && this->editorBuffer.editorEditedEvent->GetEventType().starts_with("core_world_bosses");
 	bool editEventRendered = false;
 
 	for (Event* notificationEvent : notificationBoxUpcoming) {
