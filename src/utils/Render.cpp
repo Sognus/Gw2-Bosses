@@ -607,7 +607,8 @@ float calculate_distance(const ImVec2& point1, const ImVec2& point2) {
 
 std::chrono::system_clock::time_point from_offset(auto duration) {
 	const auto now = std::chrono::system_clock::now();
-	const auto time = std::chrono::system_clock::to_time_t(now);
+	const std::time_t time = std::chrono::system_clock::to_time_t(now);
+
 
 	std::tm tm_struct;
 	if (gmtime_s(&tm_struct, &time) != 0) {
@@ -619,17 +620,34 @@ std::chrono::system_clock::time_point from_offset(auto duration) {
 	tm_struct.tm_min = 0;
 	tm_struct.tm_sec = 0;
 
-	// Use _mkgmtime to convert to UTC
-	const auto midnight_utc = std::chrono::system_clock::from_time_t(timegm(&tm_struct));
-	return midnight_utc + duration;
+	// Instead of using _mkgmtime, adjust the time manually
+	std::time_t midnight_time = std::mktime(&tm_struct);
+	if (midnight_time == -1) {
+		throw std::runtime_error("Error calculating UTC midnight time");
+	}
+
+	// Calculate the difference between local time and UTC time
+	const std::time_t utc_midnight_time = midnight_time - _timezone;
+
+
+	return std::chrono::system_clock::from_time_t(utc_midnight_time) + duration;
 }
 
 std::string calculate_tooltip_time_absolute(long seconds_since_midnight) {
 	auto duration = std::chrono::seconds(seconds_since_midnight);
 	auto timestamp = from_offset(duration);
 
+
+	std::time_t time_t_timestamp = std::chrono::system_clock::to_time_t(timestamp);
+	std::tm* local_tm = std::localtime(&time_t_timestamp);
+
 	std::ostringstream oss;
-	oss << std::format("{:%R}", std::chrono::current_zone()->to_local(timestamp));
+	if (local_tm) {
+		oss << std::put_time(local_tm, "%H:%M");  // Format the time manually
+	}
+	else {
+		oss << "time conversion error - contact developer";
+	}
 
 	return oss.str();
 }
@@ -746,7 +764,7 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 			drawList->PathClear();
 		}
 
-		if (is_point_inside_arc(mousePos, location, size, startingAngle, startingAngle + totalAngle)) {
+		if (is_point_inside_arc(mousePos, location, size, startingAngle, startingAngle + totalAngle)) {			
 			std::string time = calculate_tooltip_time_absolute(periodicity_absolute);
 			std::string next = calculate_tooltip_time_absolute(periodicity_absolute + periodicity);
 			ImGui::SetTooltip("%s\n\nstarts: %s\n\nnext: %s", description.c_str(), time.c_str(), next.c_str());
