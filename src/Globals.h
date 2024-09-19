@@ -23,6 +23,8 @@
 #include "Addon.h"
 #include "../resource.h"
 
+#include "GW2BossesVersion.h"
+
 extern AddonAPI* APIDefs;
 extern AddonDefinition* AddonDef;
 extern Mumble::Data* MumbleLink;

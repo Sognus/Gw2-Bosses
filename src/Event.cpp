@@ -3,6 +3,7 @@
 Event::Event(std::string name, ImVec2 location, std::string eventType, std::string colorHex)
     : name(name), location(location), event_type(eventType), color_hex(colorHex), scale(0.0f), percentage(0.0f) {
     markedForAlert = false;
+    enabled = true;
 }
 
 Event::Event(std::string name, float x, float y, std::string eventType, std::string colorHex)
@@ -10,10 +11,27 @@ Event::Event(std::string name, float x, float y, std::string eventType, std::str
     markedForAlert = false;
     location.x = x;
     location.y = y;
+    enabled = true;
 }
+
+Event::Event(std::string name, ImVec2 location, std::string eventType, std::string colorHex, bool aEnabled)
+    : name(name), location(location), event_type(eventType), color_hex(colorHex), scale(0.0f), percentage(0.0f) {
+    markedForAlert = false;
+    enabled = aEnabled;
+}
+
+Event::Event(std::string name, float x, float y, std::string eventType, std::string colorHex, bool aEnabled)
+    : name(name), event_type(eventType), color_hex(colorHex), scale(0.0f), percentage(0.0f) {
+    markedForAlert = false;
+    location.x = x;
+    location.y = y;
+    enabled = aEnabled;
+}
+
 
 Event::Event() {
     markedForAlert = false;
+    enabled = true;
 }
 
 std::string Event::GetName() const {
@@ -66,6 +84,7 @@ ImVec2& Event::GetLocationPtr() {
     return location;
 }
 
+
 // TODO: Deprecated
 void Event::SetColorHex(std::string newColorHex) {
     color_hex = newColorHex;
@@ -90,6 +109,9 @@ json Event::ToJson() const {
     // TODO: Deprecated
     eventData["percentage"] = percentage;
 
+    // Enabled flag
+    eventData["enabled"] = enabled;
+
     // Serialize extra data
     json extraData;
     for (const auto& entry : data) {
@@ -108,6 +130,7 @@ void Event::FromJson(const json& jsonData) {
     location.y = json_getOrElse<float>(jsonData["location"], "y", 0.0f);
     event_type = json_getOrElse<std::string>(jsonData, "event_type", "");
     color_hex = json_getOrElse<std::string>(jsonData, "color_hex", "");
+    enabled = json_getOrElse<bool>(jsonData, "enabled", true);
     
     // TODO: Deprecated
     scale = json_getOrElse<float>(jsonData, "scale", 0.0f);
@@ -141,6 +164,20 @@ std::string Event::GetFormattedEventName()
 
 Event* Event::DeepCopy() {
     return new Event(*this);
+}
+
+void Event::SetEnabled(bool aEnabled)
+{
+    this->enabled = aEnabled;
+}
+
+bool Event::IsEnabled() {
+    return this->enabled;
+}
+
+bool* Event::GetEnabledPtr()
+{
+    return &enabled;
 }
 
 // Destructor

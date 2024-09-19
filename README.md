@@ -20,7 +20,21 @@ Install via the [Nexus](https://raidcore.gg/Nexus) Addon Library or download the
 
 ## Customization
 
-Currently there is no easy way to customize rendered events, it is a feature planned for future. If you want to change color, open data.json and change `color_hex` value of event which color you want to change. Then unload and load addon again.
+Currently there are not many options to customize rendered events. Limited editor is available.
+
+### Event editor and selecting event to edit
+
+You can find event editor in **Nexus options -> Addons -> World bosses -> Editor**. 
+
+- You can either select an event from the dropdown menu (Note: If the event is numbered, the number indicates its order of occurrence from midnight, starting at 1)
+- Alternatively, you can select an event by pressing CTRL+CLICK on it in the map.
+- An event selected for editing that is enabled will have a green outline to indicate selection.
+- An event selected for editing that is disabled will have a red outline to indicate selection.
+- You can change its location by adjusting the numerical values in the form.
+- You can enable or disable its rendering using **enabled** dropdown.
+- Changing the base color for an event is currently not implemented.
+- Press the save button to apply changes (unsaved changes will be discarded).
+
 
 ## Troubleshooting and feature requests
 

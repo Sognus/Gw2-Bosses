@@ -10,7 +10,7 @@ CyclicalCoreWorldbossEventQueue::CyclicalCoreWorldbossEventQueue() {
 CyclicalCoreWorldbossEventQueue::~CyclicalCoreWorldbossEventQueue() {
     while (!deque.empty()) {
         CoreWorldbossEvent* element = deque.front();
-        deque.pop_front();
+        deque.pop_front(); 
     }
 }
 

@@ -27,6 +27,24 @@ public:
         std::string colorHex
     );
 
+    Event(
+        std::string name,
+        ImVec2 location,
+        std::string eventType,
+        std::string colorHex,
+        bool aEnabled
+    );
+
+    Event(
+        std::string name,
+        float x,
+        float y,
+        std::string eventType,
+        std::string colorHex,
+        bool aEnabled
+    );
+
+
     std::string GetName() const;
 
     float GetScale() const;
@@ -70,6 +88,12 @@ public:
     template <typename T>
     T GetData(const std::string& key, const T& defaultValue);
 
+    void SetEnabled(bool aEnabled);
+
+    bool IsEnabled();
+
+    bool* GetEnabledPtr();
+
     // Destructor
     virtual ~Event();
 
@@ -79,6 +103,7 @@ private:
     float percentage;
     std::string event_type;
     std::string color_hex;
+    bool enabled;
 
     /// <summary>
     /// Extra data

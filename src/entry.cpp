@@ -4,7 +4,6 @@
 #include <unordered_map> // HashMap
 
 #include "Globals.h"
-#include "GW2BossesVersion.h"
 
 // MODULE
 HMODULE hSelf;

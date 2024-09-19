@@ -437,7 +437,7 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 		// Check if currently edited addon is same as currently rendered addon
 		if (strcmp(pEvent.GetName().c_str(), addon->editorSelectedEventName.c_str()) == 0) {
 			ringSize = 2;
-			ringColor = IM_COL32(118, 212, 55, 255);
+			ringColor = pEvent.IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(212, 55, 118, 255);
 		}
 	}
 
@@ -687,7 +687,7 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		// Check if currently edited addon is same as currently rendered addon
 		if (strcmp(pEvent.GetName().c_str(), addon->editorSelectedEventName.c_str()) == 0) {
 			ringSize = 2;
-			ringColor = IM_COL32(118, 212, 55, 255);
+			ringColor = pEvent.IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(212, 55, 118, 255);
 		}
 	}
 
@@ -916,7 +916,7 @@ void render_map_notification(Event* notificationEvent, Texture* texture) {
 		if (strcmp(notificationEvent->GetName().c_str(), addon->editorSelectedEventName.c_str()) == 0) {
 			ImVec2 outlineRectMin = ImVec2(location.x - size / 2, location.y - size / 2);
 			ImVec2 outlineRectMax = ImVec2(location.x + size / 2, location.y + size / 2);
-			ImU32 outLineColor = IM_COL32(118, 212, 55, 255);
+			ImU32 outLineColor = notificationEvent->IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(212, 55, 118, 255);
 			drawList->AddRect(outlineRectMin, outlineRectMax, outLineColor, 0.0f, 15, 2.5f);
 		}
 	}
@@ -926,8 +926,6 @@ void render_map_notification(Event* notificationEvent, Texture* texture) {
 	ImGui::SetCursorPos(renderLocation);
 	ImGui::Image(texture->Resource, ImVec2(size, size));
 	ImGui::SetCursorPos(cursorStack);
-
-
 
 	if (eventBox.OverlapsVector(mousePos)) {
 		std::string formattedTooltip = "";
