@@ -10,8 +10,7 @@ CyclicalCoreWorldbossEventQueue::CyclicalCoreWorldbossEventQueue() {
 CyclicalCoreWorldbossEventQueue::~CyclicalCoreWorldbossEventQueue() {
     while (!deque.empty()) {
         CoreWorldbossEvent* element = deque.front();
-        deque.pop_front();
-        // element possibly leaks memory but windows is fucking trash OS
+        deque.pop_front(); 
     }
 }
 

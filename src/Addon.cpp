@@ -9,9 +9,12 @@ Addon::Addon() {
 	// Default behaviour 
 	this->render = true;
 	this->showNotifications = false;
+	this->useNexusNotifications = true;
 
 	this->DPIScaleOverride = false;
 	this->DPIScaleOverride = 1.0f;
+
+	this->showDebugCrosshair = false;
 
 	// Choices for offset combo box
 	this->additionalOffsetChoices = {
@@ -48,13 +51,32 @@ Addon::~Addon() {
 void Addon::RenderOptions() {
 	if (ImGui::BeginChild("GW2_BOSSES_OPTIONS")) {
 
+		std::string versionString = std::format("GW2 Bosses: version {} (Build: {})", VERSION_STRING, VERSION_REVISION);
+		ImGui::TextDisabled(versionString.c_str());
+		ImGui::TextDisabled("Created by: Sognus.1204");
+
+		#ifdef _DEBUG
+			ImGui::TextDisabled("Debug build");
+		#endif
+
 		if (ImGui::BeginTabBar("GW2 Bosses Tab Bar", ImGuiTabBarFlags_None)) {
 
 			if (ImGui::BeginTabItem("General")) {
 
+			#ifdef _DEBUG
+				ImGui::TextDisabled("Debug");
+				if (ImGui::Checkbox("Render crosshair", &this->showDebugCrosshair)) {
+
+				}
+			#endif
+
 				ImGui::TextDisabled("Notification control");
 
 				if (ImGui::Checkbox("Render events and bosses on map", &this->render)) {
+
+				}
+
+				if (ImGui::Checkbox("Use Nexus alerts for notificatioins", &this->useNexusNotifications)) {
 
 				}
 
@@ -149,6 +171,17 @@ void Addon::RenderOptions() {
 
 					ImGui::Separator();
 
+					ImGui::TextDisabled("Controls");
+
+					const char* isEnabledItems[] = { "false", "true" };  // Combo box items
+					ImGui::Text("Enabled: ");
+					ImGui::SameLine();
+					if (ImGui::Combo("##Enabled", (int*)(this->editorBuffer.editorEditedEvent->GetEnabledPtr()), isEnabledItems, IM_ARRAYSIZE(isEnabledItems))) {
+						// Changes
+					}
+
+					ImGui::Separator();
+
 					// Common events variables
 					ImGui::TextDisabled("Location");
 					ImVec2& location = this->editorBuffer.editorEditedEvent->GetLocationPtr();
@@ -196,8 +229,9 @@ void Addon::RenderOptions() {
 					if (ImGui::Button("Save")) {
 						// Modify data of original 
 						choosedEventPair->second->SetLocation(location);
+						choosedEventPair->second->SetEnabled(this->editorBuffer.editorEditedEvent->IsEnabled());
 						choosedEventPair->second->SetColorHex(this->editorBuffer.editorEditedEvent->GetColorHex());
-
+						ExportEventsJson();
 					}
 
 
@@ -238,7 +272,9 @@ void Addon::Render() {
 		ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_NoNavInputs |
 		ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration )) {
 		#ifdef _DEBUG
-			render_debug_crosshair();
+			if (this->showDebugCrosshair) {
+				render_debug_crosshair();
+			}
 		#endif
 		this->RenderEvents(); 
 		this->RenderNotificationsMap();
@@ -308,8 +344,8 @@ void Addon::LoadEvents() {
 
 	}
 
-	// Load events via fallback if loaded flag was not set to positive value
-	if (!eventsLoaded) {
+	// Load events via fallback if loaded flag was not set to positive value - load events always, it should add missing keys
+	if (!eventsLoaded || true) {
 		Addon::LoadEventsFallback();
 		Addon::LoadCoreWorldbossesFallback();
 		Addon::ExportEventsJson();
@@ -327,6 +363,14 @@ void Addon::RenderEvents() {
 
 		if (eventPtr) {
 
+			// Skip render of event that not enabled and is not currently edited
+
+			if (!eventPtr->IsEnabled()
+				&& this->editorBuffer.editorEditedEvent 
+				&& this->editorBuffer.editorEditedEvent->GetName() != eventPtr->GetName()) {
+				continue;
+			}
+
 			if (eventPtr->GetEventType().compare("core_world_bosses") == 0) {
 				continue;
 			}
@@ -342,6 +386,7 @@ void Addon::RenderEvents() {
 				PeriodicEvent* periodicEventPtr = static_cast<PeriodicEvent*>(eventPtr);
 				if (periodicEventPtr) {
 					if (eventPtr->GetEventType().compare("periodic") == 0) {
+						// DEPRECATED
 						render_periodic_event(*periodicEventPtr);
 						continue;
 					}
@@ -363,13 +408,77 @@ void Addon::RenderNotificationsMap() {
 	// Skip if notifications or render are disabled
 	if (!this->render) return;
 
+	bool editEventSet = this->editorBuffer.editorEditedEvent != nullptr && this->editorBuffer.editorEditedEvent->GetEventType().starts_with("core_world_bosses");
+	bool editEventRendered = false;
+
 	for (Event* notificationEvent : notificationBoxUpcoming) {
+		// Skip event render if event is not enabled
+		if (!notificationEvent->IsEnabled()) {
+			continue;
+		}
+		if (editEventSet && this->editorBuffer.editorEditedEvent->GetName() == notificationEvent->GetName()) {
+			editEventRendered = true;
+		}
 		render_map_notification_upcoming(notificationEvent);
 	}
 	for (Event* notificationEvent : notificationBoxInProgress) {
+		// Skip event render if event is not enabled
+		if (!notificationEvent->IsEnabled()) {
+			continue;
+		}
+		if (editEventSet&& this->editorBuffer.editorEditedEvent->GetName() == notificationEvent->GetName()) {
+			editEventRendered = true;
+		}
 		render_map_notification_in_progress(notificationEvent);
 	}
+
+	// Always render edited event even when its not enabled
+	if (editEventSet && !editEventRendered) {
+		render_map_notification_currently_edited(this->editorBuffer.editorEditedEvent);
+	}
 }
+
+void Addon::SendUpcomingEventAlert(Event* aEvent) {
+	// Skip if globally disabled
+	if (!this->useNexusNotifications) return;
+	// Skip if not locally enabled
+	if (!aEvent->markedForAlert) return;
+
+	long current_time = get_time_since_midnight();
+
+	std::string name = aEvent->GetFormattedEventName();
+	std::string message = name + " will start ";
+
+	// TODO: Format time until
+	// TODO: Skip sending alerts for limited time after addon load
+
+	if (aEvent->GetEventType().starts_with("core_world_bosses")) {
+		CoreWorldbossEvent* coreEvent = static_cast<CoreWorldbossEvent*>(aEvent);
+
+		// Translate when will event start
+		int timeUntil = coreEvent->GetMidnightOffsetSeconds() - current_time;
+		message += "in " + format_countdown_time_minutes(timeUntil) + "!";
+	}
+	else {
+		message += "soon!";
+	}
+
+
+	APIDefs->SendAlert(message.c_str());
+
+}
+
+void Addon::SendInProgressEventAlert(Event* aEvent) {
+	// Skip if globally disabled
+	if (!this->useNexusNotifications) return;
+	// Skip if not locally enabled
+	if (!aEvent->markedForAlert) return;
+
+	std::string name = aEvent->GetFormattedEventName();
+	std::string message = name + " just started!";
+
+	APIDefs->SendAlert(message.c_str());
+};
 
 void Addon::RenderNotifications() {
 	if (!this->showNotifications) return;
@@ -389,6 +498,10 @@ void Addon::RenderNotifications() {
 		if (ImGui::CollapsingHeader(collapsingHeaderText.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
 			if (this->additionalNotifyOffsetIndex > 0) {
 				for (Event* notificationEvent : notificationBoxUpcoming) {
+					if (!notificationEvent->IsEnabled()) {
+						continue;
+					}
+					
 					if (notificationEvent->GetEventType().starts_with("core_world_bosses")) {
 						CoreWorldbossEvent* coreEvent = static_cast<CoreWorldbossEvent*>(notificationEvent);
 
@@ -416,6 +529,11 @@ void Addon::RenderNotifications() {
 		}
 		if (ImGui::CollapsingHeader("Core world bosses in progress", ImGuiTreeNodeFlags_DefaultOpen)) {
 			for (Event* notificationEvent : notificationBoxInProgress) {
+				// Skip event notification render if its not enabled
+				if (!notificationEvent->IsEnabled()) {
+					continue;
+				}
+
 				if (notificationEvent->GetEventType().starts_with("core_world_bosses")) {
 					CoreWorldbossEvent* coreEvent = static_cast<CoreWorldbossEvent*>(notificationEvent);
 
@@ -444,6 +562,7 @@ void Addon::RenderNotifications() {
 	}
 
 }
+
 
 void Addon::Update() {
 	long current_time = get_time_since_midnight();
@@ -475,6 +594,7 @@ void Addon::Update() {
 		if (current_time >= notificationStart && current_time < eventStart) {
 			// Check if item is not present
 			if (std::find(notificationBoxUpcoming.begin(), notificationBoxUpcoming.end(), coreEvent) == notificationBoxUpcoming.end()) {
+				this->SendUpcomingEventAlert(coreEvent);
 				this->notificationBoxUpcoming.push_back(coreEvent);
 			}
 			// Event was handled pop queue
@@ -484,6 +604,7 @@ void Addon::Update() {
 		else if (current_time >= eventStart && current_time <= eventEnd) {
 			// Check if item is not present
 			if (std::find(notificationBoxInProgress.begin(), notificationBoxInProgress.end(), coreEvent) == notificationBoxInProgress.end()) {
+				this->SendInProgressEventAlert(coreEvent);
 				this->notificationBoxInProgress.push_back(coreEvent);
 			}
 			worldBossesNotifications->pop();
@@ -533,6 +654,8 @@ void Addon::Update() {
 
 			// Event is between start and end - push erase from upcoming and move to in progress
 			if (current_time >= eventStart && current_time <= eventEnd) {
+				// Send alert
+				this->SendInProgressEventAlert(coreEvent);	
 				// Move to in progress
 				this->notificationBoxInProgress.push_back(eventPtr);
 				// Erase and move to next iterator
@@ -619,11 +742,11 @@ Event* Addon::GetEvent(const std::string& eventName) {
 }
 
 void Addon::AddEvent(Event* eventInstance) {
-	events[eventInstance->GetName().c_str()] = eventInstance;
+	events.insert({ eventInstance->GetName(), eventInstance });
 }
 
 void Addon::AddCoreWorldbossEvent(Event* eventInstance) {
-	events[eventInstance->GetName().c_str()] = eventInstance;
+	events.insert({ eventInstance->GetName(), eventInstance });
 }
 
 
@@ -2325,7 +2448,7 @@ void Addon::LoadEventsFallback() {
 
 		amnytas->SetEventType("periodic_timer");
 	}
-
+	 
 	// Wizard's Tower block
 	PeriodicEvent* wizard_tower;
 	{
@@ -2414,6 +2537,52 @@ void Addon::LoadEventsFallback() {
 		convergences->SetEventType("periodic_timer_convergences");
 	}
 
+	PeriodicEvent* janthir_syntri;
+	{
+		janthir_syntri = new PeriodicEvent(
+			"Janthir Syntri",
+			39981.9258f,
+			15269.1797,
+			0,
+			7200,
+			"92AAEB"
+		);
+
+		janthir_syntri->AddPeriodicEntry(
+			"Rest",
+			"Rest",
+			0,
+			1800,
+			"6184E1"
+		);
+
+		janthir_syntri->AddPeriodicEntry(
+			"Preparation",
+			"Preparation",
+			1800,
+			600,
+			"224AB4"
+		);
+
+		janthir_syntri->AddPeriodicEntry(
+			"Meta: Of Mists and Monsters",
+			"Meta: Of Mists and Monsters",
+			2400,
+			900,
+			"18347E"
+		);
+
+		janthir_syntri->AddPeriodicEntry(
+			"Rest",
+			"Rest",
+			3300,
+			3900,
+			"6184E1"
+		);
+
+		janthir_syntri->SetEventType("periodic_timer");
+	}
+
 	// Add events block
 	{
 		// TODO: Coremap bosses
@@ -2455,5 +2624,8 @@ void Addon::LoadEventsFallback() {
 		Addon::AddEvent(amnytas);
 		Addon::AddEvent(wizard_tower);
 		Addon::AddEvent(convergences);
+
+		// JW
+		Addon::AddEvent(janthir_syntri);
 	}
 }

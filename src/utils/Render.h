@@ -19,4 +19,6 @@ void render_map_notification_upcoming(Event* notificationEvent);
 
 void render_map_notification_in_progress(Event* notificationEvent);
 
+void render_map_notification_currently_edited(Event* notificationEvent);
+
 #endif //RENDER_H

@@ -98,8 +98,11 @@ public:
      */
 
     // DPI scale
+    bool showDebugCrosshair;
     bool enableDPIScaleOverride;
     float DPIScaleOverride;
+    bool useNexusNotifications;
+  
 
      // Global render enabled-disabled flag
     bool render;
@@ -125,6 +128,9 @@ private:
     /*
      *      Events
      */ 
+
+    void SendUpcomingEventAlert(Event* event);
+    void SendInProgressEventAlert(Event* event);
 
     void LoadEvents();
     void LoadEventsFallback();

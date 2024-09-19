@@ -437,7 +437,7 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 		// Check if currently edited addon is same as currently rendered addon
 		if (strcmp(pEvent.GetName().c_str(), addon->editorSelectedEventName.c_str()) == 0) {
 			ringSize = 2;
-			ringColor = IM_COL32(118, 212, 55, 255);
+			ringColor = pEvent.IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(212, 55, 118, 255);
 		}
 	}
 
@@ -607,7 +607,8 @@ float calculate_distance(const ImVec2& point1, const ImVec2& point2) {
 
 std::chrono::system_clock::time_point from_offset(auto duration) {
 	const auto now = std::chrono::system_clock::now();
-	const auto time = std::chrono::system_clock::to_time_t(now);
+	const std::time_t time = std::chrono::system_clock::to_time_t(now);
+
 
 	std::tm tm_struct;
 	if (gmtime_s(&tm_struct, &time) != 0) {
@@ -619,17 +620,34 @@ std::chrono::system_clock::time_point from_offset(auto duration) {
 	tm_struct.tm_min = 0;
 	tm_struct.tm_sec = 0;
 
-	// Use _mkgmtime to convert to UTC
-	const auto midnight_utc = std::chrono::system_clock::from_time_t(timegm(&tm_struct));
-	return midnight_utc + duration;
+	// Instead of using _mkgmtime, adjust the time manually
+	std::time_t midnight_time = std::mktime(&tm_struct);
+	if (midnight_time == -1) {
+		throw std::runtime_error("Error calculating UTC midnight time");
+	}
+
+	// Calculate the difference between local time and UTC time
+	const std::time_t utc_midnight_time = midnight_time - _timezone;
+
+
+	return std::chrono::system_clock::from_time_t(utc_midnight_time) + duration;
 }
 
 std::string calculate_tooltip_time_absolute(long seconds_since_midnight) {
 	auto duration = std::chrono::seconds(seconds_since_midnight);
 	auto timestamp = from_offset(duration);
 
+
+	std::time_t time_t_timestamp = std::chrono::system_clock::to_time_t(timestamp);
+	std::tm* local_tm = std::localtime(&time_t_timestamp);
+
 	std::ostringstream oss;
-	oss << std::format("{:%R}", std::chrono::current_zone()->to_local(timestamp));
+	if (local_tm) {
+		oss << std::put_time(local_tm, "%H:%M");  // Format the time manually
+	}
+	else {
+		oss << "time conversion error - contact developer";
+	}
 
 	return oss.str();
 }
@@ -669,7 +687,7 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		// Check if currently edited addon is same as currently rendered addon
 		if (strcmp(pEvent.GetName().c_str(), addon->editorSelectedEventName.c_str()) == 0) {
 			ringSize = 2;
-			ringColor = IM_COL32(118, 212, 55, 255);
+			ringColor = pEvent.IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(212, 55, 118, 255);
 		}
 	}
 
@@ -746,7 +764,7 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 			drawList->PathClear();
 		}
 
-		if (is_point_inside_arc(mousePos, location, size, startingAngle, startingAngle + totalAngle)) {
+		if (is_point_inside_arc(mousePos, location, size, startingAngle, startingAngle + totalAngle)) {			
 			std::string time = calculate_tooltip_time_absolute(periodicity_absolute);
 			std::string next = calculate_tooltip_time_absolute(periodicity_absolute + periodicity);
 			ImGui::SetTooltip("%s\n\nstarts: %s\n\nnext: %s", description.c_str(), time.c_str(), next.c_str());
@@ -898,7 +916,7 @@ void render_map_notification(Event* notificationEvent, Texture* texture) {
 		if (strcmp(notificationEvent->GetName().c_str(), addon->editorSelectedEventName.c_str()) == 0) {
 			ImVec2 outlineRectMin = ImVec2(location.x - size / 2, location.y - size / 2);
 			ImVec2 outlineRectMax = ImVec2(location.x + size / 2, location.y + size / 2);
-			ImU32 outLineColor = IM_COL32(118, 212, 55, 255);
+			ImU32 outLineColor = notificationEvent->IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(212, 55, 118, 255);
 			drawList->AddRect(outlineRectMin, outlineRectMax, outLineColor, 0.0f, 15, 2.5f);
 		}
 	}
@@ -908,8 +926,6 @@ void render_map_notification(Event* notificationEvent, Texture* texture) {
 	ImGui::SetCursorPos(renderLocation);
 	ImGui::Image(texture->Resource, ImVec2(size, size));
 	ImGui::SetCursorPos(cursorStack);
-
-
 
 	if (eventBox.OverlapsVector(mousePos)) {
 		std::string formattedTooltip = "";
@@ -987,6 +1003,14 @@ void render_map_notification_in_progress(Event* notificationEvent)
 	Texture* texture =
 		(resource_textures.find(GW2BOSSES_RESOURCE_COREWORLDBOSSES_IN_PROGRESS) != resource_textures.end()) ?
 		resource_textures[GW2BOSSES_RESOURCE_COREWORLDBOSSES_IN_PROGRESS] :
+		nullptr;
+	render_map_notification(notificationEvent, texture);
+}
+
+void render_map_notification_currently_edited(Event* notificationEvent) {
+	Texture* texture =
+		(resource_textures.find(GW2BOSSES_RESOURCE_COREWORLDBOSSES_IN_EDIT) != resource_textures.end()) ?
+		resource_textures[GW2BOSSES_RESOURCE_COREWORLDBOSSES_IN_EDIT] :
 		nullptr;
 	render_map_notification(notificationEvent, texture);
 }

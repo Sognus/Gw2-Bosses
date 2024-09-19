@@ -96,13 +96,15 @@ public:
     void SetNotifyUpcoming(bool flag);
     void SetNotifyInProgress(bool flag);
 
+    std::string GetFormattedEventName() override;
+
     // Functions to serialize and deserialize the Event to and from a JSON object
     json ToJson() const override;
     void FromJson(const json& json) override;
     static PeriodicEvent* CreateFromJson(const json& json);
 
     // Deep Copy
-    PeriodicEvent* DeepCopy();
+    virtual PeriodicEvent* DeepCopy();
 
     // Destructor
     ~PeriodicEvent() override;

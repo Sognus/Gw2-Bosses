@@ -4,7 +4,6 @@
 #include <unordered_map> // HashMap
 
 #include "Globals.h"
-#include "GW2BossesVersion.h"
 
 // MODULE
 HMODULE hSelf;
@@ -151,6 +150,7 @@ void AddonLoad(AddonAPI* aHostApi)
 	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_IN_PROGRESS.c_str(), IMAGE_COREWORLDBOSSES_IN_PROGRESS, hSelf, ReceiveTexture);
 	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_UPCOMING.c_str(), IMAGE_COREWORLDBOSSES_UPCOMING, hSelf, ReceiveTexture);
 	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_GRAY.c_str(), IMAGE_COREWORLDBOSSES_GRAY, hSelf, ReceiveTexture);
+	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_IN_EDIT.c_str(), IMAGE_COREWORLDBOSSES_IN_EDIT, hSelf, ReceiveTexture);
 
 	// WND proc - Nexus bad, breaking imgui IO
 	APIDefs->RegisterWndProc(AddonWndProc);

@@ -84,6 +84,9 @@
     <ClCompile Include="src\imgui\imgui_widgets.cpp">
       <Filter>Libraries\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\JsonExtension.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\mumble\Mumble.h">
@@ -164,6 +167,9 @@
     <ClInclude Include="src\imgui\imstb_truetype.h">
       <Filter>Libraries\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\JsonExtension.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="patchnotes.md">
@@ -184,6 +190,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="resources\boss_gray.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resources\boss_in_edit.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

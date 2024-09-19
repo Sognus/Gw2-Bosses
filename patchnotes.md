@@ -1,3 +1,37 @@
+## Version 1.4.0.0
+
+### Fixed
+- Editor save button should now correctly export data to data.json
+
+### Added
+- Janthir Syntri meta event timer
+- Option to disable event render in  **Nexus options -> Addons -> World bosses -> Editor**, currently edited event is still visible and it has red outline to indicate event render is disabled
+
+### Changed
+- Data loading: Fallback load is always being called, base events that are missing in data.json will be automatically added. If you wish to remove event, disable it in editor
+
+### Known issues
+- Calculation of event render position is slightly wrong for larger interface sizes, especially when changing the map view. This affects older versions as well and has no easy solution at the moment. 
+- Change of DPI scale is slightly delayed after checked/unchecked in Guild Wars 2 settings, this is not a bug.
+- It is much more easier to select events to edit when zoomed in, it is supposed to be just slight QoL, not main functionality. To implement this, custom WND proc was needed and it is not perfect.
+
+## Version 1.3.1.0
+
+### Fixed
+- Fixed compatibility issue of Convergences event tooltip for linux users (incompatibility with windows' _mkgmtime)
+
+### Added
+- Experimental usage of Nexus' alerts for core world boss events (enable/disable in options)
+
+### Changed
+- Core world boss event that is not active and is currently being edited is shown as green cog on the map. 
+- Debug version now have special debug controls
+
+### Known issues
+- Calculation of event render position is slightly wrong for larger interface sizes, especially when changing the map view. This affects older versions as well and has no easy solution at the moment. 
+- Change of DPI scale is slightly delayed after checked/unchecked in Guild Wars 2 settings, this is not a bug.
+- It is much more easier to select events to edit when zoomed in, it is supposed to be just slight QoL, not main functionality. To implement this, custom WND proc was needed and it is not perfect.
+
 ## Version 1.3.0.0
 
 ### Added

@@ -200,6 +200,11 @@ void PeriodicEvent::SetNotifyInProgress(bool flag) {
     this->notifyInProgress = flag;
 }
 
+std::string PeriodicEvent::GetFormattedEventName()
+{
+    return this->name;
+}
+
 json PeriodicEvent::ToJson() const {
     json eventData = Event::ToJson(); // Serialize base Event data
 

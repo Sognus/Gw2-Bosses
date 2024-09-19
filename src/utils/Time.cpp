@@ -28,6 +28,37 @@ long get_time_since_midnight() {
 	return secondsSinceMidnight;
 }
 
+std::string format_countdown_time_minutes(int seconds) {
+	if (seconds <= 0) {
+		return "";
+	}
+
+	int hours = seconds / 3600;
+	int minutes = (seconds % 3600) / 60;
+	int secs = seconds % 60;
+
+	std::ostringstream oss;
+
+	// Add hours only if it's greater than zero
+	if (hours > 0) {
+		oss << std::setfill('0') << std::setw(1) << hours << " hours";
+		oss << " ";
+
+	}
+
+	// Add minutes only if it's greater than zero or hours are present
+	if (minutes > 0 || hours > 0) {
+		oss << std::setfill('0') << std::setw(1) << minutes << " minutes";
+	}
+
+	// If minutes and hours are zero, just print seconds
+	if (minutes < 1 && hours < 1) {
+		oss << std::setfill('0') << std::setw(2) << seconds << " seconds";
+	}
+
+	return oss.str();
+}
+
 std::string format_countdown_time(int seconds) {
 
 	if (seconds <= 0) {
