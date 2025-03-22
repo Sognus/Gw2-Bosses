@@ -1,3 +1,14 @@
+## Version 1.4.1.0
+
+### Added
+- Added Janthir Wilds convergence timer 
+  - _(Note: choosed Lowlands shore as event location despite map not having meta event. - You can move it in editor if you desire; example: `[37791.0, 14218.0]`)_
+
+### Known issues
+- Calculation of event render position is slightly wrong for larger interface sizes, especially when changing the map view. This affects older versions as well and has no easy solution at the moment. 
+- Change of DPI scale is slightly delayed after checked/unchecked in Guild Wars 2 settings, this is not a bug.
+- It is much more easier to select events to edit when zoomed in, it is supposed to be just slight QoL, not main functionality. To implement this, custom WND proc was needed and it is not perfect.
+
 ## Version 1.4.0.0
 
 ### Fixed

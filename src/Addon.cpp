@@ -2583,6 +2583,29 @@ void Addon::LoadEventsFallback() {
 		janthir_syntri->SetEventType("periodic_timer");
 	}
 
+	PeriodicEvent* janthir_convergence;
+	{
+		janthir_convergence = new PeriodicEvent(
+			"Convergences (Janthir Wilds)",
+			43127.0f,
+			22669.0f,
+			0,
+			7200,
+			"6184E1"
+		);
+
+		janthir_convergence->AddPeriodicEntryDay(
+			"Convergences",
+			"Convergences",
+			5400,
+			600,
+			"18347E",
+			10800 // Override of 2h periode into 3h
+		);
+
+		janthir_convergence->SetEventType("periodic_timer_convergences");
+	}
+
 	// Add events block
 	{
 		// TODO: Coremap bosses
@@ -2627,5 +2650,6 @@ void Addon::LoadEventsFallback() {
 
 		// JW
 		Addon::AddEvent(janthir_syntri);
+		Addon::AddEvent(janthir_convergence);
 	}
 }
