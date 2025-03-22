@@ -652,6 +652,18 @@ std::string calculate_tooltip_time_absolute(long seconds_since_midnight) {
 	return oss.str();
 }
 
+std::string to_lower(const std::string& str) {
+	std::string lower_str = str;
+	std::transform(lower_str.begin(), lower_str.end(), lower_str.begin(),
+		[](unsigned char c) { return std::tolower(c); });
+	return lower_str;
+}
+
+bool icontains(const std::string& str, const std::string& substr) {
+	std::string lower_str = to_lower(str);
+	std::string lower_substr = to_lower(substr);
+	return lower_str.find(lower_substr) != std::string::npos;
+}
 
 
 void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
@@ -844,7 +856,7 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		std::string currentEntryDesc = current_entry == nullptr ? "?" : current_entry["description"];
 		std::string nextEntryDesc = next_entry == nullptr ? "?" : next_entry["description"];
 
-		if (pEvent.GetName().compare(currentEntryDesc) == 0) {
+		if (pEvent.GetName().compare(currentEntryDesc) == 0 || (icontains(currentEntryDesc, "convergence") && icontains(nextEntryDesc, "convergence"))) {
 			snprintf(buffer, sizeof(buffer),
 				"%s\n\nNext: %s",
 				currentEntryDesc.c_str(),
