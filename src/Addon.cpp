@@ -348,7 +348,8 @@ void Addon::LoadEvents() {
 	if (!eventsLoaded || true) {
 		Addon::LoadEventsFallback();
 		Addon::LoadCoreWorldbossesFallback();
-		Addon::ExportEventsJson();
+		Addon::LoadEventOverrides();
+;		Addon::ExportEventsJson();
 	}
 }
 
@@ -2597,7 +2598,7 @@ void Addon::LoadEventsFallback() {
 		janthir_convergence->AddPeriodicEntryDay(
 			"Convergences",
 			"Convergences",
-			5400,
+			0,
 			600,
 			"18347E",
 			10800 // Override of 2h periode into 3h
@@ -2623,6 +2624,7 @@ void Addon::LoadEventsFallback() {
 		// PoF
 		Addon::AddEvent(crystal_oasis);
 		Addon::AddEvent(desert_highlands);
+		Addon::AddEvent(elon_riverlands);
 		Addon::AddEvent(the_desolation);
 		Addon::AddEvent(domain_of_vabbi);
 
@@ -2652,4 +2654,27 @@ void Addon::LoadEventsFallback() {
 		Addon::AddEvent(janthir_syntri);
 		Addon::AddEvent(janthir_convergence);
 	}
+}
+
+void Addon::LoadEventOverrides()
+{
+	// Janthir wilds convergences were originally created wrongly
+	auto jw_convergences_entry = this->events.find("Convergences (Janthir Wilds)");
+	if (jw_convergences_entry != this->events.end()) {
+		bool wrongEntry = false;
+		PeriodicEvent* jw_convergences_entry_periodic = static_cast<PeriodicEvent*>(jw_convergences_entry->second);
+		for (int i = 0; i < jw_convergences_entry_periodic->periodic_entries.size(); i++) {
+			json& j = jw_convergences_entry_periodic->periodic_entries.at(i);
+
+			// Check if the keys exist and are of the correct type
+			if (j.contains("name") && j["name"].is_string() &&
+				j.contains("offset_seconds") && j["offset_seconds"].is_number_integer()) {
+
+				if (j["name"] == "Convergences" && j["offset_seconds"] == 5400) {
+					j["offset_seconds"] = 0;
+				}
+			}
+		}
+	}
+
 }

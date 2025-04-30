@@ -1,3 +1,15 @@
+## Version 1.4.2.0
+
+### Fixed 
+- Fixed Elon riverland meta events not being rendered 
+- Fixed incorrect offset for janthir wild convergences (this fix should be applied automatically, but if not, delete `addons\World bosses\data.json`)
+
+### Known issues
+- Calculation of event render position is slightly wrong for larger interface sizes, especially when changing the map view. This affects older versions as well and has no easy solution at the moment. 
+- Change of DPI scale is slightly delayed after checked/unchecked in Guild Wars 2 settings, this is not a bug.
+- It is much more easier to select events to edit when zoomed in, it is supposed to be just slight QoL, not main functionality. To implement this, custom WND proc was needed and it is not perfect.
+
+
 ## Version 1.4.1.0
 
 ### Added
