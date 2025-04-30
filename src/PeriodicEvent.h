@@ -8,6 +8,7 @@
 using json = nlohmann::json;
 
 class PeriodicEvent : public Event {
+friend class Addon;
 public:
     PeriodicEvent(
         std::string name,

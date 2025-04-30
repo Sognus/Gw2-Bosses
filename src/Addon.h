@@ -134,6 +134,7 @@ private:
 
     void LoadEvents();
     void LoadEventsFallback();
+    void LoadEventOverrides();
     void LoadCoreWorldbossesFallback();
     void ExportEventsJson();
 
