@@ -1,3 +1,9 @@
+## Version 1.4.3.0
+
+### Fixed
+- Fixed incorrect location of Svanir Shaman core world boss (this fix should be applied automatically, but if not, delete `addons\World bosses\data.json`)
+
+
 ## Version 1.4.2.0
 
 ### Fixed 
