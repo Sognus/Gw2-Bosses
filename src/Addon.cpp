@@ -816,8 +816,8 @@ void Addon::LoadCoreWorldbossesFallback() {
 
 		// Svanir Shaman
 		{
-			float x = 48872.0f;
-			float y = 33548.0f;
+			float x = 55997.6719f;
+			float y = 29384.4844f;
 			int notifyOffsetSeconds = 900;
 			int midnightOffsetSeconds = 900;
 			int duration = 900;
@@ -2543,7 +2543,7 @@ void Addon::LoadEventsFallback() {
 		janthir_syntri = new PeriodicEvent(
 			"Janthir Syntri",
 			39981.9258f,
-			15269.1797,
+			15269.1797f,
 			0,
 			7200,
 			"92AAEB"
@@ -2673,6 +2673,18 @@ void Addon::LoadEventOverrides()
 				if (j["name"] == "Convergences" && j["offset_seconds"] == 5400) {
 					j["offset_seconds"] = 0;
 				}
+			}
+		}
+	}
+
+
+	for (auto eventEntry : this->events) {
+		// Svanir shaman chief override
+		if (eventEntry.first.find("Svanir Shaman Chief") != std::string::npos) {
+			CoreWorldbossEvent* ev = static_cast<CoreWorldbossEvent*>(eventEntry.second);
+			ImVec2 evLocation = ev->GetLocation();
+			if (evLocation.x == 48872.0f && evLocation.y == 33548.0f) {
+				ev->SetLocation(ImVec2(55997.6719f,29384.4844f));
 			}
 		}
 	}
