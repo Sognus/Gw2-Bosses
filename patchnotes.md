@@ -1,3 +1,6 @@
+## Version 1.4.4.0
+- Added Bava Nisos meta event timer. 
+
 ## Version 1.4.3.0
 
 ### Fixed

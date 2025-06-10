@@ -2607,6 +2607,47 @@ void Addon::LoadEventsFallback() {
 		janthir_convergence->SetEventType("periodic_timer_convergences");
 	}
 
+
+	PeriodicEvent* janthir_bava_nisos;
+	{
+		janthir_bava_nisos = new PeriodicEvent(
+			"Bava Nisos",
+			36513.9922f,
+			11571.8828f,
+			0,
+			7200,
+			"6184E1"
+		);
+
+		janthir_bava_nisos->AddPeriodicEntry(
+			"Rest",
+			"Rest",
+			0,
+			4800,
+			"6184E1"
+		);
+
+
+		janthir_bava_nisos->AddPeriodicEntry(
+			"A Titanic Voyage",
+			"A Titanic Voyage",
+			4800,
+			1500,
+			"18347E"
+		);
+
+		janthir_bava_nisos->AddPeriodicEntry(
+			"Rest",
+			"Rest",
+			6300,
+			900,
+			"6184E1"
+		);
+
+		janthir_bava_nisos->SetEventType("periodic_timer");
+	}
+
+
 	// Add events block
 	{
 		// TODO: Coremap bosses
@@ -2653,6 +2694,7 @@ void Addon::LoadEventsFallback() {
 		// JW
 		Addon::AddEvent(janthir_syntri);
 		Addon::AddEvent(janthir_convergence);
+		Addon::AddEvent(janthir_bava_nisos);
 	}
 }
 
