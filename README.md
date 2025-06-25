@@ -18,6 +18,19 @@ Install via the [Nexus](https://raidcore.gg/Nexus) Addon Library or download the
 
 `CTRL+SHIFT+O` - Toggle visibility of notification box
 
+## Settings
+
+Limited settings are available through `<GW2 Folder>\addons\World Bosses\settings.json`.
+
+- `showDebugCrosshair` - if enabled: renders red cross in debug build, used mostly for debugging
+- `enableDPIScaleOverride` - use DPI scaling specified by `DPIScaleOverride` instead of the system one to render Events
+- `DPIScaleOverride` - DPI based scaling compared to 1.0 (100%) = 96 DPI
+- `useNexusNotifications` - enable experimental nexus alerts for certain events
+- `render` - show events on map
+- `showNotifications` - show notification box for core world boss events  
+- `additionalNotifyOffsetIndex` - choice selected from `additionalOffsetChoices` (indexed from 0)
+- `additionalOffsetChoices` -  available choices of showing events into future in format `{offset minutes, "tooltip"}`
+
 ## Customization
 
 Currently there are not many options to customize rendered events. Limited editor is available.

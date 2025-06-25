@@ -30,6 +30,8 @@ Event::Event(std::string name, float x, float y, std::string eventType, std::str
 
 
 Event::Event() {
+    percentage = 0.0f;
+    scale = 0.0f;
     markedForAlert = false;
     enabled = true;
 }
