@@ -2,6 +2,8 @@
 
 
 PeriodicEvent::PeriodicEvent() {
+    periodicity_seconds = 0;
+    midnight_offset_seconds = 0;
     notifyInProgress = false;
     notifyUpcoming = false;
 }

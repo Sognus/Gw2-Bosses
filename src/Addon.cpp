@@ -2,35 +2,26 @@
 
 namespace fs = std::filesystem;
 
+void to_json(json& j, const ComboBoxItem& item) {
+	j = json{ {"value", item.value}, {"text", item.text} };
+}
+
+// Deserialize ComboBoxItem
+void from_json(const json& j, ComboBoxItem& item) {
+	j.at("value").get_to(item.value);
+	j.at("text").get_to(item.text);
+}
+
 Addon::Addon() {
+	// Events storage
 	worldBossesNotifications = new CyclicalCoreWorldbossEventQueue();
+	
+	// Load Events
 	Addon::LoadEvents();
 
-	// Default behaviour 
-	this->render = true;
-	this->showNotifications = false;
-	this->useNexusNotifications = true;
-
-	this->DPIScaleOverride = false;
-	this->DPIScaleOverride = 1.0f;
-
-	this->showDebugCrosshair = false;
-
-	// Choices for offset combo box
-	this->additionalOffsetChoices = {
-		{0, "disabled"},
-		{15, "15 minutes"},
-		{30, "30 minutes"},
-		{45, "45 minutes"},
-		{60, "1 hour"},
-		{75, "1 hour 15 minutes"},
-		{90, "1 hour 30 minutes"},
-		{105, "1 hour 45 minutes"},
-		{120, "2 hours"}
-	};
-
-	// Currently selected combo box entry
-	this->additionalNotifyOffsetIndex = 1;
+	// Load preferences
+	this->LoadDefaultPreferences();
+	this->LoadPreferences();
 
 	// Currently selected event editor entry from combo box
 	this->editorSelectedEventName = "";
@@ -45,6 +36,7 @@ Addon::~Addon() {
 	for (auto& kv : events) {
 		delete kv.second;
 	}
+	this->SavePreferences();
 	delete worldBossesNotifications;
 }
 
@@ -115,7 +107,21 @@ void Addon::RenderOptions() {
 					ImGui::InputFloat("##DPI scaling value", &this->DPIScaleOverride, 0.0f, 0.0f, "%.2f", 0);
 				}
 
+				ImGui::Separator();
 
+				ImGui::TextDisabled("Settings control");
+				
+				if (ImGui::Button("Reset settings")) {
+					this->LoadDefaultPreferences();
+				}
+
+				if (ImGui::Button("Save settings")) {
+					this->SavePreferences();
+				}
+
+				if (ImGui::Button("Reload settings")) {
+					this->LoadPreferences();
+				}
 
 				ImGui::EndTabItem();
 			}
@@ -479,7 +485,132 @@ void Addon::SendInProgressEventAlert(Event* aEvent) {
 	std::string message = name + " just started!";
 
 	APIDefs->SendAlert(message.c_str());
-};
+}
+
+void Addon::LoadPreferences()
+{
+	std::string pathFolder = APIDefs->GetAddonDirectory(AddonDef->Name);
+
+	if (!fs::exists(pathFolder)) {
+		try {
+			fs::create_directory(pathFolder);
+		}
+		catch (const std::exception& e) {
+			std::string message = "Could not create addon directory: " + pathFolder;
+			APIDefs->Log(ELogLevel::ELogLevel_CRITICAL, ADDON_NAME.c_str(), message.c_str());
+#pragma warning(suppress: 4101)
+			e;
+		}
+	}
+
+	std::string pathSettings = pathFolder + preferred_separator_char() + "settings.json";
+
+	if (fs::exists(pathSettings)) {
+		try {
+			std::ifstream settingsFile(pathSettings);
+			if (settingsFile.is_open()) {
+				json j;
+				settingsFile >> j;
+
+				showDebugCrosshair = j.value("showDebugCrosshair", showDebugCrosshair);
+				enableDPIScaleOverride = j.value("enableDPIScaleOverride", enableDPIScaleOverride);
+				DPIScaleOverride = j.value("DPIScaleOverride", DPIScaleOverride);
+				useNexusNotifications = j.value("useNexusNotifications", useNexusNotifications);
+				render = j.value("render", render);
+				showNotifications = j.value("showNotifications", showNotifications);
+				additionalNotifyOffsetIndex = j.value("additionalNotifyOffsetIndex", additionalNotifyOffsetIndex);
+
+				if (j.contains("additionalOffsetChoices")) {
+					additionalOffsetChoices = j.at("additionalOffsetChoices").get<std::vector<ComboBoxItem>>();
+				}
+
+				if (additionalNotifyOffsetIndex < 0) {
+					additionalNotifyOffsetIndex = 0;
+				}
+				if (additionalNotifyOffsetIndex >= additionalOffsetChoices.size()) {
+					additionalNotifyOffsetIndex = static_cast<int>(additionalOffsetChoices.size()) - 1;
+				}
+			}
+		}
+		catch (const std::exception& e) {
+			APIDefs->Log(ELogLevel::ELogLevel_WARNING, ADDON_NAME.c_str(), "Failed to read or parse settings.json");
+			#pragma warning(suppress: 4101)
+			e;
+		}
+	}
+}
+
+void Addon::LoadDefaultPreferences() {
+	// Default behaviour 
+	this->render = true;
+	this->showNotifications = false;
+	this->useNexusNotifications = true;
+
+	this->DPIScaleOverride = false;
+	this->DPIScaleOverride = 1.0f;
+
+	this->showDebugCrosshair = false;
+
+	// Choices for offset combo box
+	this->additionalOffsetChoices = {
+		{0, "disabled"},
+		{15, "15 minutes"},
+		{30, "30 minutes"},
+		{45, "45 minutes"},
+		{60, "1 hour"},
+		{75, "1 hour 15 minutes"},
+		{90, "1 hour 30 minutes"},
+		{105, "1 hour 45 minutes"},
+		{120, "2 hours"},
+		{135, "2 hours 15 minutes"},
+		{150, "2 hours 30 minutes"},
+		{165, "2 hours 45 minutes"},
+		{180, "3 hours"},
+		{195, "3 hours 15 minutes"},
+		{210, "3 hours 30 minutes"},
+		{225, "3 hours 45 minutes"},
+		{240, "4 hours"},
+		{255, "4 hours 15 minutes"},
+		{270, "4 hours 30 minutes"},
+		{285, "4 hours 45 minutes"},
+		{300, "5 hours"},
+		{315, "5 hours 15 minutes"},
+		{330, "5 hours 30 minutes"},
+		{345, "5 hours 45 minutes"},
+		{360, "6 hours"}
+	};
+
+	// Currently selected combo box entry
+	this->additionalNotifyOffsetIndex = 1;
+}
+
+void Addon::SavePreferences()
+{
+	std::string pathFolder = APIDefs->GetAddonDirectory(AddonDef->Name);
+	std::string pathSettings = pathFolder + preferred_separator_char() + "settings.json";
+
+	json j;
+	j["showDebugCrosshair"] = showDebugCrosshair;
+	j["enableDPIScaleOverride"] = enableDPIScaleOverride;
+	j["DPIScaleOverride"] = DPIScaleOverride;
+	j["useNexusNotifications"] = useNexusNotifications;
+	j["render"] = render;
+	j["showNotifications"] = showNotifications;
+	j["additionalNotifyOffsetIndex"] = additionalNotifyOffsetIndex;
+	j["additionalOffsetChoices"] = additionalOffsetChoices;
+
+	try {
+		std::ofstream out(pathSettings);
+		if (out.is_open()) {
+			out << j.dump(4); // Indented for readability
+		}
+	}
+	catch (const std::exception& e) {
+		APIDefs->Log(ELogLevel::ELogLevel_WARNING, ADDON_NAME.c_str(), "Failed to save preferences");
+		#pragma warning(suppress: 4101)
+		e;
+	}
+}
 
 void Addon::RenderNotifications() {
 	if (!this->showNotifications) return;

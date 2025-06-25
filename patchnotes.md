@@ -1,4 +1,15 @@
+## Version 1.5.0.0
+
+### Added
+- Preferences are now being loaded on addon load and saved on addon unload. 
+- Button to reset 
+
+### Changed
+- You can now show world bosses up to 6h hours in future (Please note that visibility of larger amount of events may result in degraded performance). If you want to extend this futher, you can manually edit settings.json additionalNotifyOffsetIndex `{minutes, "tooltip"}` 
+
 ## Version 1.4.4.0
+
+### Added
 - Added Bava Nisos meta event timer. 
 
 ## Version 1.4.3.0
