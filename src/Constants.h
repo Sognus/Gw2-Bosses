@@ -57,6 +57,7 @@ const std::string GW2_BOSSES_SHORTCUT = "QAS_BOSSES";
 // Nexus constants
 const std::string NLINK_NAME = "DL_NEXUS_LINK";
 const std::string IDENTITY_EVENT = "EV_MUMBLE_IDENTITY_UPDATED";
+const std::string MUMBLE_LINK_IDENTITY_RESOURCE = "DL_MUMBLE_LINK_IDENTITY";
 const std::string MUMBLE_LINK_RESOURCE = "DL_MUMBLE_LINK";
 
 // Keybinds
