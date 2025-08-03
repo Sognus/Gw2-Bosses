@@ -132,6 +132,10 @@ private:
     void SendUpcomingEventAlert(Event* event);
     void SendInProgressEventAlert(Event* event);
 
+    void LoadPreferences();
+    void LoadDefaultPreferences();
+    void SavePreferences();
+
     void LoadEvents();
     void LoadEventsFallback();
     void LoadEventOverrides();

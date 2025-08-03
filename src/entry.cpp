@@ -130,9 +130,10 @@ void AddonLoad(AddonAPI* aHostApi)
 	ImGui::SetCurrentContext((ImGuiContext*)APIDefs->ImguiContext);
 	ImGui::SetAllocatorFunctions((void* (*)(size_t, void*))APIDefs->ImguiMalloc, (void(*)(void*, void*))APIDefs->ImguiFree); // on imgui 1.80+
 
-	// Addon host
+	// Shared memory initialization
 	MumbleLink = (Mumble::Data*)APIDefs->GetResource(MUMBLE_LINK_RESOURCE.c_str());
 	NexusLink = (NexusLinkData*)APIDefs->GetResource(NLINK_NAME.c_str());
+	MumbleIdentity = (Mumble::Identity*)APIDefs->GetResource(MUMBLE_LINK_IDENTITY_RESOURCE.c_str());
 	APIDefs->SubscribeEvent(IDENTITY_EVENT.c_str(), OnMumbleIdentityUpdate);
 
 	// Keybinds handler

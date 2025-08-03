@@ -1,4 +1,18 @@
+## Version 1.5.0.0
+
+### Added
+- Preferences are now being loaded on addon load and saved on addon unload. 
+- Button to reset settings to default state. 
+
+### Changed
+- You can now show world bosses up to 6h hours in future (Please note that visibility of larger amount of events may result in degraded performance). If you want to extend this futher, you can manually edit settings.json additionalNotifyOffsetIndex `{minutes, "tooltip"}` 
+
+### Fixed
+- Fixed render position and scale of events in case addon was hotloaded and no mumble identity event was received. See: [#42](https://github.com/Sognus/Gw2-Bosses/issues/42)
+
 ## Version 1.4.4.0
+
+### Added
 - Added Bava Nisos meta event timer. 
 
 ## Version 1.4.3.0
