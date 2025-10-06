@@ -1,5 +1,8 @@
 ## Version 1.5.1.0
 
+### Improved
+- Overall improved the appearence of periodic circular events (clocks). 
+
 ### Fixed
 - Fixed Noran's Homestead meta event tooltip
 - Fixed render artifacts for periodic circular events (clocks). 
