@@ -173,8 +173,17 @@ void Event::SetEnabled(bool aEnabled)
     this->enabled = aEnabled;
 }
 
+void Event::SetUseScreenCoordinates(bool flag)
+{
+    this->useScreenCoordinates = flag;
+}
+
 bool Event::IsEnabled() {
     return this->enabled;
+}
+
+bool Event::IsUsingScreenCoordinates() {
+	return this->useScreenCoordinates;
 }
 
 bool* Event::GetEnabledPtr()

@@ -404,6 +404,7 @@ bool is_point_inside_arc(ImVec2 point, ImVec2 center, float radius, float startA
 }
 
 void render_periodic_circular_event(PeriodicEvent pEvent) {
+	bool day_render = false;
 	ImGuiIO& io = ImGui::GetIO();
 	ImVec2 mousePos = io.MousePos;
 
@@ -417,11 +418,36 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 
 	// Update necessary data for render
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+
+	// save current flags
+	ImDrawListFlags prevFlags = drawList->Flags;
+
+
 	ImVec2 location = map_coords_to_pixels(pEvent.GetLocation(), viewport, mapScaleX);
 
 	float mapZoomScale = map_zoom_scale();
 	float mapObjectScale = map_object_scale();
 	float size = 50.0f * mapObjectScale;
+
+	// Override location and scale if screen coordinates are used
+	if (pEvent.IsUsingScreenCoordinates()) {
+		location = ImVec2(pEvent.GetLocation().x, pEvent.GetLocation().y);
+		size = 50.0f;
+	}
+
+	if (pEvent.GetName() == "Canthan Day") {
+		size = 25.0f;
+		location = ImVec2(15.0f + size, 0.5f * screen.GetSizeY() + size + 15.0f);
+		day_render = true;
+	}
+	
+	if (pEvent.GetName() == "Tyrian Day") {
+		size = 25.0f;
+		location = ImVec2(15.0f + size, 0.5f * screen.GetSizeY() - size - 15.0f);
+		day_render = true;
+	}
+
 
 	// CHECK IF EVENT IS OUTSIDE VIEWPORT - full size of box
 	BoundingBox eventBox = BoundingBox(location, size, false);
@@ -439,7 +465,15 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 			ringSize = 2;
 			ringColor = pEvent.IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(212, 55, 118, 255);
 		}
+
 	}
+
+
+	if (addon != nullptr && day_render && addon->showDayNightClock == false) {
+		return;
+	}
+
+	drawList->AddCircleFilled(location, size, IM_COL32(0, 0, 0, 255));
 
 	// Draw base circle
 	render_ring( 
@@ -448,11 +482,15 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 		size,							// inner radius
 		size + ringSize,				// outer radius
 		ringColor,	// color
-		ENTRY_SEGMENTS);				// segments 
+		ENTRY_SEGMENTS_RING);				// segments 
+
+	// disable anti-aliased fill
+	drawList->Flags &= ~ImDrawListFlags_AntiAliasedFill;
 
 	const std::vector<json>& entries = pEvent.GetPeriodicEntries();
 	int current_entry_index = -1;
 	int next_entry_index = -1;
+
 
 	// Draw arcs
 	for (int i = 0; i < entries.size(); ++i) {
@@ -535,7 +573,18 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 
 	// Time background + text
 	std::string current_time = time_now_formatted();
+
+	if (pEvent.GetName() == "Canthan Day") {
+		current_time = "Cantha";
+	}
+
+	if (pEvent.GetName() == "Tyrian Day") {
+		current_time = "Tyria";
+	}
+
 	ImVec2 textSize = ImGui::CalcTextSize(current_time.c_str());
+
+
 
 	float margin = 5.0f * mapObjectScale;
 	float padding = 3.0f * mapObjectScale;
@@ -562,7 +611,7 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 	ImGui::Text(current_time.c_str());
 
 	// Event name + info
-	if (MumbleLink->Context.Compass.Scale <= ENTRY_MAX_ZOOM_TEXT_VISIBILITY) {
+	if (MumbleLink->Context.Compass.Scale <= ENTRY_MAX_ZOOM_TEXT_VISIBILITY && !day_render) {
 		char buffer[1024];
 		std::string currentEntryDesc = current_entry == nullptr ? "?" : current_entry["description"];
 		std::string nextEntryDesc = next_entry == nullptr ? "?" : next_entry["description"];
@@ -594,6 +643,8 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 		}
 	}
  	
+	// restore previous flags (reenable AA)
+	drawList->Flags = prevFlags;
 
 }
 
@@ -678,6 +729,10 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 
 	// Update necessary data for render
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+	// save current flags
+	ImDrawListFlags prevFlags = drawList->Flags;
+
 	ImVec2 location = map_coords_to_pixels(pEvent.GetLocation(), viewport, mapScaleX);
 
 	float mapZoomScale = map_zoom_scale();
@@ -710,7 +765,10 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		size,							// inner radius
 		size + ringSize,				// outer radius
 		ringColor,	// color
-		ENTRY_SEGMENTS);				// segments 
+		ENTRY_SEGMENTS_RING);				// segments 
+
+	// disable anti-aliased fill
+	drawList->Flags &= ~ImDrawListFlags_AntiAliasedFill;
 
 	std::string event_hex_color = pEvent.GetColorHex();
 	ImU32 event_color = hex_to_color(event_hex_color);
@@ -894,6 +952,9 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 			}
 		}
 	}
+
+	// restore previous flags (reenable AA)
+	drawList->Flags = prevFlags;
 }
 
 void render_map_notification(Event* notificationEvent, Texture* texture) {
@@ -932,6 +993,26 @@ void render_map_notification(Event* notificationEvent, Texture* texture) {
 			drawList->AddRect(outlineRectMin, outlineRectMax, outLineColor, 0.0f, 15, 2.5f);
 		}
 	}
+
+	std::string name = notificationEvent->GetName();
+
+	// Strip trailing numeric suffix
+	size_t lastSpace = name.find_last_of(' ');
+	std::string baseName = name;
+
+	// Check if it ends with " space + number"
+	if (lastSpace != std::string::npos) {
+		std::string suffix = name.substr(lastSpace + 1);
+		if (!suffix.empty() && std::all_of(suffix.begin(), suffix.end(), ::isdigit)) {
+			baseName = name.substr(0, lastSpace); // Strip numeric index
+		}
+	}
+
+	if (addon && addon->renderedCoreEvents.contains(baseName)) {
+		return; // Already rendered
+	}
+
+	addon->renderedCoreEvents.insert(baseName);
 
 	ImVec2 cursorStack = ImGui::GetCursorPos();
 	ImVec2 renderLocation = ImVec2(location.x - size / 2, location.y - size / 2);

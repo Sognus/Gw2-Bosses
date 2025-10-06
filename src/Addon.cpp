@@ -55,13 +55,6 @@ void Addon::RenderOptions() {
 
 			if (ImGui::BeginTabItem("General")) {
 
-			#ifdef _DEBUG
-				ImGui::TextDisabled("Debug");
-				if (ImGui::Checkbox("Render crosshair", &this->showDebugCrosshair)) {
-
-				}
-			#endif
-
 				ImGui::TextDisabled("Notification control");
 
 				if (ImGui::Checkbox("Render events and bosses on map", &this->render)) {
@@ -73,6 +66,10 @@ void Addon::RenderOptions() {
 				}
 
 				if (ImGui::Checkbox("Show notification box", &this->showNotifications))
+				{
+				}
+
+				if (ImGui::Checkbox("Show daynight cycle clocks", &this->showDayNightClock))
 				{
 				}
 
@@ -245,7 +242,28 @@ void Addon::RenderOptions() {
 				ImGui::EndTabItem();
 
 			}
+			
+			if (ImGui::BeginTabItem("Debug")) {
+
+				std::string debugVersionString = std::format("Debug version: {} (Build: {})", VERSION_STRING, VERSION_REVISION);
+				ImGui::TextDisabled(debugVersionString.c_str());
+
+				ImGui::Separator();
+
+				std::string eventsLoadedText = std::format("Events loaded: {}", events.size());
+				ImGui::TextDisabled(eventsLoadedText.c_str());
+
+				ImGui::Separator();
+
+				if (ImGui::Checkbox("Render crosshair", &this->showDebugCrosshair)) {
+
+				}
+			}
+			
 			ImGui::EndTabBar();
+
+
+
 
 		}
 		ImGui::EndChild();
@@ -257,6 +275,8 @@ void Addon::Render() {
 	// Update data
 	this->Update();
 
+	// Clear event deduplication every frame
+	this->renderedCoreEvents.clear();
 
 	// Render notifications 
 	this->RenderNotifications();
@@ -277,11 +297,9 @@ void Addon::Render() {
 		ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoScrollbar |
 		ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_NoNavInputs |
 		ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration )) {
-		#ifdef _DEBUG
-			if (this->showDebugCrosshair) {
-				render_debug_crosshair();
-			}
-		#endif
+		if (this->showDebugCrosshair) {
+			render_debug_crosshair();
+		}
 		this->RenderEvents(); 
 		this->RenderNotificationsMap();
 		ImGui::End();
@@ -362,6 +380,8 @@ void Addon::LoadEvents() {
 void Addon::RenderEvents() {
 	// Skip if render is disabled
 	if (!this->render) return;
+
+	std::unordered_map<std::string, Event*>::iterator it = events.begin();
 
 	// Render events
 	for (const auto& kvp : events) {
@@ -519,6 +539,7 @@ void Addon::LoadPreferences()
 				render = j.value("render", render);
 				showNotifications = j.value("showNotifications", showNotifications);
 				additionalNotifyOffsetIndex = j.value("additionalNotifyOffsetIndex", additionalNotifyOffsetIndex);
+				showDayNightClock = j.value("showDayNightClock", showDayNightClock);
 
 				if (j.contains("additionalOffsetChoices")) {
 					additionalOffsetChoices = j.at("additionalOffsetChoices").get<std::vector<ComboBoxItem>>();
@@ -550,6 +571,8 @@ void Addon::LoadDefaultPreferences() {
 	this->DPIScaleOverride = 1.0f;
 
 	this->showDebugCrosshair = false;
+
+	this->showDayNightClock = false;
 
 	// Choices for offset combo box
 	this->additionalOffsetChoices = {
@@ -598,6 +621,7 @@ void Addon::SavePreferences()
 	j["showNotifications"] = showNotifications;
 	j["additionalNotifyOffsetIndex"] = additionalNotifyOffsetIndex;
 	j["additionalOffsetChoices"] = additionalOffsetChoices;
+	j["showDayNightClock"] = showDayNightClock;
 
 	try {
 		std::ofstream out(pathSettings);
@@ -1588,6 +1612,49 @@ void Addon::LoadCoreWorldbossesFallback() {
 
 void Addon::LoadEventsFallback() {
 
+	// Core game
+	PeriodicEvent* tyrian_day;
+	{
+		tyrian_day = new PeriodicEvent(
+			"Tyrian Day",
+			10.0f,
+			10.0f,
+			0,
+			7200,
+			"FFDD00"
+		);
+
+		tyrian_day->AddPeriodicEntry("Night", "Night", 0, 1500, "0B1D36");        // 00:00 - 00:25
+		tyrian_day->AddPeriodicEntry("Dawn", "Dawn", 1500, 300, "FF7F00");        // 00:25 - 00:30
+		tyrian_day->AddPeriodicEntry("Day", "Day", 1800, 4200, "FFE26F");         // 00:30 - 01:40
+		tyrian_day->AddPeriodicEntry("Dusk", "Dusk", 6000, 300, "C1440E");        // 01:40 - 01:45
+		tyrian_day->AddPeriodicEntry("Night", "Night", 6300, 900, "0B1D36");      // 01:45 - 02:00
+
+		tyrian_day->SetUseScreenCoordinates(true);
+		tyrian_day->SetEventType("periodic_timer");
+	}
+
+	PeriodicEvent* canthan_day;
+	{
+		canthan_day = new PeriodicEvent(
+			"Canthan Day",
+			10.0f,
+			110.0f,
+			0,
+			7200,
+			"88CCFF"
+		);
+
+		canthan_day->AddPeriodicEntry("Night", "Night", 0, 2100, "122A3F");       // 00:00 - 00:35
+		canthan_day->AddPeriodicEntry("Dawn", "Dawn", 2100, 300, "4EBBE6");       // 00:35 - 00:40
+		canthan_day->AddPeriodicEntry("Day", "Day", 2400, 3420, "AEEBFF");        // 00:40 - 01:35
+		canthan_day->AddPeriodicEntry("Dusk", "Dusk", 5820, 300, "2F6690");       // 01:35 - 01:40
+		canthan_day->AddPeriodicEntry("Night", "Night", 6120, 1080, "122A3F");    // 01:40 - 02:00
+
+		canthan_day->SetUseScreenCoordinates(true);
+		canthan_day->SetEventType("periodic_timer");
+	}
+
 
 	// Dry top block
 	PeriodicEvent* dry_top;
@@ -1836,7 +1903,7 @@ void Addon::LoadEventsFallback() {
 		);
 		lake_doric->AddPeriodicEntry(
 			"Saidra's Haven",
-			"Noran's Homestead",
+			"Saidra's Haven",
 			3600,
 			2700,
 			"34561E"
@@ -2398,6 +2465,44 @@ void Addon::LoadEventsFallback() {
 		bjora_marches->SetEventType("periodic_timer");
 	}
 
+	PeriodicEvent* dragonstorm;
+	{
+		dragonstorm = new PeriodicEvent(
+			"Dragonstorm",
+			57090.6797f,
+			21795.8281f,
+			0,
+			7200,
+			"FF0000"
+		);
+
+		dragonstorm->AddPeriodicEntry(
+			"Rest",
+			"Rest",
+			0,
+			3600,
+			"033A62"
+		);
+
+		dragonstorm->AddPeriodicEntry(
+			"Dragonstorm",
+			"Dragonstorm",
+			3600,
+			1200,
+			"206697" 
+		);
+
+		dragonstorm->AddPeriodicEntry(
+			"Rest",
+			"Rest",
+			4800,
+			2400,
+			"033A62"
+		);
+
+		dragonstorm->SetEventType("periodic_timer");
+	}
+
 	// Seitung Province block
 	PeriodicEvent* seitung_province;
 	{
@@ -2505,6 +2610,68 @@ void Addon::LoadEventsFallback() {
 		);
 
 		the_echovald_wilds->SetEventType("periodic_timer");
+	}
+
+	PeriodicEvent* the_dragons_end;
+	{
+		the_dragons_end = new PeriodicEvent(
+			"Dragon's End",
+			34101.6992f,
+			103128.3564f,
+			0,
+			7200,
+			"FF0000"
+		);
+
+		the_dragons_end->AddPeriodicEntry(
+			"Preparation",
+			"Preparation",
+			0,
+			300,
+			"09565E"
+		);
+
+		the_dragons_end->AddPeriodicEntry(
+			"Jade Maw",
+			"Jade Maw",
+			300,
+			480,
+			"208B97"
+		);
+
+		the_dragons_end->AddPeriodicEntry(
+			"Preparation",
+			"Preparation",
+			780,
+			1920,
+			"09565E"
+		);
+
+		the_dragons_end->AddPeriodicEntry(
+			"Jade Maw",
+			"Jade Maw",
+			2700,
+			480,
+			"208B97"
+		);
+
+		the_dragons_end->AddPeriodicEntry(
+			"Preparation",
+			"Preparation",
+			3180,
+			420,
+			"09565E"
+		);
+
+		the_dragons_end->AddPeriodicEntry(
+			"Battle of Jade Sea",
+			"Battle of Jade Sea",
+			3600,
+			3600,
+			"10737F"
+		);
+
+		the_dragons_end->SetEventType("periodic_timer");
 	}
 
 
@@ -2781,7 +2948,9 @@ void Addon::LoadEventsFallback() {
 
 	// Add events block
 	{
-		// TODO: Coremap bosses
+		// Core game
+		Addon::AddEvent(tyrian_day);
+		Addon::AddEvent(canthan_day);
 
 		// HoT
 		Addon::AddEvent(dry_top);
@@ -2809,12 +2978,13 @@ void Addon::LoadEventsFallback() {
 		// IBS
 		Addon::AddEvent(grothmar_valley);
 		Addon::AddEvent(bjora_marches);
-		// TODO: Dragonstorm
+		Addon::AddEvent(dragonstorm);
 
 		// EoD
 		Addon::AddEvent(seitung_province);
 		Addon::AddEvent(new_kaineng_city);
 		Addon::AddEvent(the_echovald_wilds);
+		Addon::AddEvent(the_dragons_end);
 
 		// Soto
 		Addon::AddEvent(skywatch_archipelago);
@@ -2850,6 +3020,18 @@ void Addon::LoadEventOverrides()
 		}
 	}
 
+	auto lake_doric_entry = this->events.find("Lake Doric");
+	if (lake_doric_entry != this->events.end()) {
+		PeriodicEvent* lake_doric_ev = static_cast<PeriodicEvent*>(lake_doric_entry->second);
+		for (int i = 0; i < lake_doric_ev->periodic_entries.size(); i++) {
+			json& j = lake_doric_ev->periodic_entries.at(i);
+			if (j.contains("name") && j.contains("description")) {
+				if (j["name"] == "Saidra's Haven") {
+					j["description"] = "Saidra's Haven";
+				}
+			}
+		}
+	}
 
 	for (auto eventEntry : this->events) {
 		// Svanir shaman chief override

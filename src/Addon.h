@@ -4,6 +4,7 @@
 #include <queue>  
 #include <functional> 
 #include <algorithm>
+#include <unordered_set>
 
 #include "Globals.h"
 #include "utils/Render.h"
@@ -102,7 +103,8 @@ public:
     bool enableDPIScaleOverride;
     float DPIScaleOverride;
     bool useNexusNotifications;
-  
+    
+    bool showDayNightClock;
 
      // Global render enabled-disabled flag
     bool render;
@@ -114,6 +116,8 @@ public:
     // Editor selection
     std::string editorSelectedEventName;
     EditorBuffer editorBuffer;
+
+    std::unordered_set<std::string> renderedCoreEvents;
 
 private:
     /*
