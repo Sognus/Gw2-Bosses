@@ -89,8 +89,11 @@ public:
     T GetData(const std::string& key, const T& defaultValue);
 
     void SetEnabled(bool aEnabled);
+    void SetUseScreenCoordinates(bool flag);
 
     bool IsEnabled();
+
+    bool IsUsingScreenCoordinates();
 
     bool* GetEnabledPtr();
 
@@ -105,6 +108,7 @@ private:
     std::string color_hex;
     bool enabled;
 
+
     /// <summary>
     /// Extra data
     /// </summary>
@@ -113,6 +117,7 @@ private:
 
 protected:
     std::string name;
+	bool useScreenCoordinates = false;
 
     Event();
 };

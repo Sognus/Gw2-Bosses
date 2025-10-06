@@ -17,6 +17,7 @@ PeriodicEvent::PeriodicEvent(
 ) : Event(name, location, "periodic", hexColor), periodicity_seconds(periodicitySeconds), midnight_offset_seconds(midnightOffsetSeconds) {
     notifyInProgress = false;
     notifyUpcoming = false;
+
 }
 
 PeriodicEvent::PeriodicEvent(

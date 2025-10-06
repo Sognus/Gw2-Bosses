@@ -21,7 +21,6 @@ CoreWorldbossEvent::CoreWorldbossEvent(
     notify_offset_seconds(notifyOffsetSeconds),
     midnight_offset_seconds(midnightOffsetSeconds),
     duration_seconds(durationSeconds) {
-
 }
 
 CoreWorldbossEvent::CoreWorldbossEvent(
@@ -40,7 +39,6 @@ CoreWorldbossEvent::CoreWorldbossEvent(
     notify_offset_seconds(notifyOffsetSeconds),
     midnight_offset_seconds(midnightOffsetSeconds),
     duration_seconds(durationSeconds) {
-
 }
 
 CoreWorldbossEvent::CoreWorldbossEvent(

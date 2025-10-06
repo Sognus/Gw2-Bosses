@@ -1,14 +1,27 @@
+## Version 1.5.1.0
+
+### Improved
+- Overall improved the appearence of periodic circular events (clocks). 
+
+### Fixed
+- Fixed Noran's Homestead meta event tooltip
+- Fixed render artifacts for periodic circular events (clocks). 
+
 ## Version 1.5.0.0
 
 ### Added
 - Preferences are now being loaded on addon load and saved on addon unload. 
 - Button to reset settings to default state. 
+- Tyria and Cantha day/night cycle can be rendered on map (this option is disabled by default - Enable it in **Nexus options -> Addons -> World bosses -> General -> Show daynight cycle clocks**).
 
 ### Changed
-- You can now show world bosses up to 6h hours in future (Please note that visibility of larger amount of events may result in degraded performance). If you want to extend this futher, you can manually edit settings.json additionalNotifyOffsetIndex `{minutes, "tooltip"}` 
+- You can now show world bosses up to 6h hours in future (Please note that visibility of larger amount of events may result in degraded performance). If you want to extend this futher, you can manually edit settings.json additionalNotifyOffsetIndex `{minutes, "tooltip"}`, first future occurence of world boss is rendered, rest are skipped. 
+- Debug options were moved to **Nexus options -> Addons -> World bosses -> Debug**. This option is now permanently visible and no longer dependant on preprocessor conditional build.  
 
 ### Fixed
 - Fixed render position and scale of events in case addon was hotloaded and no mumble identity event was received. See: [#42](https://github.com/Sognus/Gw2-Bosses/issues/42)
+- Fixed missing End of Dragons - Dragon's End meta event timer.
+- Fixed missing Icebrood Saga - Dragonstorm
 
 ## Version 1.4.4.0
 
