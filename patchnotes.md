@@ -1,3 +1,8 @@
+## Version 1.6.0.0
+
+## Added
+- Added meta event timers for Vision of Eternity expansion
+
 ## Version 1.5.1.0
 
 ### Improved
