@@ -2945,6 +2945,75 @@ void Addon::LoadEventsFallback() {
 		janthir_bava_nisos->SetEventType("periodic_timer");
 	}
 
+	PeriodicEvent* voe_shipwreck_stand;
+	{
+		voe_shipwreck_stand = new PeriodicEvent(
+			"Shipwreck Stand",
+			10515.2617f,
+			59212.1758f,
+			0,
+			7200,
+			"65260F"
+		);
+		voe_shipwreck_stand->AddPeriodicEntry(
+			"Rest",
+			"Rest",
+			0,
+			2400,
+			"65260F"
+		);
+		voe_shipwreck_stand->AddPeriodicEntry(
+			"Hammerhart Rumble",
+			"Hammerhart Rumble",
+			2400,
+			1200,
+			"AB401A"
+		);
+		voe_shipwreck_stand->AddPeriodicEntry(
+			"Rest",
+			"Rest",
+			3600,
+			3600,
+			"65260F"
+		);
+		voe_shipwreck_stand->SetEventType("periodic_timer");
+	}
+
+	PeriodicEvent* voe_starlit_weald; 
+	{
+		voe_starlit_weald = new PeriodicEvent(
+			"Starlit Weald",
+			7310.7393f,
+			58945.1680f,
+			0,
+			7200,
+			"65260F"
+		);
+		voe_starlit_weald->AddPeriodicEntry(
+			"Secrets of the Weald",
+			"Secrets of the Weald",
+			0,
+			900,
+			"AB401A"
+		);
+		voe_starlit_weald->AddPeriodicEntry(
+			"Rest",
+			"Rest",
+			900,
+			5100,
+			"65260F"
+		);
+		voe_starlit_weald->AddPeriodicEntry(
+			"Secrets of the Weald",
+			"Secrets of the Weald",
+			6000,
+			1200,
+			"AB401A"
+		);
+
+		voe_starlit_weald->SetEventType("periodic_timer");
+	}
+
 
 	// Add events block
 	{
@@ -2996,6 +3065,12 @@ void Addon::LoadEventsFallback() {
 		Addon::AddEvent(janthir_syntri);
 		Addon::AddEvent(janthir_convergence);
 		Addon::AddEvent(janthir_bava_nisos);
+
+		// VoE
+		Addon::AddEvent(voe_shipwreck_stand);
+		Addon::AddEvent(voe_starlit_weald);
+
+
 	}
 }
 

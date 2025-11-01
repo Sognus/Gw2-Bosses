@@ -4,8 +4,8 @@
     #include "../BuildVersion.h"
 
     #define VERSION_MAJOR 1
-    #define VERSION_MINOR 5
-    #define VERSION_BUILD 1
+    #define VERSION_MINOR 6
+    #define VERSION_BUILD 0
     #define VERSION_REVISION_BASE 0
 
     #define STRINGIZE2(x) #x
