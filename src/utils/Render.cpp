@@ -526,10 +526,6 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 		for (int i = 0; i < ENTRY_SEGMENTS; ++i) {
 			float startAngle = startingAngle + angleStep * i;
 			float endAngle = startingAngle + angleStep * (i + 1);
-			drawList->PathLineTo(location);
-			drawList->PathArcTo(location, size, startAngle, endAngle);
-			drawList->PathFillConvex(color);
-			drawList->PathClear();
 
 			if (lineTex)
 			{
@@ -542,6 +538,11 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 					rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), endAngle, color);
 				}
 			}
+
+			drawList->PathLineTo(location);
+			drawList->PathArcTo(location, size, startAngle, endAngle);
+			drawList->PathFillConvex(color);
+			drawList->PathClear();
 		}
 
 		if (is_point_inside_arc(mousePos, location, size, startingAngle, startingAngle + totalAngle)) {
@@ -867,10 +868,6 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		for (int i = 0; i < ENTRY_SEGMENTS; ++i) {
 			float startAngle = startingAngle + angleStep * i;
 			float endAngle = startingAngle + angleStep * (i + 1);
-			drawList->PathLineTo(location);
-			drawList->PathArcTo(location, size, startAngle, endAngle);
-			drawList->PathFillConvex(color);
-			drawList->PathClear();
 
 			if (lineTex)
 			{
@@ -883,6 +880,11 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 					rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), endAngle, color);
 				}
 			}
+
+			drawList->PathLineTo(location);
+			drawList->PathArcTo(location, size, startAngle, endAngle);
+			drawList->PathFillConvex(color);
+			drawList->PathClear();
 		}
 
 		if (is_point_inside_arc(mousePos, location, size, startingAngle, startingAngle + totalAngle)) {			
