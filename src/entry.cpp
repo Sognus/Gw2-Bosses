@@ -153,6 +153,7 @@ void AddonLoad(AddonAPI* aHostApi)
 	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_GRAY.c_str(), IMAGE_COREWORLDBOSSES_GRAY, hSelf, ReceiveTexture);
 	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_COREWORLDBOSSES_IN_EDIT.c_str(), IMAGE_COREWORLDBOSSES_IN_EDIT, hSelf, ReceiveTexture);
 	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_PAINTED_CIRCLE_TOP.c_str(), IMAGE_PAINTED_CIRCLE_TOP, hSelf, ReceiveTexture);
+	APIDefs->LoadTextureFromResource(GW2BOSSES_RESOURCE_PAINTED_LINE.c_str(), IMAGE_PAINTED_LINE, hSelf, ReceiveTexture);
 
 	// WND proc - Nexus bad, breaking imgui IO
 	APIDefs->RegisterWndProc(AddonWndProc);
