@@ -467,13 +467,13 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 	}
 
 	int ringSize = 1.0;
-	ImU32 ringColor = IM_COL32(212, 175, 55, 255);
+	ImU32 ringColor = IM_COL32(18, 18, 18, 255);
 	// Nullcheck
 	if (addon != nullptr && addon->editorBuffer.editorEditedEvent != nullptr) {
 		// Check if currently edited addon is same as currently rendered addon
 		if (strcmp(pEvent.GetName().c_str(), addon->editorSelectedEventName.c_str()) == 0) {
 			ringSize = 2;
-			ringColor = pEvent.IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(212, 55, 118, 255);
+			ringColor = pEvent.IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(18, 18, 18, 255);
 		}
 
 	}
@@ -497,7 +497,7 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 		resource_textures[GW2BOSSES_RESOURCE_PAINTED_LINE] :
 		nullptr;
 
-	float texRadius = size * 1.2f;
+	float texRadius = size * 1.15f;
 
 	// Draw arcs
 	for (int i = 0; i < entries.size(); ++i) {
@@ -777,13 +777,13 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 	}
 
 	int ringSize = 1.0;
-	ImU32 ringColor = IM_COL32(212, 175, 55, 255);
+	ImU32 ringColor = IM_COL32(18, 18, 18, 255);
 	// Nullcheck
 	if (addon != nullptr && addon->editorBuffer.editorEditedEvent != nullptr) {
 		// Check if currently edited addon is same as currently rendered addon
 		if (strcmp(pEvent.GetName().c_str(), addon->editorSelectedEventName.c_str()) == 0) {
 			ringSize = 2;
-			ringColor = pEvent.IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(212, 55, 118, 255);
+			ringColor = pEvent.IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(18, 18, 18, 255);
 		}
 	}
 
@@ -808,7 +808,7 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		resource_textures[GW2BOSSES_RESOURCE_PAINTED_LINE] :
 		nullptr;
 
-	float texRadius = size * 1.2f;
+	float texRadius = size * 1.15f;
 
 	// Draw arcs
 	for (int i = 0; i < entries.size(); ++i) {
