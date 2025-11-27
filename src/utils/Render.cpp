@@ -535,11 +535,11 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 			{
 				if (i == 0)
 				{
-					rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), startAngle - ENTRY_ARC_OFFSET, color);
+					rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), startAngle, color);
 				}
 				else if (i == ENTRY_SEGMENTS - 1)
 				{
-					rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), endAngle - ENTRY_ARC_OFFSET, color);
+					rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), endAngle, color);
 				}
 			}
 		}
@@ -876,11 +876,11 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 			{
 				if (i == 0)
 				{
-					rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), startAngle - ENTRY_ARC_OFFSET, color);
+					rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), startAngle, color);
 				}
 				else if (i == ENTRY_SEGMENTS - 1)
 				{
-					rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), endAngle - ENTRY_ARC_OFFSET, color);
+					rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), endAngle, color);
 				}
 			}
 		}
