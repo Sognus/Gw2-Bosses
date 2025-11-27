@@ -195,6 +195,9 @@
     <Image Include="resources\boss_in_edit.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="resources\circle_top.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">

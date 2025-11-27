@@ -37,10 +37,11 @@ void render_debug_crosshair() {
 	drawList->AddLine(verticalStart, verticalEnd, RED, DEBUG_LINE_THICKNESS);
 }
 
-
 void render_event_circle(ImVec2 location, float scale) {
+
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 	float radius = ENTRY_RADIUS * scale;
+
 	drawList->AddCircleFilled(location, radius, GREEN, ENTRY_SEGMENTS);
 }
 
@@ -350,24 +351,6 @@ void render_periodic_event(PeriodicEvent event) {
 	ImGui::SetWindowFontScale(1.0f);
 }
 
-
-void render_ring(ImDrawList* drawList, ImVec2 center, float innerRadius, float outerRadius, ImU32 color, int numSegments) {
-	for (int i = 0; i < numSegments; ++i) {
-		float t0 = static_cast<float>(i) / static_cast<float>(numSegments);
-		float t1 = static_cast<float>(i + 1) / static_cast<float>(numSegments);
-
-		float angle0 = t0 * 2 * M_PI;
-		float angle1 = t1 * 2 * M_PI;
-
-		ImVec2 p0(center.x + innerRadius * cosf(angle0), center.y + innerRadius * sinf(angle0));
-		ImVec2 p1(center.x + innerRadius * cosf(angle1), center.y + innerRadius * sinf(angle1));
-		ImVec2 p2(center.x + outerRadius * cosf(angle1), center.y + outerRadius * sinf(angle1));
-		ImVec2 p3(center.x + outerRadius * cosf(angle0), center.y + outerRadius * sinf(angle0));
-
-		drawList->AddQuad(p0, p1, p2, p3, color);
-	}
-}
-
 bool is_point_inside_arc(ImVec2 point, ImVec2 center, float radius, float startAngle, float endAngle) {
 	float angle = atan2f(point.y - center.y, point.x - center.x);
 
@@ -475,15 +458,6 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 
 	drawList->AddCircleFilled(location, size, IM_COL32(0, 0, 0, 255));
 
-	// Draw base circle
-	render_ring( 
-		drawList,
-		location,						// center
-		size,							// inner radius
-		size + ringSize,				// outer radius
-		ringColor,	// color
-		ENTRY_SEGMENTS_RING);				// segments 
-
 	// disable anti-aliased fill
 	drawList->Flags &= ~ImDrawListFlags_AntiAliasedFill;
 
@@ -540,6 +514,18 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 			next_entry_index = (i + 1) % entries.size();
 		}
 
+	}
+
+	Texture* texture =
+		(resource_textures.find(GW2BOSSES_RESOURCE_PAINTED_CIRCLE_TOP) != resource_textures.end()) ?
+		resource_textures[GW2BOSSES_RESOURCE_PAINTED_CIRCLE_TOP] :
+		nullptr;
+	
+	float texRadius = size * 1.2f;
+
+	if (texture)
+	{
+		drawList->AddImage(texture->Resource, ImVec2(location.x - texRadius, location.y - texRadius), ImVec2(location.x + texRadius, location.y + texRadius), ImVec2(0, 0), ImVec2(1, 1), ringColor);
 	}
 
 	if (current_entry_index < 0 || next_entry_index < 0) {
@@ -621,13 +607,23 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 			currentEntryDesc.c_str(),
 			nextEntryDesc.c_str()
 		);
+		ImGui::PushFont((ImFont*)NexusLink->FontUI);
 		ImVec2 descTextSize = ImGui::CalcTextSize(buffer);
 		ImVec2 descTextPosition = ImVec2(
 			location.x - descTextSize.x / 2,
 			location.y + size + margin
 		);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x - 1.f, descTextPosition.y - 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x + 1.f, descTextPosition.y - 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x + 1.f, descTextPosition.y + 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x - 1.f, descTextPosition.y + 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
 		ImGui::SetCursorPos(descTextPosition);
 		ImGui::Text(buffer);
+		ImGui::PopFont();
 	}
 
 	// Mouse is inside event box
@@ -758,15 +754,6 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		}
 	}
 
-	// Draw base circle
-	render_ring(
-		drawList,
-		location,						// center
-		size,							// inner radius
-		size + ringSize,				// outer radius
-		ringColor,	// color
-		ENTRY_SEGMENTS_RING);				// segments 
-
 	// disable anti-aliased fill
 	drawList->Flags &= ~ImDrawListFlags_AntiAliasedFill;
 
@@ -851,6 +838,19 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 
 	}
 
+	Texture* texture =
+		(resource_textures.find(GW2BOSSES_RESOURCE_PAINTED_CIRCLE_TOP) != resource_textures.end()) ?
+		resource_textures[GW2BOSSES_RESOURCE_PAINTED_CIRCLE_TOP] :
+		nullptr;
+
+	float texRadius = size * 1.2f;
+
+	if (texture)
+	{
+		drawList->AddImage(texture->Resource, ImVec2(location.x - texRadius, location.y - texRadius), ImVec2(location.x + texRadius, location.y + texRadius), ImVec2(0, 0), ImVec2(1, 1), ringColor);
+	}
+
+
 	if (current_entry_index < 0 || next_entry_index < 0) {
 		current_entry_index = 0;
 		next_entry_index = 0;
@@ -931,13 +931,23 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		}
 
 
+		ImGui::PushFont((ImFont*)NexusLink->FontUI);
 		ImVec2 descTextSize = ImGui::CalcTextSize(buffer);
 		ImVec2 descTextPosition = ImVec2(
 			location.x - descTextSize.x / 2,
 			location.y + size + margin
 		);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x - 1.f, descTextPosition.y - 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x + 1.f, descTextPosition.y - 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x + 1.f, descTextPosition.y + 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x - 1.f, descTextPosition.y + 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
 		ImGui::SetCursorPos(descTextPosition);
 		ImGui::Text(buffer);
+		ImGui::PopFont();
 	}
 
 	// Mouse is inside event box

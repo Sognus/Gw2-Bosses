@@ -81,6 +81,7 @@
     <Image Include="resources\boss_in_edit.png" />
     <Image Include="resources\boss_in_progress.png" />
     <Image Include="resources\boss_upcoming.png" />
+    <Image Include="resources\circle_top.png" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GW2-Bosses.rc" />
