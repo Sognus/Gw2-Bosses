@@ -37,10 +37,11 @@ void render_debug_crosshair() {
 	drawList->AddLine(verticalStart, verticalEnd, RED, DEBUG_LINE_THICKNESS);
 }
 
-
 void render_event_circle(ImVec2 location, float scale) {
+
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 	float radius = ENTRY_RADIUS * scale;
+
 	drawList->AddCircleFilled(location, radius, GREEN, ENTRY_SEGMENTS);
 }
 
@@ -350,24 +351,6 @@ void render_periodic_event(PeriodicEvent event) {
 	ImGui::SetWindowFontScale(1.0f);
 }
 
-
-void render_ring(ImDrawList* drawList, ImVec2 center, float innerRadius, float outerRadius, ImU32 color, int numSegments) {
-	for (int i = 0; i < numSegments; ++i) {
-		float t0 = static_cast<float>(i) / static_cast<float>(numSegments);
-		float t1 = static_cast<float>(i + 1) / static_cast<float>(numSegments);
-
-		float angle0 = t0 * 2 * M_PI;
-		float angle1 = t1 * 2 * M_PI;
-
-		ImVec2 p0(center.x + innerRadius * cosf(angle0), center.y + innerRadius * sinf(angle0));
-		ImVec2 p1(center.x + innerRadius * cosf(angle1), center.y + innerRadius * sinf(angle1));
-		ImVec2 p2(center.x + outerRadius * cosf(angle1), center.y + outerRadius * sinf(angle1));
-		ImVec2 p3(center.x + outerRadius * cosf(angle0), center.y + outerRadius * sinf(angle0));
-
-		drawList->AddQuad(p0, p1, p2, p3, color);
-	}
-}
-
 bool is_point_inside_arc(ImVec2 point, ImVec2 center, float radius, float startAngle, float endAngle) {
 	float angle = atan2f(point.y - center.y, point.x - center.x);
 
@@ -401,6 +384,33 @@ bool is_point_inside_arc(ImVec2 point, ImVec2 center, float radius, float startA
 		return (angle >= startAngle || angle <= endAngle) &&
 			(sqrt((point.x - center.x) * (point.x - center.x) + (point.y - center.y) * (point.y - center.y)) <= radius);
 	}
+}
+
+ImVec2 rotate(const ImVec2& aPoint, float aCosA, float aSinA)
+{
+	return ImVec2(aPoint.x * aCosA - aPoint.y * aSinA, aPoint.x * aSinA + aPoint.y * aCosA);
+}
+
+void rotate_image(ImDrawList* draw_list, ImTextureID aTextureIdentifier, ImVec2 aOrigin, ImVec2 aSize, float aAngle, ImColor aColor)
+{
+	float cos_a = cosf(aAngle);
+	float sin_a = sinf(aAngle);
+	ImVec2 pos[4] =
+	{
+		aOrigin + rotate(ImVec2(-aSize.x * 0.5f, -aSize.y * 0.5f), cos_a, sin_a),
+		aOrigin + rotate(ImVec2(+aSize.x * 0.5f, -aSize.y * 0.5f), cos_a, sin_a),
+		aOrigin + rotate(ImVec2(+aSize.x * 0.5f, +aSize.y * 0.5f), cos_a, sin_a),
+		aOrigin + rotate(ImVec2(-aSize.x * 0.5f, +aSize.y * 0.5f), cos_a, sin_a)
+	};
+	ImVec2 uvs[4] =
+	{
+		ImVec2(0.0f, 0.0f),
+		ImVec2(1.0f, 0.0f),
+		ImVec2(1.0f, 1.0f),
+		ImVec2(0.0f, 1.0f)
+	};
+
+	draw_list->AddImageQuad(aTextureIdentifier, pos[0], pos[1], pos[2], pos[3], uvs[0], uvs[1], uvs[2], uvs[3], aColor);
 }
 
 void render_periodic_circular_event(PeriodicEvent pEvent) {
@@ -457,13 +467,13 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 	}
 
 	int ringSize = 1.0;
-	ImU32 ringColor = IM_COL32(212, 175, 55, 255);
+	ImU32 ringColor = IM_COL32(18, 18, 18, 255);
 	// Nullcheck
 	if (addon != nullptr && addon->editorBuffer.editorEditedEvent != nullptr) {
 		// Check if currently edited addon is same as currently rendered addon
 		if (strcmp(pEvent.GetName().c_str(), addon->editorSelectedEventName.c_str()) == 0) {
 			ringSize = 2;
-			ringColor = pEvent.IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(212, 55, 118, 255);
+			ringColor = pEvent.IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(18, 18, 18, 255);
 		}
 
 	}
@@ -475,15 +485,6 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 
 	drawList->AddCircleFilled(location, size, IM_COL32(0, 0, 0, 255));
 
-	// Draw base circle
-	render_ring( 
-		drawList,
-		location,						// center
-		size,							// inner radius
-		size + ringSize,				// outer radius
-		ringColor,	// color
-		ENTRY_SEGMENTS_RING);				// segments 
-
 	// disable anti-aliased fill
 	drawList->Flags &= ~ImDrawListFlags_AntiAliasedFill;
 
@@ -491,6 +492,12 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 	int current_entry_index = -1;
 	int next_entry_index = -1;
 
+	Texture* lineTex =
+		(resource_textures.find(GW2BOSSES_RESOURCE_PAINTED_LINE) != resource_textures.end()) ?
+		resource_textures[GW2BOSSES_RESOURCE_PAINTED_LINE] :
+		nullptr;
+
+	float texRadius = size * 1.15f;
 
 	// Draw arcs
 	for (int i = 0; i < entries.size(); ++i) {
@@ -519,6 +526,19 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 		for (int i = 0; i < ENTRY_SEGMENTS; ++i) {
 			float startAngle = startingAngle + angleStep * i;
 			float endAngle = startingAngle + angleStep * (i + 1);
+
+			if (lineTex)
+			{
+				if (i == 0)
+				{
+					rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), startAngle, color);
+				}
+				else if (i == ENTRY_SEGMENTS - 1)
+				{
+					rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), endAngle, color);
+				}
+			}
+
 			drawList->PathLineTo(location);
 			drawList->PathArcTo(location, size, startAngle, endAngle);
 			drawList->PathFillConvex(color);
@@ -540,6 +560,16 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 			next_entry_index = (i + 1) % entries.size();
 		}
 
+	}
+
+	Texture* circleTex =
+		(resource_textures.find(GW2BOSSES_RESOURCE_PAINTED_CIRCLE_TOP) != resource_textures.end()) ?
+		resource_textures[GW2BOSSES_RESOURCE_PAINTED_CIRCLE_TOP] :
+		nullptr;
+	
+	if (circleTex)
+	{
+		drawList->AddImage(circleTex->Resource, ImVec2(location.x - texRadius, location.y - texRadius), ImVec2(location.x + texRadius, location.y + texRadius), ImVec2(0, 0), ImVec2(1, 1), ringColor);
 	}
 
 	if (current_entry_index < 0 || next_entry_index < 0) {
@@ -568,8 +598,10 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 	float angle = aligned_time_percentage * (2 * M_PI);
 	angle = angle - (M_PI / 2);
 
-	ImVec2 endPoint(location.x + size * cosf(angle), location.y + size * sinf(angle));
-	drawList->AddLine(location, endPoint, RED, 1.5f);
+	if (lineTex)
+	{
+		rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), angle, RED);
+	}
 
 	// Time background + text
 	std::string current_time = time_now_formatted();
@@ -621,13 +653,23 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 			currentEntryDesc.c_str(),
 			nextEntryDesc.c_str()
 		);
+		ImGui::PushFont((ImFont*)NexusLink->FontUI);
 		ImVec2 descTextSize = ImGui::CalcTextSize(buffer);
 		ImVec2 descTextPosition = ImVec2(
 			location.x - descTextSize.x / 2,
 			location.y + size + margin
 		);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x - 1.f, descTextPosition.y - 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x + 1.f, descTextPosition.y - 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x + 1.f, descTextPosition.y + 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x - 1.f, descTextPosition.y + 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
 		ImGui::SetCursorPos(descTextPosition);
 		ImGui::Text(buffer);
+		ImGui::PopFont();
 	}
 
 	// Mouse is inside event box
@@ -748,24 +790,15 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 	}
 
 	int ringSize = 1.0;
-	ImU32 ringColor = IM_COL32(212, 175, 55, 255);
+	ImU32 ringColor = IM_COL32(18, 18, 18, 255);
 	// Nullcheck
 	if (addon != nullptr && addon->editorBuffer.editorEditedEvent != nullptr) {
 		// Check if currently edited addon is same as currently rendered addon
 		if (strcmp(pEvent.GetName().c_str(), addon->editorSelectedEventName.c_str()) == 0) {
 			ringSize = 2;
-			ringColor = pEvent.IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(212, 55, 118, 255);
+			ringColor = pEvent.IsEnabled() ? IM_COL32(118, 212, 55, 255) : IM_COL32(18, 18, 18, 255);
 		}
 	}
-
-	// Draw base circle
-	render_ring(
-		drawList,
-		location,						// center
-		size,							// inner radius
-		size + ringSize,				// outer radius
-		ringColor,	// color
-		ENTRY_SEGMENTS_RING);				// segments 
 
 	// disable anti-aliased fill
 	drawList->Flags &= ~ImDrawListFlags_AntiAliasedFill;
@@ -782,6 +815,13 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 	const std::vector<json>& entries = pEvent.GetPeriodicEntries();
 	int current_entry_index = -1;
 	int next_entry_index = -1;
+
+	Texture* lineTex =
+		(resource_textures.find(GW2BOSSES_RESOURCE_PAINTED_LINE) != resource_textures.end()) ?
+		resource_textures[GW2BOSSES_RESOURCE_PAINTED_LINE] :
+		nullptr;
+
+	float texRadius = size * 1.15f;
 
 	// Draw arcs
 	for (int i = 0; i < entries.size(); ++i) {
@@ -828,6 +868,19 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		for (int i = 0; i < ENTRY_SEGMENTS; ++i) {
 			float startAngle = startingAngle + angleStep * i;
 			float endAngle = startingAngle + angleStep * (i + 1);
+
+			if (lineTex)
+			{
+				if (i == 0)
+				{
+					rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), startAngle, color);
+				}
+				else if (i == ENTRY_SEGMENTS - 1)
+				{
+					rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), endAngle, color);
+				}
+			}
+
 			drawList->PathLineTo(location);
 			drawList->PathArcTo(location, size, startAngle, endAngle);
 			drawList->PathFillConvex(color);
@@ -850,6 +903,17 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		}
 
 	}
+
+	Texture* circleTex =
+		(resource_textures.find(GW2BOSSES_RESOURCE_PAINTED_CIRCLE_TOP) != resource_textures.end()) ?
+		resource_textures[GW2BOSSES_RESOURCE_PAINTED_CIRCLE_TOP] :
+		nullptr;
+
+	if (circleTex)
+	{
+		drawList->AddImage(circleTex->Resource, ImVec2(location.x - texRadius, location.y - texRadius), ImVec2(location.x + texRadius, location.y + texRadius), ImVec2(0, 0), ImVec2(1, 1), ringColor);
+	}
+
 
 	if (current_entry_index < 0 || next_entry_index < 0) {
 		current_entry_index = 0;
@@ -877,8 +941,10 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 	float angle = aligned_time_percentage * (2 * M_PI);
 	angle = angle - (M_PI / 2);
 
-	ImVec2 endPoint(location.x + size * cosf(angle), location.y + size * sinf(angle));
-	drawList->AddLine(location, endPoint, RED, 1.5f);
+	if (lineTex)
+	{
+		rotate_image(drawList, lineTex->Resource, location, ImVec2(texRadius * 2.f, texRadius * 2.f), angle, RED);
+	}
 
 	// Time background + text
 	std::string current_time = time_now_formatted();
@@ -931,13 +997,23 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		}
 
 
+		ImGui::PushFont((ImFont*)NexusLink->FontUI);
 		ImVec2 descTextSize = ImGui::CalcTextSize(buffer);
 		ImVec2 descTextPosition = ImVec2(
 			location.x - descTextSize.x / 2,
 			location.y + size + margin
 		);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x - 1.f, descTextPosition.y - 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x + 1.f, descTextPosition.y - 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x + 1.f, descTextPosition.y + 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
+		ImGui::SetCursorPos(ImVec2(descTextPosition.x - 1.f, descTextPosition.y + 1.f));
+		ImGui::TextColored(ImColor(0.f, 0.f, 0.f, 0.8f), buffer);
 		ImGui::SetCursorPos(descTextPosition);
 		ImGui::Text(buffer);
+		ImGui::PopFont();
 	}
 
 	// Mouse is inside event box

@@ -16,7 +16,9 @@
 #include <string>
 
 #include "nexus/Nexus.h"
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui/imgui.h"
+#include "imgui/imgui_internal.h"
 #include "mumble/Mumble.h"
 
 #include "Constants.h"
