@@ -1,3 +1,8 @@
+## Version 1.7.0.0
+
+### Improved
+- Improved meta event timers appearence and text clarity (by [@DeltaGW2](https://github.com/DeltaGW2))
+
 ## Version 1.6.0.0
 
 ## Added
