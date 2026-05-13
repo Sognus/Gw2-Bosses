@@ -1,3 +1,6 @@
+## Version 1.8.0.0
+- Added meta event timer for Vision of Eternity - Eternity's Garden map.
+
 ## Version 1.7.0.0
 
 ### Improved

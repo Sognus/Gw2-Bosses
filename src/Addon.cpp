@@ -3014,6 +3014,40 @@ void Addon::LoadEventsFallback() {
 		voe_starlit_weald->SetEventType("periodic_timer");
 	}
 
+	PeriodicEvent* voe_eternity_garden;
+	{
+		voe_eternity_garden = new PeriodicEvent(
+			"Eternity Garden",
+			4566.9111f,
+			61793.5312f,
+			0,
+			7200,
+			"65260F"
+		);
+		voe_eternity_garden->AddPeriodicEntry(
+			"Rest",
+			"Rest",
+			0,
+			4200,
+			"65260F"
+		);
+		voe_eternity_garden->AddPeriodicEntry(
+			"Shackles of the Ancients",
+			"Shackles of the Ancients",
+			4200,
+			1500,
+			"AB401A"
+		);
+		voe_eternity_garden->AddPeriodicEntry(
+			"Rest",
+			"Rest",
+			5700,
+			1500,
+			"65260F"
+		);
+
+		voe_eternity_garden->SetEventType("periodic_timer");
+	}
 
 	// Add events block
 	{
@@ -3069,7 +3103,7 @@ void Addon::LoadEventsFallback() {
 		// VoE
 		Addon::AddEvent(voe_shipwreck_stand);
 		Addon::AddEvent(voe_starlit_weald);
-
+		Addon::AddEvent(voe_eternity_garden);
 
 	}
 }
