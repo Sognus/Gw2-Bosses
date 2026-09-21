@@ -136,12 +136,14 @@ ImU32 hour_marker_color_for_group(const std::string& hex) {
 	float saturation;
 	float value;
 	ImGui::ColorConvertRGBtoHSV(red, green, blue, hue, saturation, value);
+	const float luminance = 0.2126f * red + 0.7152f * green + 0.0722f * blue;
 
-	// Use the opposite hue and contrasting brightness. Events with the same base
-	// color therefore share a marker color, while different color groups differ.
+	// Use the opposite hue and move brightness to the other end of the range.
+	// Identical phase colors therefore share a marker color, while each color
+	// group receives its own contrasting tint.
 	hue = fmodf(hue + 0.5f, 1.0f);
-	saturation = std::max(saturation, 0.65f);
-	value = value > 0.55f ? 0.35f : 0.95f;
+	saturation = std::max(saturation, 0.8f);
+	value = luminance > 0.5f ? 0.25f : 1.0f;
 	ImGui::ColorConvertHSVtoRGB(hue, saturation, value, red, green, blue);
 
 	return IM_COL32(
@@ -150,6 +152,26 @@ ImU32 hour_marker_color_for_group(const std::string& hex) {
 		static_cast<int>(blue * 255.0f),
 		220
 	);
+}
+
+struct ClockColorSegment {
+	float offsetSeconds;
+	float durationSeconds;
+	std::string colorHex;
+};
+
+std::string clock_group_color_at_offset(
+	const std::vector<ClockColorSegment>& colorSegments,
+	float offsetSeconds,
+	const std::string& fallbackColorHex
+) {
+	for (const ClockColorSegment& segment : colorSegments) {
+		if (offsetSeconds >= segment.offsetSeconds &&
+			offsetSeconds < segment.offsetSeconds + segment.durationSeconds) {
+			return segment.colorHex;
+		}
+	}
+	return fallbackColorHex;
 }
 
 
@@ -445,15 +467,21 @@ void render_hour_markers(
 	ImVec2 location,
 	float textureRadius,
 	long periodicitySeconds,
-	const std::string& groupColorHex
+	const std::vector<ClockColorSegment>& colorSegments,
+	const std::string& fallbackColorHex
 ) {
 	if (!lineTexture || periodicitySeconds <= HOUR_TO_SEC ||
 		(addon != nullptr && !addon->showHourlyClockMarkers)) {
 		return;
 	}
 
-	const ImU32 markerColor = hour_marker_color_for_group(groupColorHex);
-	for (long hourOffset = HOUR_TO_SEC; hourOffset < periodicitySeconds; hourOffset += HOUR_TO_SEC) {
+	for (long hourOffset = 0; hourOffset < periodicitySeconds; hourOffset += HOUR_TO_SEC) {
+		const std::string groupColorHex = clock_group_color_at_offset(
+			colorSegments,
+			static_cast<float>(hourOffset),
+			fallbackColorHex
+		);
+		const ImU32 markerColor = hour_marker_color_for_group(groupColorHex);
 		const float hourAngle = ENTRY_ARC_OFFSET +
 			(static_cast<float>(hourOffset) / periodicitySeconds) * (2.0f * M_PI);
 		rotate_image(
@@ -544,6 +572,7 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 
 	const std::vector<json>& entries = pEvent.GetPeriodicEntries();
 	const long periodicity_seconds = pEvent.GetPeriodicitySeconds();
+	std::vector<ClockColorSegment> markerColorSegments;
 	int current_entry_index = -1;
 	int next_entry_index = -1;
 
@@ -566,6 +595,7 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 
 		std::string hex_color = entry["color_hex"];
 		ImU32 color = hex_to_color(hex_color);
+		markerColorSegments.push_back({ offset_seconds, duration_seconds, hex_color });
 
 		// Size of offset 
 		float offset = (offset_seconds / pEvent.GetPeriodicitySeconds()) * 100; // %
@@ -623,6 +653,7 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 		location,
 		texRadius,
 		periodicity_seconds,
+		markerColorSegments,
 		pEvent.GetColorHex()
 	);
 
@@ -877,6 +908,7 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 	}
 
 	const std::vector<json>& entries = pEvent.GetPeriodicEntries();
+	std::vector<ClockColorSegment> markerColorSegments;
 	int current_entry_index = -1;
 	int next_entry_index = -1;
 
@@ -917,6 +949,11 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		}
 
 		long offset_2h = periodicity_absolute - (which_2h_block * 7200L);
+		markerColorSegments.push_back({
+			static_cast<float>(offset_2h),
+			duration_seconds,
+			hex_color
+		});
 
 		// Size of offset 
 		float offset = (offset_2h / 7200.0F) * 100; // %
@@ -974,6 +1011,7 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		location,
 		texRadius,
 		7200L,
+		markerColorSegments,
 		pEvent.GetColorHex()
 	);
 
