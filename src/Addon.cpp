@@ -3049,6 +3049,52 @@ void Addon::LoadEventsFallback() {
 		voe_eternity_garden->SetEventType("periodic_timer");
 	}
 
+	PeriodicEvent* voe_leyspring_hollows;
+	{
+		voe_leyspring_hollows = new PeriodicEvent(
+			"Depths of Cruelty",
+			5108.6636f,
+			58547.8516f,
+			0,
+			7200,
+			"65260F"
+		);
+
+		voe_leyspring_hollows->AddPeriodicEntryDay(
+			"Depths of Cruelty",
+			"Depths of Cruelty",
+			7200,
+			1800,
+			"AB401A",
+			10800 // Override of 2h periode into 3h
+		);
+
+		voe_leyspring_hollows->SetEventType("periodic_timer_convergences");
+	}
+
+	PeriodicEvent* voe_convergence;
+	{
+		voe_convergence = new PeriodicEvent(
+			"Convergences (Visions of Eternity)",
+			5177.3560f,
+			57663.7969f,
+			0,
+			7200,
+			"65260F"
+		);
+
+		voe_convergence->AddPeriodicEntryDay(
+			"Convergences",
+			"Convergences",
+			3600,
+			600,
+			"AB401A",
+			10800 // Override of 2h periode into 3h
+		);
+
+		voe_convergence->SetEventType("periodic_timer_convergences");
+	}
+
 	// Add events block
 	{
 		// Core game
@@ -3104,6 +3150,8 @@ void Addon::LoadEventsFallback() {
 		Addon::AddEvent(voe_shipwreck_stand);
 		Addon::AddEvent(voe_starlit_weald);
 		Addon::AddEvent(voe_eternity_garden);
+		Addon::AddEvent(voe_leyspring_hollows);
+		Addon::AddEvent(voe_convergence);
 
 	}
 }

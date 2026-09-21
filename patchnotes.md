@@ -1,3 +1,7 @@
+## Version 1.9.0.0
+- Added meta event timer for Visions of Eternity - Leyspring Hollows map.
+- Added Visions of Eternity convergence timer.
+
 ## Version 1.8.0.0
 - Added meta event timer for Vision of Eternity - Eternity's Garden map.
 
