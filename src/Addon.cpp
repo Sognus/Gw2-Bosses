@@ -3070,6 +3070,7 @@ void Addon::LoadEventsFallback() {
 		);
 
 		voe_leyspring_hollows->SetEventType("periodic_timer_convergences");
+		voe_leyspring_hollows->SetEmptyBlockTooltip("No event in this 2 hour block");
 	}
 
 	PeriodicEvent* voe_convergence;
@@ -3158,6 +3159,12 @@ void Addon::LoadEventsFallback() {
 
 void Addon::LoadEventOverrides()
 {
+	auto voe_leyspring_hollows_entry = this->events.find("Depths of Cruelty");
+	if (voe_leyspring_hollows_entry != this->events.end()) {
+		PeriodicEvent* voe_leyspring_hollows_event = static_cast<PeriodicEvent*>(voe_leyspring_hollows_entry->second);
+		voe_leyspring_hollows_event->SetEmptyBlockTooltip("No event in this 2 hour block");
+	}
+
 	// Janthir wilds convergences were originally created wrongly
 	auto jw_convergences_entry = this->events.find("Convergences (Janthir Wilds)");
 	if (jw_convergences_entry != this->events.end()) {

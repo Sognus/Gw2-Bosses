@@ -97,6 +97,9 @@ public:
     void SetNotifyUpcoming(bool flag);
     void SetNotifyInProgress(bool flag);
 
+    const std::string& GetEmptyBlockTooltip() const;
+    void SetEmptyBlockTooltip(std::string newEmptyBlockTooltip);
+
     std::string GetFormattedEventName() override;
 
     // Functions to serialize and deserialize the Event to and from a JSON object
@@ -117,6 +120,7 @@ private:
 
     bool notifyUpcoming;
     bool notifyInProgress;
+    std::string emptyBlockTooltip = "No convergence";
 
 protected:
     PeriodicEvent();

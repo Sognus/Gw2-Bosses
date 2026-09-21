@@ -203,6 +203,14 @@ void PeriodicEvent::SetNotifyInProgress(bool flag) {
     this->notifyInProgress = flag;
 }
 
+const std::string& PeriodicEvent::GetEmptyBlockTooltip() const {
+    return this->emptyBlockTooltip;
+}
+
+void PeriodicEvent::SetEmptyBlockTooltip(std::string newEmptyBlockTooltip) {
+    this->emptyBlockTooltip = newEmptyBlockTooltip;
+}
+
 std::string PeriodicEvent::GetFormattedEventName()
 {
     return this->name;
@@ -213,6 +221,7 @@ json PeriodicEvent::ToJson() const {
 
     // Add PeriodicEvent-specific fields
     eventData["periodicity_seconds"] = periodicity_seconds;
+    eventData["empty_block_tooltip"] = emptyBlockTooltip;
 
     // Serialize periodic entries
     json periodicEntriesArray;
@@ -229,6 +238,10 @@ void PeriodicEvent::FromJson(const json& jsonData) {
 
     if (jsonData.find("periodicity_seconds") != jsonData.end()) {
         periodicity_seconds = jsonData["periodicity_seconds"].get<int>();
+    }
+
+    if (jsonData.find("empty_block_tooltip") != jsonData.end() && jsonData["empty_block_tooltip"].is_string()) {
+        emptyBlockTooltip = jsonData["empty_block_tooltip"].get<std::string>();
     }
 
     if (jsonData.find("periodic_entries") != jsonData.end()) {

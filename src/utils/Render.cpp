@@ -809,7 +809,7 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 
 	// Imgui tooltip
 	if (calculate_distance(location, io.MousePos) < size) {
-		ImGui::SetTooltip("No convergence");
+		ImGui::SetTooltip("%s", pEvent.GetEmptyBlockTooltip().c_str());
 	}
 
 	const std::vector<json>& entries = pEvent.GetPeriodicEntries();
