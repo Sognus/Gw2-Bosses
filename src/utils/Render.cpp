@@ -563,17 +563,19 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 
 	// Longer clocks need hour markers so their period is visually distinguishable
 	// from the standard two-hour event window.
-	if (periodicity_seconds > 7200L) {
+	if (periodicity_seconds > 7200L && lineTex) {
 		const ImU32 hourSeparatorColor = IM_COL32(140, 140, 140, 210);
-		const float hourSeparatorThickness = std::max(1.0f, 1.5f * mapObjectScale);
 		for (long hourOffset = HOUR_TO_SEC; hourOffset < periodicity_seconds; hourOffset += HOUR_TO_SEC) {
 			const float hourAngle = ENTRY_ARC_OFFSET +
 				(static_cast<float>(hourOffset) / periodicity_seconds) * (2.0f * M_PI);
-			const ImVec2 hourMarkerEnd(
-				location.x + cosf(hourAngle) * size,
-				location.y + sinf(hourAngle) * size
+			rotate_image(
+				drawList,
+				lineTex->Resource,
+				location,
+				ImVec2(texRadius * 2.0f, texRadius * 2.0f),
+				hourAngle,
+				hourSeparatorColor
 			);
-			drawList->AddLine(location, hourMarkerEnd, hourSeparatorColor, hourSeparatorThickness);
 		}
 	}
 
