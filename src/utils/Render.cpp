@@ -134,16 +134,15 @@ std::string format_time(std::tm* time) {
 }
 
 
-std::string calculate_tooltip_time(float offset_seconds) {
+std::string calculate_tooltip_time(float offset_seconds, long periodicity_seconds = 7200L) {
 	// Define your time point (e.g., current time)
 	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 
 	// Convert the time point to a time_t
 	std::time_t time = std::chrono::system_clock::to_time_t(now);
 
-	// Convert into latest 2h block
-	double seconds_in_2h_block = 2 * 60 * 60; // 2 hours in seconds
-	std::time_t aligned_time = floorf(time / seconds_in_2h_block) * seconds_in_2h_block;
+	// Convert into the latest event period
+	std::time_t aligned_time = (time / periodicity_seconds) * periodicity_seconds;
 
 	// Offset time 
 	std::time_t offset_aligned_time = aligned_time + (long)(offset_seconds);
@@ -156,15 +155,14 @@ std::string calculate_tooltip_time(float offset_seconds) {
 }
 
 // Time in seconds since last aligned block
-long aligned_time_offset() {
+long aligned_time_offset(long periodicity_seconds = 7200L) {
 	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 
 	// Convert the time point to a time_t
 	std::time_t time = std::chrono::system_clock::to_time_t(now);
 
-	// Convert into latest 2h block
-	long seconds_in_2h_block = 2 * 60 * 60; // 2 hours in seconds
-	std::time_t aligned_time = (time / seconds_in_2h_block) * seconds_in_2h_block;
+	// Convert into the latest event period
+	std::time_t aligned_time = (time / periodicity_seconds) * periodicity_seconds;
 
 	return time - aligned_time;
 }
@@ -489,6 +487,7 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 	drawList->Flags &= ~ImDrawListFlags_AntiAliasedFill;
 
 	const std::vector<json>& entries = pEvent.GetPeriodicEntries();
+	const long periodicity_seconds = pEvent.GetPeriodicitySeconds();
 	int current_entry_index = -1;
 	int next_entry_index = -1;
 
@@ -546,15 +545,15 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 		}
 
 		if (is_point_inside_arc(mousePos, location, size, startingAngle, startingAngle + totalAngle)) {
-			std::string time = calculate_tooltip_time(offset_seconds);
-			std::string next = calculate_tooltip_time(offset_seconds + offset_next);
+			std::string time = calculate_tooltip_time(offset_seconds, periodicity_seconds);
+			std::string next = calculate_tooltip_time(offset_seconds + offset_next, periodicity_seconds);
 			ImGui::SetTooltip("%s\n\nstarts: %s\n\nnext: %s", description.c_str(), time.c_str(), next.c_str());
 		}
 
 		// Set current entry
 		float startTime = offset_seconds;
 		float endTime = offset_seconds + duration_seconds;
-		float alignedOffset = aligned_time_offset();
+		float alignedOffset = aligned_time_offset(periodicity_seconds);
 		if (alignedOffset >= startTime && alignedOffset <= endTime) {
 			current_entry_index = i;
 			next_entry_index = (i + 1) % entries.size();
@@ -593,8 +592,8 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 	}
 
 	// Render current time line
-	float aligned_time = aligned_time_offset();
-	float aligned_time_percentage = aligned_time / 7200.0f;
+	float aligned_time = aligned_time_offset(periodicity_seconds);
+	float aligned_time_percentage = aligned_time / periodicity_seconds;
 	float angle = aligned_time_percentage * (2 * M_PI);
 	angle = angle - (M_PI / 2);
 

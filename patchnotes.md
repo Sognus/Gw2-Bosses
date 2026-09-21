@@ -2,6 +2,9 @@
 - Added meta event timer for Visions of Eternity - Leyspring Hollows map.
 - Added Visions of Eternity convergence timer.
 
+### Fixed
+- Rendered Depths of Cruelty as a complete three-hour cycle instead of an incomplete two-hour block.
+
 ## Version 1.8.0.0
 - Added meta event timer for Vision of Eternity - Eternity's Garden map.
 

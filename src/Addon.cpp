@@ -3056,21 +3056,36 @@ void Addon::LoadEventsFallback() {
 			5108.6636f,
 			58547.8516f,
 			0,
-			7200,
+			10800,
 			"65260F"
 		);
 
-		voe_leyspring_hollows->AddPeriodicEntryDay(
+		voe_leyspring_hollows->AddPeriodicEntry(
+			"Rest",
+			"Rest",
+			0,
+			7200,
+			10800,
+			"65260F"
+		);
+		voe_leyspring_hollows->AddPeriodicEntry(
 			"Depths of Cruelty",
 			"Depths of Cruelty",
 			7200,
 			1800,
-			"AB401A",
-			10800 // Override of 2h periode into 3h
+			10800,
+			"AB401A"
+		);
+		voe_leyspring_hollows->AddPeriodicEntry(
+			"Rest",
+			"Rest",
+			9000,
+			1800,
+			10800,
+			"65260F"
 		);
 
-		voe_leyspring_hollows->SetEventType("periodic_timer_convergences");
-		voe_leyspring_hollows->SetEmptyBlockTooltip("No event in this 2 hour block");
+		voe_leyspring_hollows->SetEventType("periodic_timer");
 	}
 
 	PeriodicEvent* voe_convergence;
@@ -3162,7 +3177,12 @@ void Addon::LoadEventOverrides()
 	auto voe_leyspring_hollows_entry = this->events.find("Depths of Cruelty");
 	if (voe_leyspring_hollows_entry != this->events.end()) {
 		PeriodicEvent* voe_leyspring_hollows_event = static_cast<PeriodicEvent*>(voe_leyspring_hollows_entry->second);
-		voe_leyspring_hollows_event->SetEmptyBlockTooltip("No event in this 2 hour block");
+		voe_leyspring_hollows_event->SetPeriodicitySeconds(10800);
+		voe_leyspring_hollows_event->SetEventType("periodic_timer");
+		voe_leyspring_hollows_event->SetPeriodicEntries({});
+		voe_leyspring_hollows_event->AddPeriodicEntry("Rest", "Rest", 0, 7200, 10800, "65260F");
+		voe_leyspring_hollows_event->AddPeriodicEntry("Depths of Cruelty", "Depths of Cruelty", 7200, 1800, 10800, "AB401A");
+		voe_leyspring_hollows_event->AddPeriodicEntry("Rest", "Rest", 9000, 1800, 10800, "65260F");
 	}
 
 	// Janthir wilds convergences were originally created wrongly
