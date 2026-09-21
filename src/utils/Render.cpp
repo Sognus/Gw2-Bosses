@@ -124,6 +124,34 @@ ImU32 hex_to_color(const std::string& hex) {
 	return IM_COL32(R, G, B, 255);
 }
 
+ImU32 hour_marker_color_for_group(const std::string& hex) {
+	if (hex.length() != 6) {
+		return IM_COL32(180, 180, 180, 220);
+	}
+
+	float red = std::stoul(hex.substr(0, 2), nullptr, 16) / 255.0f;
+	float green = std::stoul(hex.substr(2, 2), nullptr, 16) / 255.0f;
+	float blue = std::stoul(hex.substr(4, 2), nullptr, 16) / 255.0f;
+	float hue;
+	float saturation;
+	float value;
+	ImGui::ColorConvertRGBtoHSV(red, green, blue, hue, saturation, value);
+
+	// Use the opposite hue and contrasting brightness. Events with the same base
+	// color therefore share a marker color, while different color groups differ.
+	hue = fmodf(hue + 0.5f, 1.0f);
+	saturation = std::max(saturation, 0.65f);
+	value = value > 0.55f ? 0.35f : 0.95f;
+	ImGui::ColorConvertHSVtoRGB(hue, saturation, value, red, green, blue);
+
+	return IM_COL32(
+		static_cast<int>(red * 255.0f),
+		static_cast<int>(green * 255.0f),
+		static_cast<int>(blue * 255.0f),
+		220
+	);
+}
+
 
 std::string format_time(std::tm* time) {
 	// Format the struct tm to HH:MM string
@@ -411,6 +439,34 @@ void rotate_image(ImDrawList* draw_list, ImTextureID aTextureIdentifier, ImVec2 
 	draw_list->AddImageQuad(aTextureIdentifier, pos[0], pos[1], pos[2], pos[3], uvs[0], uvs[1], uvs[2], uvs[3], aColor);
 }
 
+void render_hour_markers(
+	ImDrawList* drawList,
+	Texture* lineTexture,
+	ImVec2 location,
+	float textureRadius,
+	long periodicitySeconds,
+	const std::string& groupColorHex
+) {
+	if (!lineTexture || periodicitySeconds <= HOUR_TO_SEC ||
+		(addon != nullptr && !addon->showHourlyClockMarkers)) {
+		return;
+	}
+
+	const ImU32 markerColor = hour_marker_color_for_group(groupColorHex);
+	for (long hourOffset = HOUR_TO_SEC; hourOffset < periodicitySeconds; hourOffset += HOUR_TO_SEC) {
+		const float hourAngle = ENTRY_ARC_OFFSET +
+			(static_cast<float>(hourOffset) / periodicitySeconds) * (2.0f * M_PI);
+		rotate_image(
+			drawList,
+			lineTexture->Resource,
+			location,
+			ImVec2(textureRadius * 2.0f, textureRadius * 2.0f),
+			hourAngle,
+			markerColor
+		);
+	}
+}
+
 void render_periodic_circular_event(PeriodicEvent pEvent) {
 	bool day_render = false;
 	ImGuiIO& io = ImGui::GetIO();
@@ -561,23 +617,14 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 
 	}
 
-	// Longer clocks need hour markers so their period is visually distinguishable
-	// from the standard two-hour event window.
-	if (periodicity_seconds > 7200L && lineTex) {
-		const ImU32 hourSeparatorColor = IM_COL32(140, 140, 140, 210);
-		for (long hourOffset = HOUR_TO_SEC; hourOffset < periodicity_seconds; hourOffset += HOUR_TO_SEC) {
-			const float hourAngle = ENTRY_ARC_OFFSET +
-				(static_cast<float>(hourOffset) / periodicity_seconds) * (2.0f * M_PI);
-			rotate_image(
-				drawList,
-				lineTex->Resource,
-				location,
-				ImVec2(texRadius * 2.0f, texRadius * 2.0f),
-				hourAngle,
-				hourSeparatorColor
-			);
-		}
-	}
+	render_hour_markers(
+		drawList,
+		lineTex,
+		location,
+		texRadius,
+		periodicity_seconds,
+		pEvent.GetColorHex()
+	);
 
 	Texture* circleTex =
 		(resource_textures.find(GW2BOSSES_RESOURCE_PAINTED_CIRCLE_TOP) != resource_textures.end()) ?
@@ -920,6 +967,15 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		}
 
 	}
+
+	render_hour_markers(
+		drawList,
+		lineTex,
+		location,
+		texRadius,
+		7200L,
+		pEvent.GetColorHex()
+	);
 
 	Texture* circleTex =
 		(resource_textures.find(GW2BOSSES_RESOURCE_PAINTED_CIRCLE_TOP) != resource_textures.end()) ?

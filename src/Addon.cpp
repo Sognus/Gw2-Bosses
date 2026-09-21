@@ -73,6 +73,10 @@ void Addon::RenderOptions() {
 				{
 				}
 
+				if (ImGui::Checkbox("Show hourly clock separator lines", &this->showHourlyClockMarkers))
+				{
+				}
+
 				std::string comboPreview = "no selection";
 				if (this->additionalNotifyOffsetIndex >= 0 && this->additionalNotifyOffsetIndex < this->additionalOffsetChoices.size()) {
 					comboPreview = this->additionalOffsetChoices[this->additionalNotifyOffsetIndex].text;
@@ -540,6 +544,7 @@ void Addon::LoadPreferences()
 				showNotifications = j.value("showNotifications", showNotifications);
 				additionalNotifyOffsetIndex = j.value("additionalNotifyOffsetIndex", additionalNotifyOffsetIndex);
 				showDayNightClock = j.value("showDayNightClock", showDayNightClock);
+				showHourlyClockMarkers = j.value("showHourlyClockMarkers", showHourlyClockMarkers);
 
 				if (j.contains("additionalOffsetChoices")) {
 					additionalOffsetChoices = j.at("additionalOffsetChoices").get<std::vector<ComboBoxItem>>();
@@ -573,6 +578,7 @@ void Addon::LoadDefaultPreferences() {
 	this->showDebugCrosshair = false;
 
 	this->showDayNightClock = false;
+	this->showHourlyClockMarkers = true;
 
 	// Choices for offset combo box
 	this->additionalOffsetChoices = {
@@ -622,6 +628,7 @@ void Addon::SavePreferences()
 	j["additionalNotifyOffsetIndex"] = additionalNotifyOffsetIndex;
 	j["additionalOffsetChoices"] = additionalOffsetChoices;
 	j["showDayNightClock"] = showDayNightClock;
+	j["showHourlyClockMarkers"] = showHourlyClockMarkers;
 
 	try {
 		std::ofstream out(pathSettings);

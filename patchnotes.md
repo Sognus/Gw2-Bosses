@@ -5,6 +5,9 @@
 ### Fixed
 - Rendered Depths of Cruelty as a complete three-hour cycle instead of an incomplete two-hour block.
 
+### Improved
+- Added optional hourly separator lines to periodic event clocks.
+
 ## Version 1.8.0.0
 - Added meta event timer for Vision of Eternity - Eternity's Garden map.
 

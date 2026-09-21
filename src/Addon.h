@@ -105,6 +105,7 @@ public:
     bool useNexusNotifications;
     
     bool showDayNightClock;
+    bool showHourlyClockMarkers;
 
      // Global render enabled-disabled flag
     bool render;
