@@ -106,6 +106,7 @@ public:
     
     bool showDayNightClock;
     bool showHourlyClockMarkers;
+    bool showHourlyClockMarkersForTwoHourBlocks;
 
      // Global render enabled-disabled flag
     bool render;

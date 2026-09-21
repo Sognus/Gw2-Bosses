@@ -471,7 +471,8 @@ void render_hour_markers(
 	const std::string& fallbackColorHex
 ) {
 	if (!lineTexture || periodicitySeconds <= HOUR_TO_SEC ||
-		(addon != nullptr && !addon->showHourlyClockMarkers)) {
+		(addon != nullptr && !addon->showHourlyClockMarkers) ||
+		(periodicitySeconds == 7200L && addon != nullptr && !addon->showHourlyClockMarkersForTwoHourBlocks)) {
 		return;
 	}
 
