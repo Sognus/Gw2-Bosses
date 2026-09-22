@@ -5,9 +5,13 @@
 ### Fixed
 - Rendered Depths of Cruelty as a complete three-hour cycle instead of an incomplete two-hour block.
 
-### Improved
-- Added optional hourly separator lines to periodic event clocks.
-- Rendered all three-hour convergence timers as complete event cycles.
+### Added
+- Added hourly separator indicators to periodic event clocks.
+  - `Show hourly separator lines` enables indicators for non-two-hour clocks and is enabled by default.
+  - `Show lines for 2 hour view blocks as well` also enables indicators for two-hour clocks and is disabled by default.
+
+### Changed
+- Replaced the convergence-specific two-hour block renderer with full three-hour cycle rendering.
 
 ## Version 1.8.0.0
 - Added meta event timer for Vision of Eternity - Eternity's Garden map.
