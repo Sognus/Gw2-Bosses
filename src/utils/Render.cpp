@@ -124,6 +124,56 @@ ImU32 hex_to_color(const std::string& hex) {
 	return IM_COL32(R, G, B, 255);
 }
 
+ImU32 hour_marker_color_for_group(const std::string& hex) {
+	if (hex.length() != 6) {
+		return IM_COL32(180, 180, 180, 220);
+	}
+
+	float red = std::stoul(hex.substr(0, 2), nullptr, 16) / 255.0f;
+	float green = std::stoul(hex.substr(2, 2), nullptr, 16) / 255.0f;
+	float blue = std::stoul(hex.substr(4, 2), nullptr, 16) / 255.0f;
+	float hue;
+	float saturation;
+	float value;
+	ImGui::ColorConvertRGBtoHSV(red, green, blue, hue, saturation, value);
+	const float luminance = 0.2126f * red + 0.7152f * green + 0.0722f * blue;
+
+	// Use the opposite hue and move brightness to the other end of the range.
+	// Identical phase colors therefore share a marker color, while each color
+	// group receives its own contrasting tint.
+	hue = fmodf(hue + 0.5f, 1.0f);
+	saturation = std::max(saturation, 0.8f);
+	value = luminance > 0.5f ? 0.25f : 1.0f;
+	ImGui::ColorConvertHSVtoRGB(hue, saturation, value, red, green, blue);
+
+	return IM_COL32(
+		static_cast<int>(red * 255.0f),
+		static_cast<int>(green * 255.0f),
+		static_cast<int>(blue * 255.0f),
+		220
+	);
+}
+
+struct ClockColorSegment {
+	float offsetSeconds;
+	float durationSeconds;
+	std::string colorHex;
+};
+
+std::string clock_group_color_at_offset(
+	const std::vector<ClockColorSegment>& colorSegments,
+	float offsetSeconds,
+	const std::string& fallbackColorHex
+) {
+	for (const ClockColorSegment& segment : colorSegments) {
+		if (offsetSeconds >= segment.offsetSeconds &&
+			offsetSeconds < segment.offsetSeconds + segment.durationSeconds) {
+			return segment.colorHex;
+		}
+	}
+	return fallbackColorHex;
+}
+
 
 std::string format_time(std::tm* time) {
 	// Format the struct tm to HH:MM string
@@ -134,16 +184,15 @@ std::string format_time(std::tm* time) {
 }
 
 
-std::string calculate_tooltip_time(float offset_seconds) {
+std::string calculate_tooltip_time(float offset_seconds, long periodicity_seconds = 7200L) {
 	// Define your time point (e.g., current time)
 	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 
 	// Convert the time point to a time_t
 	std::time_t time = std::chrono::system_clock::to_time_t(now);
 
-	// Convert into latest 2h block
-	double seconds_in_2h_block = 2 * 60 * 60; // 2 hours in seconds
-	std::time_t aligned_time = floorf(time / seconds_in_2h_block) * seconds_in_2h_block;
+	// Convert into the latest event period
+	std::time_t aligned_time = (time / periodicity_seconds) * periodicity_seconds;
 
 	// Offset time 
 	std::time_t offset_aligned_time = aligned_time + (long)(offset_seconds);
@@ -156,15 +205,14 @@ std::string calculate_tooltip_time(float offset_seconds) {
 }
 
 // Time in seconds since last aligned block
-long aligned_time_offset() {
+long aligned_time_offset(long periodicity_seconds = 7200L) {
 	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 
 	// Convert the time point to a time_t
 	std::time_t time = std::chrono::system_clock::to_time_t(now);
 
-	// Convert into latest 2h block
-	long seconds_in_2h_block = 2 * 60 * 60; // 2 hours in seconds
-	std::time_t aligned_time = (time / seconds_in_2h_block) * seconds_in_2h_block;
+	// Convert into the latest event period
+	std::time_t aligned_time = (time / periodicity_seconds) * periodicity_seconds;
 
 	return time - aligned_time;
 }
@@ -413,6 +461,41 @@ void rotate_image(ImDrawList* draw_list, ImTextureID aTextureIdentifier, ImVec2 
 	draw_list->AddImageQuad(aTextureIdentifier, pos[0], pos[1], pos[2], pos[3], uvs[0], uvs[1], uvs[2], uvs[3], aColor);
 }
 
+void render_hour_markers(
+	ImDrawList* drawList,
+	Texture* lineTexture,
+	ImVec2 location,
+	float textureRadius,
+	long periodicitySeconds,
+	const std::vector<ClockColorSegment>& colorSegments,
+	const std::string& fallbackColorHex
+) {
+	if (!lineTexture || periodicitySeconds <= HOUR_TO_SEC ||
+		(addon != nullptr && !addon->showHourlyClockMarkers) ||
+		(periodicitySeconds == 7200L && addon != nullptr && !addon->showHourlyClockMarkersForTwoHourBlocks)) {
+		return;
+	}
+
+	for (long hourOffset = 0; hourOffset < periodicitySeconds; hourOffset += HOUR_TO_SEC) {
+		const std::string groupColorHex = clock_group_color_at_offset(
+			colorSegments,
+			static_cast<float>(hourOffset),
+			fallbackColorHex
+		);
+		const ImU32 markerColor = hour_marker_color_for_group(groupColorHex);
+		const float hourAngle = ENTRY_ARC_OFFSET +
+			(static_cast<float>(hourOffset) / periodicitySeconds) * (2.0f * M_PI);
+		rotate_image(
+			drawList,
+			lineTexture->Resource,
+			location,
+			ImVec2(textureRadius * 2.0f, textureRadius * 2.0f),
+			hourAngle,
+			markerColor
+		);
+	}
+}
+
 void render_periodic_circular_event(PeriodicEvent pEvent) {
 	bool day_render = false;
 	ImGuiIO& io = ImGui::GetIO();
@@ -489,6 +572,8 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 	drawList->Flags &= ~ImDrawListFlags_AntiAliasedFill;
 
 	const std::vector<json>& entries = pEvent.GetPeriodicEntries();
+	const long periodicity_seconds = pEvent.GetPeriodicitySeconds();
+	std::vector<ClockColorSegment> markerColorSegments;
 	int current_entry_index = -1;
 	int next_entry_index = -1;
 
@@ -511,6 +596,7 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 
 		std::string hex_color = entry["color_hex"];
 		ImU32 color = hex_to_color(hex_color);
+		markerColorSegments.push_back({ offset_seconds, duration_seconds, hex_color });
 
 		// Size of offset 
 		float offset = (offset_seconds / pEvent.GetPeriodicitySeconds()) * 100; // %
@@ -546,21 +632,31 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 		}
 
 		if (is_point_inside_arc(mousePos, location, size, startingAngle, startingAngle + totalAngle)) {
-			std::string time = calculate_tooltip_time(offset_seconds);
-			std::string next = calculate_tooltip_time(offset_seconds + offset_next);
+			std::string time = calculate_tooltip_time(offset_seconds, periodicity_seconds);
+			std::string next = calculate_tooltip_time(offset_seconds + offset_next, periodicity_seconds);
 			ImGui::SetTooltip("%s\n\nstarts: %s\n\nnext: %s", description.c_str(), time.c_str(), next.c_str());
 		}
 
 		// Set current entry
 		float startTime = offset_seconds;
 		float endTime = offset_seconds + duration_seconds;
-		float alignedOffset = aligned_time_offset();
+		float alignedOffset = aligned_time_offset(periodicity_seconds);
 		if (alignedOffset >= startTime && alignedOffset <= endTime) {
 			current_entry_index = i;
 			next_entry_index = (i + 1) % entries.size();
 		}
 
 	}
+
+	render_hour_markers(
+		drawList,
+		lineTex,
+		location,
+		texRadius,
+		periodicity_seconds,
+		markerColorSegments,
+		pEvent.GetColorHex()
+	);
 
 	Texture* circleTex =
 		(resource_textures.find(GW2BOSSES_RESOURCE_PAINTED_CIRCLE_TOP) != resource_textures.end()) ?
@@ -593,8 +689,8 @@ void render_periodic_circular_event(PeriodicEvent pEvent) {
 	}
 
 	// Render current time line
-	float aligned_time = aligned_time_offset();
-	float aligned_time_percentage = aligned_time / 7200.0f;
+	float aligned_time = aligned_time_offset(periodicity_seconds);
+	float aligned_time_percentage = aligned_time / periodicity_seconds;
 	float angle = aligned_time_percentage * (2 * M_PI);
 	angle = angle - (M_PI / 2);
 
@@ -809,10 +905,11 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 
 	// Imgui tooltip
 	if (calculate_distance(location, io.MousePos) < size) {
-		ImGui::SetTooltip("No convergence");
+		ImGui::SetTooltip("%s", pEvent.GetEmptyBlockTooltip().c_str());
 	}
 
 	const std::vector<json>& entries = pEvent.GetPeriodicEntries();
+	std::vector<ClockColorSegment> markerColorSegments;
 	int current_entry_index = -1;
 	int next_entry_index = -1;
 
@@ -853,6 +950,11 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		}
 
 		long offset_2h = periodicity_absolute - (which_2h_block * 7200L);
+		markerColorSegments.push_back({
+			static_cast<float>(offset_2h),
+			duration_seconds,
+			hex_color
+		});
 
 		// Size of offset 
 		float offset = (offset_2h / 7200.0F) * 100; // %
@@ -903,6 +1005,16 @@ void render_periodic_circular_event_convergences(PeriodicEvent pEvent) {
 		}
 
 	}
+
+	render_hour_markers(
+		drawList,
+		lineTex,
+		location,
+		texRadius,
+		7200L,
+		markerColorSegments,
+		pEvent.GetColorHex()
+	);
 
 	Texture* circleTex =
 		(resource_textures.find(GW2BOSSES_RESOURCE_PAINTED_CIRCLE_TOP) != resource_textures.end()) ?

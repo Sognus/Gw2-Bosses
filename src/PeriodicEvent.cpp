@@ -123,7 +123,7 @@ void PeriodicEvent::AddPeriodicEntry(
     entry["color_hex"] = entryColorHex;
     entry["offset_next"] = offsetNext;
     entry["periodicity_type"] = "periode"; // Periode is bound inside period
-    entry["periocitity_override"] = 7200; // Assume 2h periode
+    entry["periocitity_override"] = periodicity_seconds;
 
     periodic_entries.push_back(entry);
 }
@@ -144,9 +144,9 @@ void PeriodicEvent::AddPeriodicEntry(
     entry["offset_seconds"] = offsetSeconds;
     entry["duration_seconds"] = durationSeconds;
     entry["color_hex"] = entryColorHex;
-    entry["offset_next"] = 7200;
+    entry["offset_next"] = periodicity_seconds;
     entry["periodicity_type"] = "periode"; // Periode is bound inside period
-    entry["periocitity_override"] = 7200; // Assume 2h periode
+    entry["periocitity_override"] = periodicity_seconds;
 
     periodic_entries.push_back(entry);
 }
@@ -203,6 +203,14 @@ void PeriodicEvent::SetNotifyInProgress(bool flag) {
     this->notifyInProgress = flag;
 }
 
+const std::string& PeriodicEvent::GetEmptyBlockTooltip() const {
+    return this->emptyBlockTooltip;
+}
+
+void PeriodicEvent::SetEmptyBlockTooltip(std::string newEmptyBlockTooltip) {
+    this->emptyBlockTooltip = newEmptyBlockTooltip;
+}
+
 std::string PeriodicEvent::GetFormattedEventName()
 {
     return this->name;
@@ -213,6 +221,7 @@ json PeriodicEvent::ToJson() const {
 
     // Add PeriodicEvent-specific fields
     eventData["periodicity_seconds"] = periodicity_seconds;
+    eventData["empty_block_tooltip"] = emptyBlockTooltip;
 
     // Serialize periodic entries
     json periodicEntriesArray;
@@ -229,6 +238,10 @@ void PeriodicEvent::FromJson(const json& jsonData) {
 
     if (jsonData.find("periodicity_seconds") != jsonData.end()) {
         periodicity_seconds = jsonData["periodicity_seconds"].get<int>();
+    }
+
+    if (jsonData.find("empty_block_tooltip") != jsonData.end() && jsonData["empty_block_tooltip"].is_string()) {
+        emptyBlockTooltip = jsonData["empty_block_tooltip"].get<std::string>();
     }
 
     if (jsonData.find("periodic_entries") != jsonData.end()) {
