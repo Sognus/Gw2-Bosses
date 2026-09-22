@@ -2837,20 +2837,22 @@ void Addon::LoadEventsFallback() {
 			23503.0f,
 			22698.0f,
 			0,
-			7200,
+			10800,
 			"A06608"
 		);
 
-		convergences->AddPeriodicEntryDay(
+		convergences->AddPeriodicEntry("Rest", "Rest", 0, 5400, 10800, "A06608");
+		convergences->AddPeriodicEntry(
 			"Convergences",
 			"Convergences",
 			5400,
 			600,
-			"FFD792",
-			10800 // Override of 2h periode into 3h
+			10800,
+			"FFD792"
 		);
+		convergences->AddPeriodicEntry("Rest", "Rest", 6000, 4800, 10800, "A06608");
 
-		convergences->SetEventType("periodic_timer_convergences");
+		convergences->SetEventType("periodic_timer");
 	}
 
 	PeriodicEvent* janthir_syntri;
@@ -2906,20 +2908,21 @@ void Addon::LoadEventsFallback() {
 			43127.0f,
 			22669.0f,
 			0,
-			7200,
+			10800,
 			"6184E1"
 		);
 
-		janthir_convergence->AddPeriodicEntryDay(
+		janthir_convergence->AddPeriodicEntry(
 			"Convergences",
 			"Convergences",
 			0,
 			600,
-			"18347E",
-			10800 // Override of 2h periode into 3h
+			10800,
+			"18347E"
 		);
+		janthir_convergence->AddPeriodicEntry("Rest", "Rest", 600, 10200, 10800, "6184E1");
 
-		janthir_convergence->SetEventType("periodic_timer_convergences");
+		janthir_convergence->SetEventType("periodic_timer");
 	}
 
 
@@ -3112,20 +3115,22 @@ void Addon::LoadEventsFallback() {
 			5177.3560f,
 			57663.7969f,
 			0,
-			7200,
+			10800,
 			"65260F"
 		);
 
-		voe_convergence->AddPeriodicEntryDay(
+		voe_convergence->AddPeriodicEntry("Rest", "Rest", 0, 3600, 10800, "65260F");
+		voe_convergence->AddPeriodicEntry(
 			"Convergences",
 			"Convergences",
 			3600,
 			600,
-			"AB401A",
-			10800 // Override of 2h periode into 3h
+			10800,
+			"AB401A"
 		);
+		voe_convergence->AddPeriodicEntry("Rest", "Rest", 4200, 6600, 10800, "65260F");
 
-		voe_convergence->SetEventType("periodic_timer_convergences");
+		voe_convergence->SetEventType("periodic_timer");
 	}
 
 	// Add events block
@@ -3191,33 +3196,86 @@ void Addon::LoadEventsFallback() {
 
 void Addon::LoadEventOverrides()
 {
-	auto voe_leyspring_hollows_entry = this->events.find("Depths of Cruelty");
-	if (voe_leyspring_hollows_entry != this->events.end()) {
-		PeriodicEvent* voe_leyspring_hollows_event = static_cast<PeriodicEvent*>(voe_leyspring_hollows_entry->second);
-		voe_leyspring_hollows_event->SetPeriodicitySeconds(10800);
-		voe_leyspring_hollows_event->SetEventType("periodic_timer");
-		voe_leyspring_hollows_event->SetPeriodicEntries({});
-		voe_leyspring_hollows_event->AddPeriodicEntry("Rest", "Rest", 0, 7200, 10800, "65260F");
-		voe_leyspring_hollows_event->AddPeriodicEntry("Depths of Cruelty", "Depths of Cruelty", 7200, 1800, 10800, "AB401A");
-		voe_leyspring_hollows_event->AddPeriodicEntry("Rest", "Rest", 9000, 1800, 10800, "65260F");
-	}
+	// Convert legacy convergence timers and every non-two-hour timer into a full
+	// cycle made from explicit event and Rest entries.
+	for (const auto& eventEntry : this->events) {
+		Event* event = eventEntry.second;
+		if (event == nullptr || !event->GetEventType().starts_with("periodic_timer")) {
+			continue;
+		}
 
-	// Janthir wilds convergences were originally created wrongly
-	auto jw_convergences_entry = this->events.find("Convergences (Janthir Wilds)");
-	if (jw_convergences_entry != this->events.end()) {
-		bool wrongEntry = false;
-		PeriodicEvent* jw_convergences_entry_periodic = static_cast<PeriodicEvent*>(jw_convergences_entry->second);
-		for (int i = 0; i < jw_convergences_entry_periodic->periodic_entries.size(); i++) {
-			json& j = jw_convergences_entry_periodic->periodic_entries.at(i);
+		PeriodicEvent* periodicEvent = static_cast<PeriodicEvent*>(event);
+		const bool isLegacyConvergence = event->GetEventType() == "periodic_timer_convergences";
+		int fullPeriodSeconds = periodicEvent->GetPeriodicitySeconds();
+		std::vector<json> sourceEntries = periodicEvent->GetPeriodicEntries();
 
-			// Check if the keys exist and are of the correct type
-			if (j.contains("name") && j["name"].is_string() &&
-				j.contains("offset_seconds") && j["offset_seconds"].is_number_integer()) {
-
-				if (j["name"] == "Convergences" && j["offset_seconds"] == 5400) {
-					j["offset_seconds"] = 0;
+		if (isLegacyConvergence) {
+			for (const json& entry : sourceEntries) {
+				if (entry.contains("periocitity_override") && entry["periocitity_override"].is_number_integer()) {
+					fullPeriodSeconds = std::max(fullPeriodSeconds, entry["periocitity_override"].get<int>());
 				}
 			}
+		}
+
+		if (!isLegacyConvergence && fullPeriodSeconds == 7200) {
+			continue;
+		}
+
+		std::vector<json> activeEntries;
+		for (json entry : sourceEntries) {
+			if (event->GetName() == "Convergences (Janthir Wilds)" &&
+				entry.value("name", "") == "Convergences" &&
+				entry.value("offset_seconds", 0) == 5400) {
+				entry["offset_seconds"] = 0;
+			}
+
+			if (entry.value("name", "") != "Rest") {
+				activeEntries.push_back(entry);
+			}
+		}
+
+		std::sort(activeEntries.begin(), activeEntries.end(), [](const json& left, const json& right) {
+			return left.value("offset_seconds", 0) < right.value("offset_seconds", 0);
+		});
+
+		periodicEvent->SetPeriodicitySeconds(fullPeriodSeconds);
+		periodicEvent->SetEventType("periodic_timer");
+		periodicEvent->SetPeriodicEntries({});
+
+		int cursorSeconds = 0;
+		for (const json& entry : activeEntries) {
+			const int offsetSeconds = std::clamp(entry.value("offset_seconds", 0), 0, fullPeriodSeconds);
+			const int durationSeconds = std::clamp(
+				entry.value("duration_seconds", 0),
+				0,
+				fullPeriodSeconds - offsetSeconds
+			);
+
+			if (offsetSeconds > cursorSeconds) {
+				periodicEvent->AddPeriodicEntry(
+					"Rest", "Rest", cursorSeconds, offsetSeconds - cursorSeconds,
+					fullPeriodSeconds, periodicEvent->GetColorHex()
+				);
+			}
+
+			if (durationSeconds > 0) {
+				periodicEvent->AddPeriodicEntry(
+					entry.value("name", "Event"),
+					entry.value("description", entry.value("name", "Event")),
+					offsetSeconds,
+					durationSeconds,
+					fullPeriodSeconds,
+					entry.value("color_hex", periodicEvent->GetColorHex())
+				);
+				cursorSeconds = std::max(cursorSeconds, offsetSeconds + durationSeconds);
+			}
+		}
+
+		if (cursorSeconds < fullPeriodSeconds) {
+			periodicEvent->AddPeriodicEntry(
+				"Rest", "Rest", cursorSeconds, fullPeriodSeconds - cursorSeconds,
+				fullPeriodSeconds, periodicEvent->GetColorHex()
+			);
 		}
 	}
 

@@ -7,6 +7,7 @@
 
 ### Improved
 - Added optional hourly separator lines to periodic event clocks.
+- Rendered all three-hour convergence timers as complete event cycles.
 
 ## Version 1.8.0.0
 - Added meta event timer for Vision of Eternity - Eternity's Garden map.

@@ -123,7 +123,7 @@ void PeriodicEvent::AddPeriodicEntry(
     entry["color_hex"] = entryColorHex;
     entry["offset_next"] = offsetNext;
     entry["periodicity_type"] = "periode"; // Periode is bound inside period
-    entry["periocitity_override"] = 7200; // Assume 2h periode
+    entry["periocitity_override"] = periodicity_seconds;
 
     periodic_entries.push_back(entry);
 }
@@ -144,9 +144,9 @@ void PeriodicEvent::AddPeriodicEntry(
     entry["offset_seconds"] = offsetSeconds;
     entry["duration_seconds"] = durationSeconds;
     entry["color_hex"] = entryColorHex;
-    entry["offset_next"] = 7200;
+    entry["offset_next"] = periodicity_seconds;
     entry["periodicity_type"] = "periode"; // Periode is bound inside period
-    entry["periocitity_override"] = 7200; // Assume 2h periode
+    entry["periocitity_override"] = periodicity_seconds;
 
     periodic_entries.push_back(entry);
 }
